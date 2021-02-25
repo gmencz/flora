@@ -1,0 +1,8 @@
+query Messages {
+  messages(limit: 50) {
+    id
+    sent_at
+    guest_name
+    content
+  }
+}

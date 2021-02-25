@@ -1,1 +1,21 @@
-[]
+- table:
+    schema: public
+    name: messages
+  insert_permissions:
+  - role: guest
+    permission:
+      check: {}
+      columns:
+      - content
+      - guest_name
+      backend_only: false
+  select_permissions:
+  - role: guest
+    permission:
+      columns:
+      - content
+      - guest_name
+      - id
+      - sent_at
+      filter: {}
+      limit: 50
