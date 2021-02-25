@@ -1,5 +1,4 @@
 import { useQueryClient } from "react-query";
-import uniquify from "../utils/uniquify";
 import useSubscription from "../utils/useSubscription";
 
 interface CountriesQuery {
@@ -50,26 +49,13 @@ const IndexPage = () => {
     OPERATION_NAME,
     fetchCountries,
     {
+      wsUrl: "ws://localhost:8080/v1/graphql",
       subscription: {
         operationName: OPERATION_NAME,
         query: COUNTRIES,
       },
       onData: (data) => {
-        queryClient.setQueryData<CountriesQuery>(
-          OPERATION_NAME,
-          (existingCountries) => {
-            if (!existingCountries) {
-              return data;
-            }
-
-            const countries = uniquify(data.data.countries, "id");
-            return {
-              data: {
-                countries,
-              },
-            };
-          }
-        );
+        queryClient.setQueryData<CountriesQuery>(OPERATION_NAME, data);
       },
     }
   );

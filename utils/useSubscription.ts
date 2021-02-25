@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   QueryFunction,
   QueryKey,
@@ -15,9 +15,9 @@ interface UseSubscriptionOptions<
   TError = unknown,
   TData = TQueryFnData
 > extends UseQueryOptions<TQueryFnData, TError, TData> {
+  wsUrl: string;
   subscription: OperationOptions;
   onData: (data: TData) => void;
-  runOnInitialData?: boolean;
 }
 
 export default function useSubscription<
@@ -30,23 +30,15 @@ export default function useSubscription<
   options: UseSubscriptionOptions<TQueryFnData, TError, TData>
 ) {
   const query = useQuery(queryKey, queryFn, options);
-  const isInitialDataRef = useRef(true);
 
   useEffect(() => {
-    const subscriptionClient = new SubscriptionClient(
-      "ws://localhost:8080/v1/graphql",
-      {
-        reconnect: true,
-      }
-    );
+    const subscriptionClient = new SubscriptionClient(options.wsUrl, {
+      reconnect: true,
+    });
 
     subscriptionClient.request(options.subscription).subscribe({
       next: (data) => {
-        if (!isInitialDataRef.current || options.runOnInitialData) {
-          options.onData(data as TData);
-        }
-
-        isInitialDataRef.current = false;
+        options.onData(data as TData);
       },
     });
   }, []);
