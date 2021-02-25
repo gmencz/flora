@@ -5,37 +5,31 @@ services:
     image: postgres:12-alpine
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DATABASE}
-      POSTGRES_USER: ${POSTGRES_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGTZ: ${POSTGRES_TIMEZONE}
+      POSTGRES_DB: chatskee_db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      PGTZ: utc
     ports:
-      - target: 5432
-        published: ${POSTGRES_ENDPOINT_PORT}
-        protocol: tcp
-        mode: host
+      - "5432:5432"
     volumes:
-      ## To executes ['initialization scripts'](https://hub.docker.com/_/postgres),
-      ## uncomment the next line, create ./data directory, and add .sh or .sql files under ./data
-      # - ./data:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
   graphql-engine:
-    image: hasura/graphql-engine:v1.1.0.cli-migrations
+    image: hasura/graphql-engine:v1.3.3
     ports:
-      - target: 8080
-        published: ${HASURA_ENDPOINT_PORT}
-        protocol: tcp
-        mode: host
+      - "8080:8080"
     volumes:
       - ./hasura/migrations:/hasura-migrations
     depends_on:
       - "postgres"
     restart: always
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: "postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DATABASE}"
-      HASURA_GRAPHQL_ENABLE_CONSOLE: ${HASURA_GRAPHQL_ENABLE_CONSOLE}
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: ${HASURA_GRAPHQL_ENABLED_LOG_TYPES}
+      HASURA_GRAPHQL_DATABASE_URL: postgres://root:root@postgres:5432/chatskee_db
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to set an admin secret
-      # HASURA_GRAPHQL_ADMIN_SECRET: '${HASURA_GRAPHQL_ADMIN_SECRET}'
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
   postgres_data:
