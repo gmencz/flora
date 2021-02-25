@@ -1,6 +1,7 @@
 import { AppProps } from "next/dist/next-server/lib/router/router";
 import { useRef } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { ReactQueryDevtools } from "react-query/devtools";
 import { Hydrate } from "react-query/hydration";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
@@ -14,6 +15,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       <Hydrate state={pageProps.dehydratedState}>
         <Component {...pageProps} />
       </Hydrate>
+      <ReactQueryDevtools />
     </QueryClientProvider>
   );
 }

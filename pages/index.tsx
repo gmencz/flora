@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
-import { useQuery, useQueryClient } from "react-query";
-import { SubscriptionClient } from "subscriptions-transport-ws";
+import { useQueryClient } from "react-query";
+import uniquify from "../utils/uniquify";
+import useSubscription from "../utils/useSubscription";
 
 interface CountriesQuery {
   data: {
@@ -27,7 +27,6 @@ async function fetchCountries(): Promise<CountriesQuery> {
           }
         }
       `,
-      variables: null,
     }),
   });
 
@@ -35,61 +34,47 @@ async function fetchCountries(): Promise<CountriesQuery> {
   return data;
 }
 
+const OPERATION_NAME = "Countries";
+const COUNTRIES = `
+  subscription Countries {
+    countries {
+      id
+      name
+    }
+  }
+`;
+
 const IndexPage = () => {
-  const countriesQuery = useQuery("countries", fetchCountries);
-  const isInitialDataRef = useRef(true);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const client = new SubscriptionClient("ws://localhost:8080/v1/graphql", {
-      reconnect: true,
-    });
-
-    client
-      .request({
-        operationName: "Countries",
-        query: `
-          subscription Countries {
-            countries {
-              id
-              name
+  const { isLoading, isError, data } = useSubscription(
+    OPERATION_NAME,
+    fetchCountries,
+    {
+      subscription: {
+        operationName: OPERATION_NAME,
+        query: COUNTRIES,
+      },
+      onData: (data) => {
+        queryClient.setQueryData<CountriesQuery>(
+          OPERATION_NAME,
+          (existingCountries) => {
+            if (!existingCountries) {
+              return data;
             }
+
+            const countries = uniquify(data.data.countries, "id");
+            return {
+              data: {
+                countries,
+              },
+            };
           }
-      `,
-      })
-      .subscribe({
-        next: (data) => {
-          if (!isInitialDataRef.current) {
-            queryClient.setQueryData<CountriesQuery>(
-              "countries",
-              (existingCountries) => {
-                const { data: countries } = data as CountriesQuery;
-                if (!existingCountries) {
-                  return { data: countries };
-                }
+        );
+      },
+    }
+  );
 
-                const uniqueCountries = Array.from(
-                  new Set(countries.countries.map((country) => country.id))
-                ).map(
-                  (id) =>
-                    countries.countries.find((country) => country.id === id)!
-                );
-
-                return {
-                  data: {
-                    countries: uniqueCountries,
-                  },
-                };
-              }
-            );
-          }
-
-          isInitialDataRef.current = false;
-        },
-      });
-  }, []);
-
-  if (countriesQuery.isLoading) {
+  if (isLoading) {
     return (
       <div style={{ padding: "1rem 2rem" }}>
         <p>Loading...</p>
@@ -97,7 +82,7 @@ const IndexPage = () => {
     );
   }
 
-  if (countriesQuery.isError) {
+  if (isError) {
     return (
       <div style={{ padding: "1rem 2rem" }}>
         <p>Oops! Something went wrong</p>
@@ -108,7 +93,7 @@ const IndexPage = () => {
   return (
     <div style={{ padding: "1rem 2rem" }}>
       <h1>Countries:</h1>
-      <pre>{JSON.stringify(countriesQuery.data?.data.countries, null, 2)}</pre>
+      <pre>{JSON.stringify(data?.data.countries, null, 2)}</pre>
     </div>
   );
 };
