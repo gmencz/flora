@@ -1,5 +1,5 @@
 import { distanceInWordsToNow } from 'date-fns'
-import { useRef, useState } from 'react'
+import { KeyboardEvent, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from 'react-query'
 import {
@@ -36,6 +36,7 @@ const schema = yup.object().shape({
 function IndexPage() {
   const queryClient = useQueryClient()
   const isNewMessageRef = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const [guestName, setGuestName] = useState<null | string>(null)
   const latestMessagesQuery = useSubscription<LatestMessagesQuery, ClientError>(
     'LatestMessages',
@@ -90,6 +91,13 @@ function IndexPage() {
         guest_name: guestName,
       },
     })
+  }
+
+  const submitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && event.shiftKey == false) {
+      event.preventDefault()
+      handleSubmit(onSubmit)()
+    }
   }
 
   if (!guestName) {
@@ -170,7 +178,7 @@ function IndexPage() {
       )}
 
       <div className="sticky mt-auto bottom-0 bg-white pb-8 pt-4 max-w-xl w-full">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
           <p className="mb-2 text-sm text-red-600">
             {newMessageMutation.isError
               ? newMessageMutation.error?.message
@@ -178,6 +186,7 @@ function IndexPage() {
           </p>
           <div className="flex items-start">
             <textarea
+              onKeyPress={submitOnEnter}
               name="content"
               rows={2}
               ref={register}
