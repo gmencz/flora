@@ -17,4 +17,5 @@ jobs:
           PATH_TO_HASURA_PROJECT_ROOT: ./hasura
           HASURA_ENDPOINT: ${{ secrets.HASURA_ENDPOINT }}
           HASURA_ADMIN_SECRET: ${{ secrets.HASURA_ADMIN_SECRET }}
+          HASURA_CLI_VERSION: v2.0.0-alpha.2
           HASURA_MIGRATIONS_ENABLED: true
