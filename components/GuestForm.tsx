@@ -24,7 +24,6 @@ function GuestForm({ setGuestName }: GuestFormProps) {
   })
 
   const onSubmit = (data: FormInputs) => {
-    localStorage.setItem('guestName', data.nickname)
     setGuestName(data.nickname)
   }
 

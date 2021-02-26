@@ -1,5 +1,5 @@
 import { distanceInWordsToNow } from 'date-fns'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from 'react-query'
 import {
@@ -71,11 +71,6 @@ function IndexPage() {
       },
     },
   )
-
-  useEffect(() => {
-    const savedGuestName = localStorage.getItem('guestName')
-    setGuestName(savedGuestName)
-  }, [])
 
   const { register, handleSubmit, errors, reset } = useForm<FormInputs>({
     resolver: yupResolver(schema),

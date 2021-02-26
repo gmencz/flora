@@ -17,6 +17,7 @@
       - content
       - guest_name
       - id
+      - message_number
       - sent_at
       filter: {}
       limit: 50

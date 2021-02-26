@@ -12,7 +12,7 @@ query LatestMessages {
 }
 
 subscription OnNewMessage {
-  messages(order_by: { sent_at: desc }, limit: 1) {
+  messages(limit: 1, order_by: { message_number: desc }) {
     ...Message
   }
 }
