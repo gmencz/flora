@@ -3,7 +3,6 @@ version: '3.7'
 services:
   postgres:
     image: postgres:12-alpine
-    restart: always
     environment:
       POSTGRES_DB: chatskee_db
       POSTGRES_USER: root
@@ -21,7 +20,6 @@ services:
       - ./hasura/migrations:/hasura-migrations
     depends_on:
       - 'postgres'
-    restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://root:root@postgres:5432/chatskee_db
       ## enable the console served by server
