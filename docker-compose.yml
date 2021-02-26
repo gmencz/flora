@@ -1,4 +1,4 @@
-version: "3.7"
+version: '3.7'
 
 services:
   postgres:
@@ -10,25 +10,26 @@ services:
       POSTGRES_PASSWORD: root
       PGTZ: utc
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
   graphql-engine:
-    image: hasura/graphql-engine:v1.3.3
+    image: hasura/graphql-engine:v2.0.0-alpha.2
     ports:
-      - "8080:8080"
+      - '8080:8080'
     volumes:
       - ./hasura/migrations:/hasura-migrations
     depends_on:
-      - "postgres"
+      - 'postgres'
     restart: always
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://root:root@postgres:5432/chatskee_db
       ## enable the console served by server
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES:
+        startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to set an admin secret
       HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: guest
