@@ -540,7 +540,7 @@ export const MessageFragmentDoc = `
     `
 export const LatestMessagesDocument = `
     query LatestMessages {
-  messages(order_by: {sent_at: desc}, limit: 30) {
+  messages(limit: 30, order_by: {message_number: desc}) {
     ...Message
   }
 }

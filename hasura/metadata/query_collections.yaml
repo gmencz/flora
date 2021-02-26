@@ -1,10 +1,10 @@
 - name: allowed-queries
   definition:
     queries:
-    - name: LatestMessages
+    - name: NewMessage
       query: |-
-        query LatestMessages {
-          messages(order_by: {sent_at: desc}, limit: 30) {
+        mutation NewMessage($input: messages_insert_input!) {
+          insert_messages_one(object: $input) {
             ...Message
           }
         }
@@ -18,7 +18,7 @@
     - name: OnNewMessage
       query: |-
         subscription OnNewMessage {
-          messages(order_by: {sent_at: desc}, limit: 1) {
+          messages(limit: 1, order_by: { message_number: desc }) {
             ...Message
           }
         }
@@ -29,10 +29,10 @@
           guest_name
           content
         }
-    - name: NewMessage
+    - name: LatestMessages
       query: |-
-        mutation NewMessage($input: messages_insert_input!) {
-          insert_messages_one(object: $input) {
+        query LatestMessages {
+          messages(limit: 30, order_by: { message_number: desc }) {
             ...Message
           }
         }
