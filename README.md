@@ -1,3 +1,3 @@
-# React Query GraphQL Subscriptions
+# Chatskee
 
-This is an example repo of GraphQL subscriptions + React Query with Next.js.
+Chatskee is a discord clone built with Next.js and Hasura.
