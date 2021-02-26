@@ -8,6 +8,7 @@
       columns:
       - content
       - guest_name
+      - sent_at
       backend_only: false
   select_permissions:
   - role: guest

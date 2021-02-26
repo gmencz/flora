@@ -1,23 +1,18 @@
-import { useEffect } from "react";
-import {
-  QueryFunction,
-  QueryKey,
-  UseQueryOptions,
-  useQuery,
-} from "react-query";
+import { useEffect } from 'react'
+import { QueryFunction, QueryKey, UseQueryOptions, useQuery } from 'react-query'
 import {
   OperationOptions,
   SubscriptionClient,
-} from "subscriptions-transport-ws";
+} from 'subscriptions-transport-ws'
 
 interface UseSubscriptionOptions<
   TQueryFnData = unknown,
   TError = unknown,
   TData = TQueryFnData
 > extends UseQueryOptions<TQueryFnData, TError, TData> {
-  wsUrl: string;
-  subscription: OperationOptions;
-  onData: (data: TData) => void;
+  wsUrl: string
+  subscription: OperationOptions
+  onData: (data: TData) => void
 }
 
 export default function useSubscription<
@@ -27,21 +22,21 @@ export default function useSubscription<
 >(
   queryKey: QueryKey,
   queryFn: QueryFunction<TQueryFnData>,
-  options: UseSubscriptionOptions<TQueryFnData, TError, TData>
+  options: UseSubscriptionOptions<TQueryFnData, TError, TData>,
 ) {
-  const query = useQuery(queryKey, queryFn, options);
+  const query = useQuery(queryKey, queryFn, options)
 
   useEffect(() => {
     const subscriptionClient = new SubscriptionClient(options.wsUrl, {
       reconnect: true,
-    });
+    })
 
     subscriptionClient.request(options.subscription).subscribe({
-      next: (data) => {
-        options.onData(data as TData);
+      next: ({ data }) => {
+        options.onData(data as TData)
       },
-    });
-  }, []);
+    })
+  }, [])
 
-  return query;
+  return query
 }

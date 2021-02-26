@@ -1,8 +1,24 @@
-query Messages {
-  messages(limit: 50) {
-    id
-    sent_at
-    guest_name
-    content
+fragment Message on messages {
+  id
+  sent_at
+  guest_name
+  content
+}
+
+query LatestMessages {
+  messages(order_by: { sent_at: desc }, limit: 30) {
+    ...Message
+  }
+}
+
+subscription OnNewMessage {
+  messages(order_by: { sent_at: desc }, limit: 1) {
+    ...Message
+  }
+}
+
+mutation NewMessage($input: messages_insert_input!) {
+  insert_messages_one(object: $input) {
+    ...Message
   }
 }

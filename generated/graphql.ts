@@ -1,5 +1,10 @@
 import { GraphQLClient } from 'graphql-request'
-import { useQuery, UseQueryOptions } from 'react-query'
+import {
+  useQuery,
+  UseQueryOptions,
+  useMutation,
+  UseMutationOptions,
+} from 'react-query'
 export type Maybe<T> = T | null
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
@@ -363,38 +368,97 @@ export type Timestamptz_Comparison_Exp = {
   _nin?: Maybe<Array<Scalars['timestamptz']>>
 }
 
-export type MessagesQueryVariables = Exact<{ [key: string]: never }>
+export type MessageFragment = { __typename?: 'messages' } & Pick<
+  Messages,
+  'id' | 'sent_at' | 'guest_name' | 'content'
+>
 
-export type MessagesQuery = { __typename?: 'query_root' } & {
-  messages: Array<
-    { __typename?: 'messages' } & Pick<
-      Messages,
-      'id' | 'sent_at' | 'guest_name' | 'content'
-    >
-  >
+export type LatestMessagesQueryVariables = Exact<{ [key: string]: never }>
+
+export type LatestMessagesQuery = { __typename?: 'query_root' } & {
+  messages: Array<{ __typename?: 'messages' } & MessageFragment>
 }
 
-export const MessagesDocument = `
-    query Messages {
-  messages(limit: 50) {
-    id
-    sent_at
-    guest_name
-    content
-  }
+export type OnNewMessageSubscriptionVariables = Exact<{ [key: string]: never }>
+
+export type OnNewMessageSubscription = { __typename?: 'subscription_root' } & {
+  messages: Array<{ __typename?: 'messages' } & MessageFragment>
+}
+
+export type NewMessageMutationVariables = Exact<{
+  input: Messages_Insert_Input
+}>
+
+export type NewMessageMutation = { __typename?: 'mutation_root' } & {
+  insert_messages_one?: Maybe<{ __typename?: 'messages' } & MessageFragment>
+}
+
+export const MessageFragmentDoc = `
+    fragment Message on messages {
+  id
+  sent_at
+  guest_name
+  content
 }
     `
-export const useMessagesQuery = <TData = MessagesQuery, TError = unknown>(
+export const LatestMessagesDocument = `
+    query LatestMessages {
+  messages(order_by: {sent_at: desc}, limit: 30) {
+    ...Message
+  }
+}
+    ${MessageFragmentDoc}`
+export const useLatestMessagesQuery = <
+  TData = LatestMessagesQuery,
+  TError = unknown
+>(
   client: GraphQLClient,
-  variables?: MessagesQueryVariables,
-  options?: UseQueryOptions<MessagesQuery, TError, TData>,
+  variables?: LatestMessagesQueryVariables,
+  options?: UseQueryOptions<LatestMessagesQuery, TError, TData>,
 ) =>
-  useQuery<MessagesQuery, TError, TData>(
-    ['Messages', variables],
-    fetcher<MessagesQuery, MessagesQueryVariables>(
+  useQuery<LatestMessagesQuery, TError, TData>(
+    ['LatestMessages', variables],
+    fetcher<LatestMessagesQuery, LatestMessagesQueryVariables>(
       client,
-      MessagesDocument,
+      LatestMessagesDocument,
       variables,
     ),
+    options,
+  )
+export const OnNewMessageDocument = `
+    subscription OnNewMessage {
+  messages(order_by: {sent_at: desc}, limit: 1) {
+    ...Message
+  }
+}
+    ${MessageFragmentDoc}`
+export const NewMessageDocument = `
+    mutation NewMessage($input: messages_insert_input!) {
+  insert_messages_one(object: $input) {
+    ...Message
+  }
+}
+    ${MessageFragmentDoc}`
+export const useNewMessageMutation = <TError = unknown, TContext = unknown>(
+  client: GraphQLClient,
+  options?: UseMutationOptions<
+    NewMessageMutation,
+    TError,
+    NewMessageMutationVariables,
+    TContext
+  >,
+) =>
+  useMutation<
+    NewMessageMutation,
+    TError,
+    NewMessageMutationVariables,
+    TContext
+  >(
+    (variables?: NewMessageMutationVariables) =>
+      fetcher<NewMessageMutation, NewMessageMutationVariables>(
+        client,
+        NewMessageDocument,
+        variables,
+      )(),
     options,
   )
