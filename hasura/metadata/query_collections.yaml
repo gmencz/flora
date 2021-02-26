@@ -1,1 +1,45 @@
-[]
+- name: allowed-queries
+  definition:
+    queries:
+    - name: LatestMessages
+      query: |-
+        query LatestMessages {
+          messages(order_by: {sent_at: desc}, limit: 30) {
+            ...Message
+          }
+        }
+
+        fragment Message on messages {
+          id
+          sent_at
+          guest_name
+          content
+        }
+    - name: OnNewMessage
+      query: |-
+        subscription OnNewMessage {
+          messages(order_by: {sent_at: desc}, limit: 1) {
+            ...Message
+          }
+        }
+
+        fragment Message on messages {
+          id
+          sent_at
+          guest_name
+          content
+        }
+    - name: NewMessage
+      query: |-
+        mutation NewMessage($input: messages_insert_input!) {
+          insert_messages_one(object: $input) {
+            ...Message
+          }
+        }
+
+        fragment Message on messages {
+          id
+          sent_at
+          guest_name
+          content
+        }
