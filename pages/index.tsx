@@ -42,11 +42,6 @@ interface Message {
   status: MessageStatus
 }
 
-interface LastMessageState {
-  fromSubscription: string | null
-  fromCache: string | null
-}
-
 async function fetchLatestMessages(): Promise<Message[]> {
   const data = await graphql.request<
     LatestMessagesQuery,
@@ -75,10 +70,6 @@ function IndexPage() {
   const formRef = useRef<HTMLFormElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [guestName, setGuestName] = useState<null | string>(null)
-  const [lastMessage, setLastMessage] = useState<LastMessageState>({
-    fromSubscription: null,
-    fromCache: null,
-  })
 
   const messagesQuery = useSubscription<
     Message[],
@@ -124,11 +115,6 @@ function IndexPage() {
           },
         ]
       })
-
-      setLastMessage(current => ({
-        ...current,
-        fromSubscription: newMessage.id,
-      }))
     },
   })
 
@@ -185,11 +171,6 @@ function IndexPage() {
           }) ?? []
         )
       })
-
-      setLastMessage(current => ({
-        ...current,
-        fromCache: input.id!,
-      }))
     },
     onSuccess: data => {
       queryClient.setQueryData<Message[]>('Messages', currentMessages => {
@@ -206,11 +187,6 @@ function IndexPage() {
           }) ?? []
         )
       })
-
-      setLastMessage(current => ({
-        ...current,
-        fromCache: data.insert_messages_one!.id,
-      }))
     },
   })
 
@@ -218,8 +194,7 @@ function IndexPage() {
     if (
       messagesQuery.data &&
       messagesQuery.data.length > 0 &&
-      !newMessageMutation.isLoading &&
-      lastMessage.fromCache === lastMessage.fromSubscription
+      !newMessageMutation.isLoading
     ) {
       const firstMessageInQueue = messagesQuery.data.find(
         message => message.status === MessageStatus.IN_QUEUE,
@@ -238,12 +213,7 @@ function IndexPage() {
         },
       })
     }
-  }, [
-    lastMessage.fromCache,
-    lastMessage.fromSubscription,
-    messagesQuery.data,
-    newMessageMutation,
-  ])
+  }, [messagesQuery.data, newMessageMutation])
 
   if (!guestName) {
     return <GuestForm setGuestName={setGuestName} />
