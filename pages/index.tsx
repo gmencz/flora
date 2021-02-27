@@ -1,4 +1,3 @@
-import { distanceInWordsToNow } from 'date-fns'
 import { KeyboardEvent, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from 'react-query'
@@ -15,6 +14,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { ClientError } from 'graphql-request'
 import GuestForm from '../components/GuestForm'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 
 interface FormInputs {
   content: string
@@ -84,6 +84,7 @@ function IndexPage() {
   })
 
   const onSubmit = (data: FormInputs) => {
+    console.log(newMessageMutation.isLoading)
     newMessageMutation.mutate({
       input: {
         sent_at: new Date().toISOString(),
@@ -164,7 +165,7 @@ function IndexPage() {
                       {message.guest_name}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {distanceInWordsToNow(message.sent_at, {
+                      {formatDistanceToNow(parseISO(message.sent_at), {
                         addSuffix: true,
                       })}
                     </p>
