@@ -152,7 +152,7 @@ function IndexPage() {
         <ul className="mt-2 divide-y divide-gray-200">
           {latestMessagesQuery.data?.messages.map(message => (
             <li className="py-4" key={message.id}>
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 break-all">
                 <img
                   className="h-6 w-6 rounded-full"
                   src="https://res.cloudinary.com/ds9ttumx0/image/upload/v1614296913/chatskee/default_yjml9c_ne1c6w.png"
