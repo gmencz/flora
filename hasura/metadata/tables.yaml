@@ -20,4 +20,3 @@
       - id
       - message_number
       filter: {}
-      limit: 50
