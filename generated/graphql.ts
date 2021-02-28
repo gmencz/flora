@@ -68,10 +68,10 @@ export type String_Comparison_Exp = {
 export type Messages = {
   __typename?: 'messages'
   content: Scalars['String']
+  created_at?: Maybe<Scalars['timestamptz']>
   guest_name: Scalars['String']
   id: Scalars['String']
   message_number: Scalars['Int']
-  sent_at: Scalars['timestamptz']
 }
 
 /** aggregated selection of "messages" */
@@ -141,10 +141,10 @@ export type Messages_Bool_Exp = {
   _not?: Maybe<Messages_Bool_Exp>
   _or?: Maybe<Array<Maybe<Messages_Bool_Exp>>>
   content?: Maybe<String_Comparison_Exp>
+  created_at?: Maybe<Timestamptz_Comparison_Exp>
   guest_name?: Maybe<String_Comparison_Exp>
   id?: Maybe<String_Comparison_Exp>
   message_number?: Maybe<Int_Comparison_Exp>
-  sent_at?: Maybe<Timestamptz_Comparison_Exp>
 }
 
 /** unique or primary key constraints on table "messages" */
@@ -161,48 +161,48 @@ export type Messages_Inc_Input = {
 /** input type for inserting data into table "messages" */
 export type Messages_Insert_Input = {
   content?: Maybe<Scalars['String']>
+  created_at?: Maybe<Scalars['timestamptz']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
   message_number?: Maybe<Scalars['Int']>
-  sent_at?: Maybe<Scalars['timestamptz']>
 }
 
 /** aggregate max on columns */
 export type Messages_Max_Fields = {
   __typename?: 'messages_max_fields'
   content?: Maybe<Scalars['String']>
+  created_at?: Maybe<Scalars['timestamptz']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
   message_number?: Maybe<Scalars['Int']>
-  sent_at?: Maybe<Scalars['timestamptz']>
 }
 
 /** order by max() on columns of table "messages" */
 export type Messages_Max_Order_By = {
   content?: Maybe<Order_By>
+  created_at?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
   message_number?: Maybe<Order_By>
-  sent_at?: Maybe<Order_By>
 }
 
 /** aggregate min on columns */
 export type Messages_Min_Fields = {
   __typename?: 'messages_min_fields'
   content?: Maybe<Scalars['String']>
+  created_at?: Maybe<Scalars['timestamptz']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
   message_number?: Maybe<Scalars['Int']>
-  sent_at?: Maybe<Scalars['timestamptz']>
 }
 
 /** order by min() on columns of table "messages" */
 export type Messages_Min_Order_By = {
   content?: Maybe<Order_By>
+  created_at?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
   message_number?: Maybe<Order_By>
-  sent_at?: Maybe<Order_By>
 }
 
 /** response of any mutation on the table "messages" */
@@ -230,10 +230,10 @@ export type Messages_On_Conflict = {
 /** ordering options when selecting data from "messages" */
 export type Messages_Order_By = {
   content?: Maybe<Order_By>
+  created_at?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
   message_number?: Maybe<Order_By>
-  sent_at?: Maybe<Order_By>
 }
 
 /** primary key columns input for table: "messages" */
@@ -246,22 +246,22 @@ export enum Messages_Select_Column {
   /** column name */
   Content = 'content',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   GuestName = 'guest_name',
   /** column name */
   Id = 'id',
   /** column name */
   MessageNumber = 'message_number',
-  /** column name */
-  SentAt = 'sent_at',
 }
 
 /** input type for updating data in table "messages" */
 export type Messages_Set_Input = {
   content?: Maybe<Scalars['String']>
+  created_at?: Maybe<Scalars['timestamptz']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
   message_number?: Maybe<Scalars['Int']>
-  sent_at?: Maybe<Scalars['timestamptz']>
 }
 
 /** aggregate stddev on columns */
@@ -313,13 +313,13 @@ export enum Messages_Update_Column {
   /** column name */
   Content = 'content',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   GuestName = 'guest_name',
   /** column name */
   Id = 'id',
   /** column name */
   MessageNumber = 'message_number',
-  /** column name */
-  SentAt = 'sent_at',
 }
 
 /** aggregate var_pop on columns */
@@ -507,7 +507,7 @@ export type Timestamptz_Comparison_Exp = {
 
 export type MessageFragment = { __typename?: 'messages' } & Pick<
   Messages,
-  'id' | 'sent_at' | 'guest_name' | 'content'
+  'id' | 'content' | 'guest_name' | 'created_at'
 >
 
 export type LatestMessagesQueryVariables = Exact<{ [key: string]: never }>
@@ -519,7 +519,9 @@ export type LatestMessagesQuery = { __typename?: 'query_root' } & {
 export type OnNewMessageSubscriptionVariables = Exact<{ [key: string]: never }>
 
 export type OnNewMessageSubscription = { __typename?: 'subscription_root' } & {
-  messages: Array<{ __typename?: 'messages' } & MessageFragment>
+  messages: Array<
+    { __typename?: 'messages' } & Pick<Messages, 'id' | 'created_at'>
+  >
 }
 
 export type NewMessageMutationVariables = Exact<{
@@ -527,20 +529,31 @@ export type NewMessageMutationVariables = Exact<{
 }>
 
 export type NewMessageMutation = { __typename?: 'mutation_root' } & {
-  insert_messages_one?: Maybe<{ __typename?: 'messages' } & MessageFragment>
+  insert_messages_one?: Maybe<
+    { __typename?: 'messages' } & Pick<Messages, 'id' | 'created_at'>
+  >
+}
+
+export type MessagesRangeQueryVariables = Exact<{
+  from?: Maybe<Scalars['timestamptz']>
+  to?: Maybe<Scalars['timestamptz']>
+}>
+
+export type MessagesRangeQuery = { __typename?: 'query_root' } & {
+  messages: Array<{ __typename?: 'messages' } & MessageFragment>
 }
 
 export const MessageFragmentDoc = `
     fragment Message on messages {
   id
-  sent_at
-  guest_name
   content
+  guest_name
+  created_at
 }
     `
 export const LatestMessagesDocument = `
     query LatestMessages {
-  messages(limit: 30, order_by: {message_number: desc}) {
+  messages(order_by: {message_number: asc}) {
     ...Message
   }
 }
@@ -564,18 +577,20 @@ export const useLatestMessagesQuery = <
   )
 export const OnNewMessageDocument = `
     subscription OnNewMessage {
-  messages(limit: 1, order_by: {message_number: desc}) {
-    ...Message
+  messages(limit: 1, order_by: {created_at: desc}) {
+    id
+    created_at
   }
 }
-    ${MessageFragmentDoc}`
+    `
 export const NewMessageDocument = `
     mutation NewMessage($input: messages_insert_input!) {
   insert_messages_one(object: $input) {
-    ...Message
+    id
+    created_at
   }
 }
-    ${MessageFragmentDoc}`
+    `
 export const useNewMessageMutation = <TError = unknown, TContext = unknown>(
   client: GraphQLClient,
   options?: UseMutationOptions<
@@ -597,5 +612,32 @@ export const useNewMessageMutation = <TError = unknown, TContext = unknown>(
         NewMessageDocument,
         variables,
       )(),
+    options,
+  )
+export const MessagesRangeDocument = `
+    query MessagesRange($from: timestamptz, $to: timestamptz) {
+  messages(
+    where: {created_at: {_gt: $from, _lte: $to}}
+    order_by: {message_number: asc}
+  ) {
+    ...Message
+  }
+}
+    ${MessageFragmentDoc}`
+export const useMessagesRangeQuery = <
+  TData = MessagesRangeQuery,
+  TError = unknown
+>(
+  client: GraphQLClient,
+  variables?: MessagesRangeQueryVariables,
+  options?: UseQueryOptions<MessagesRangeQuery, TError, TData>,
+) =>
+  useQuery<MessagesRangeQuery, TError, TData>(
+    ['MessagesRange', variables],
+    fetcher<MessagesRangeQuery, MessagesRangeQueryVariables>(
+      client,
+      MessagesRangeDocument,
+      variables,
+    ),
     options,
   )

@@ -1,24 +1,35 @@
 fragment Message on messages {
   id
-  sent_at
-  guest_name
   content
+  guest_name
+  created_at
 }
 
 query LatestMessages {
-  messages(limit: 30, order_by: { message_number: desc }) {
+  messages(order_by: { message_number: asc }) {
     ...Message
   }
 }
 
 subscription OnNewMessage {
-  messages(limit: 1, order_by: { message_number: desc }) {
-    ...Message
+  messages(limit: 1, order_by: { created_at: desc }) {
+    id
+    created_at
   }
 }
 
 mutation NewMessage($input: messages_insert_input!) {
   insert_messages_one(object: $input) {
+    id
+    created_at
+  }
+}
+
+query MessagesRange($from: timestamptz, $to: timestamptz) {
+  messages(
+    where: { created_at: { _gt: $from, _lte: $to } }
+    order_by: { message_number: asc }
+  ) {
     ...Message
   }
 }

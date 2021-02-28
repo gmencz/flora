@@ -11,6 +11,9 @@ import {
   LatestMessagesDocument,
   LatestMessagesQuery,
   LatestMessagesQueryVariables,
+  MessagesRangeDocument,
+  MessagesRangeQuery,
+  MessagesRangeQueryVariables,
   OnNewMessageDocument,
   OnNewMessageSubscription,
   useNewMessageMutation,
@@ -21,8 +24,9 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { ClientError } from 'graphql-request'
 import GuestForm from '../components/GuestForm'
-import { formatDistanceToNow, parseISO } from 'date-fns'
 import { nanoid } from 'nanoid'
+import uniquify from '../utils/uniquify'
+import formatMessageTimestamp from '../utils/formatMessageTimestamp'
 
 interface FormInputs {
   content: string
@@ -38,21 +42,21 @@ interface Message {
   id: string
   content: string
   guestName: string
-  sentAt: string
+  createdAt?: string | null | undefined
   status: MessageStatus
 }
 
-async function fetchLatestMessages(): Promise<Message[]> {
+async function fetchInitialMessages(): Promise<Message[]> {
   const data = await graphql.request<
     LatestMessagesQuery,
     LatestMessagesQueryVariables
   >(LatestMessagesDocument)
 
-  return data.messages.reverse().map(message => ({
+  return data.messages.map(message => ({
     id: message.id,
     content: message.content,
     guestName: message.guest_name,
-    sentAt: message.sent_at,
+    createdAt: message.created_at,
     status: MessageStatus.DELIVERED,
   }))
 }
@@ -66,16 +70,17 @@ const schema = yup.object().shape({
 
 function IndexPage() {
   const queryClient = useQueryClient()
-  const isNewMessageRef = useRef(false)
+  const isNewEventRef = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [guestName, setGuestName] = useState<null | string>(null)
+  const latestMessageTsRef = useRef<string>()
 
   const messagesQuery = useSubscription<
     Message[],
     ClientError,
     OnNewMessageSubscription
-  >('Messages', fetchLatestMessages, {
+  >('Messages', fetchInitialMessages, {
     staleTime: Infinity,
     enabled: !!guestName,
     wsUrl: process.env.NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT!,
@@ -84,46 +89,47 @@ function IndexPage() {
       query: OnNewMessageDocument,
     },
     onData: data => {
-      if (!isNewMessageRef.current) {
-        isNewMessageRef.current = true
+      const [latestMessage] = data.messages
+
+      if (!latestMessage) {
+        isNewEventRef.current = true
         return
       }
 
-      const [newMessage] = data.messages
+      if (isNewEventRef.current) {
+        graphql
+          .request<MessagesRangeQuery, MessagesRangeQueryVariables>(
+            MessagesRangeDocument,
+            {
+              from: latestMessageTsRef.current,
+              to: latestMessage.created_at,
+            },
+          )
+          .then(latestMessages => {
+            queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+              const merged = [
+                ...(currentMessages ?? []),
+                ...latestMessages.messages.map(message => ({
+                  id: message.id,
+                  content: message.content,
+                  guestName: message.guest_name,
+                  createdAt: message.created_at,
+                  status: MessageStatus.DELIVERED,
+                })),
+              ]
 
-      queryClient.setQueryData<Message[]>('Messages', currentMessages => {
-        // Here we look for a message that may be in cache.
-        // If it's in cache this means the user sent this message
-        // therefore we do not want to re-cache this already
-        // cached message.
-        const isOwnMessage = currentMessages?.find(
-          message => message.id === newMessage.id,
-        )
+              return uniquify(merged, 'id')
+            })
+          })
+      } else {
+        isNewEventRef.current = true
+      }
 
-        if (isOwnMessage) {
-          return currentMessages ?? []
-        }
-
-        return [
-          ...(currentMessages ?? []),
-          {
-            id: newMessage.id,
-            content: newMessage.content,
-            guestName: newMessage.guest_name,
-            sentAt: newMessage.sent_at,
-            status: MessageStatus.DELIVERED,
-          },
-        ]
-      })
+      latestMessageTsRef.current = latestMessage.created_at!
     },
   })
 
-  const {
-    register,
-    handleSubmit,
-    errors,
-    reset: resetForm,
-  } = useForm<FormInputs>({
+  const { register, handleSubmit, reset: resetForm } = useForm<FormInputs>({
     resolver: yupResolver(schema),
   })
 
@@ -132,9 +138,9 @@ function IndexPage() {
       ...(currentMessages ?? []),
       {
         id: nanoid(),
-        sentAt: new Date().toISOString(),
         content: data.content,
-        guestName: guestName ?? 'Anonymous',
+        guestName: guestName!,
+        createdAt: new Date().toISOString(),
         status: MessageStatus.IN_QUEUE,
       },
     ])
@@ -155,65 +161,67 @@ function IndexPage() {
     }
   }, [messagesQuery.data])
 
-  const newMessageMutation = useNewMessageMutation<ClientError>(graphql, {
-    onError: (_, { input }) => {
-      queryClient.setQueryData<Message[]>('Messages', currentMessages => {
-        return (
-          currentMessages?.map(message => {
-            if (message.id === input.id) {
-              return {
-                ...message,
-                status: MessageStatus.FAILED,
+  const { mutate: sendMessage, variables } = useNewMessageMutation<ClientError>(
+    graphql,
+    {
+      onError: (_, { input }) => {
+        queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+          return (
+            currentMessages?.map(message => {
+              if (message.id === input.id) {
+                return {
+                  ...message,
+                  status: MessageStatus.FAILED,
+                }
               }
-            }
 
-            return message
-          }) ?? []
-        )
-      })
-    },
-    onSuccess: data => {
-      queryClient.setQueryData<Message[]>('Messages', currentMessages => {
-        return (
-          currentMessages?.map(message => {
-            if (message.id === data.insert_messages_one?.id) {
-              return {
-                ...message,
-                status: MessageStatus.DELIVERED,
-              }
-            }
+              return message
+            }) ?? []
+          )
+        })
+      },
+      onSuccess: data => {
+        if (data.insert_messages_one) {
+          queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+            return (
+              currentMessages?.map(message => {
+                if (message.id === data.insert_messages_one?.id) {
+                  return {
+                    ...message,
+                    status: MessageStatus.DELIVERED,
+                  }
+                }
 
-            return message
-          }) ?? []
-        )
-      })
+                return message
+              }) ?? []
+            )
+          })
+        }
+      },
     },
-  })
+  )
 
   useEffect(() => {
-    if (
-      messagesQuery.data &&
-      messagesQuery.data.length > 0 &&
-      !newMessageMutation.isLoading
-    ) {
+    if (messagesQuery.data && messagesQuery.data.length > 0) {
       const firstMessageInQueue = messagesQuery.data.find(
-        message => message.status === MessageStatus.IN_QUEUE,
+        message =>
+          message.status === MessageStatus.IN_QUEUE &&
+          message.id !== variables?.input.id,
       )
 
       if (!firstMessageInQueue) {
         return
       }
 
-      newMessageMutation.mutate({
+      sendMessage({
         input: {
           id: firstMessageInQueue.id,
-          guest_name: firstMessageInQueue.guestName,
           content: firstMessageInQueue.content,
-          sent_at: firstMessageInQueue.sentAt,
+          guest_name: firstMessageInQueue.guestName,
         },
       })
     }
-  }, [messagesQuery.data, newMessageMutation])
+  }, [messagesQuery.data, sendMessage, variables?.input.id])
 
   if (!guestName) {
     return <GuestForm setGuestName={setGuestName} />
@@ -278,9 +286,7 @@ function IndexPage() {
                         {message.guestName}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {formatDistanceToNow(parseISO(message.sentAt), {
-                          addSuffix: true,
-                        })}
+                        {formatMessageTimestamp(message.createdAt!)}
                       </p>
                     </div>
 
@@ -298,11 +304,6 @@ function IndexPage() {
 
       <div className="sticky mt-auto bottom-0 bg-white pb-8 pt-4 max-w-xl w-full">
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
-          <p className="mb-2 text-sm text-red-600">
-            {newMessageMutation.isError
-              ? newMessageMutation.error?.message
-              : errors.content?.message}
-          </p>
           <div className="flex items-start">
             <textarea
               onKeyPress={submitOnEnter}
@@ -314,7 +315,6 @@ function IndexPage() {
             ></textarea>
             <button
               type="submit"
-              disabled={newMessageMutation.isLoading}
               className="p-1.5 flex items-center justify-center rounded-full ml-4 text-green-500 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-green-500"
             >
               <svg
