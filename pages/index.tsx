@@ -25,19 +25,19 @@ import * as yup from 'yup'
 import { ClientError } from 'graphql-request'
 import GuestForm from '../components/GuestForm'
 import { nanoid } from 'nanoid'
-import formatMessageTimestamp from '../utils/formatMessageTimestamp'
+import Message from '../components/Message'
 
 interface FormInputs {
   content: string
 }
 
-enum MessageStatus {
+export enum MessageStatus {
   DELIVERED = 'DELIVERED',
   FAILED = 'FAILED',
   IN_QUEUE = 'IN_QUEUE',
 }
 
-interface Message {
+export interface IMessage {
   id: string
   content: string
   guestName: string
@@ -45,7 +45,7 @@ interface Message {
   status: MessageStatus
 }
 
-async function fetchInitialMessages(): Promise<Message[]> {
+async function fetchInitialMessages(): Promise<IMessage[]> {
   const data = await graphql.request<
     LatestMessagesQuery,
     LatestMessagesQueryVariables
@@ -76,7 +76,7 @@ function IndexPage() {
   const latestMessageTsRef = useRef<string>()
 
   const messagesQuery = useSubscription<
-    Message[],
+    IMessage[],
     ClientError,
     OnNewMessageSubscription
   >('Messages', fetchInitialMessages, {
@@ -93,7 +93,7 @@ function IndexPage() {
       if (!latestMessage) {
         // If there's no latest message this means there's no messages
         // at all so we'll set the messages cache to an empty array.
-        queryClient.setQueryData<Message[]>('Messages', [])
+        queryClient.setQueryData<IMessage[]>('Messages', [])
         isNewEventRef.current = true
         return
       }
@@ -101,7 +101,7 @@ function IndexPage() {
       if (isNewEventRef.current) {
         // If the latest message is in the cache, we don't need to refetch
         // latest messages which lets us skip a lot of unnecessary requests.
-        const currentMessages = queryClient.getQueryData<Message[]>('Messages')
+        const currentMessages = queryClient.getQueryData<IMessage[]>('Messages')
         if (currentMessages?.some(message => message.id === latestMessage.id)) {
           return
         }
@@ -115,20 +115,23 @@ function IndexPage() {
             },
           )
           .then(latestMessages => {
-            queryClient.setQueryData<Message[]>('Messages', currentMessages => {
-              const merged = [
-                ...(currentMessages ?? []),
-                ...latestMessages.messages.map(message => ({
-                  id: message.id,
-                  content: message.content,
-                  guestName: message.guest_name,
-                  createdAt: message.created_at,
-                  status: MessageStatus.DELIVERED,
-                })),
-              ]
+            queryClient.setQueryData<IMessage[]>(
+              'Messages',
+              currentMessages => {
+                const merged = [
+                  ...(currentMessages ?? []),
+                  ...latestMessages.messages.map(message => ({
+                    id: message.id,
+                    content: message.content,
+                    guestName: message.guest_name,
+                    createdAt: message.created_at,
+                    status: MessageStatus.DELIVERED,
+                  })),
+                ]
 
-              return merged
-            })
+                return merged
+              },
+            )
           })
       } else {
         isNewEventRef.current = true
@@ -143,7 +146,7 @@ function IndexPage() {
   })
 
   const onSubmit = (data: FormInputs) => {
-    queryClient.setQueryData<Message[]>('Messages', currentMessages => [
+    queryClient.setQueryData<IMessage[]>('Messages', currentMessages => [
       ...(currentMessages ?? []),
       {
         id: nanoid(),
@@ -172,7 +175,7 @@ function IndexPage() {
 
   const { mutate: sendMessage } = useNewMessageMutation<ClientError>(graphql, {
     onError: (_, { input }) => {
-      queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+      queryClient.setQueryData<IMessage[]>('Messages', currentMessages => {
         return (
           currentMessages?.map(message => {
             if (message.id === input.id) {
@@ -189,7 +192,7 @@ function IndexPage() {
     },
     onSuccess: data => {
       if (data.insert_messages_one) {
-        queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+        queryClient.setQueryData<IMessage[]>('Messages', currentMessages => {
           return (
             currentMessages?.map(message => {
               if (message.id === data.insert_messages_one?.id) {
@@ -239,7 +242,7 @@ function IndexPage() {
   useEffect(() => {
     if (messagesQuery.data) {
       const areAllMessagesDelivered = queryClient
-        .getQueryData<Message[]>('Messages')
+        .getQueryData<IMessage[]>('Messages')
         ?.every(message => message.status === MessageStatus.DELIVERED)
 
       if (areAllMessagesDelivered) {
@@ -253,7 +256,7 @@ function IndexPage() {
   }
 
   return (
-    <div className="px-4 w-full max-w-xl mx-auto min-h-screen flex flex-col">
+    <div className="px-4 w-full max-w-2xl mx-auto min-h-screen flex flex-col">
       <div className="pt-12 border-b border-gray-200 pb-4 sticky top-0 bg-white">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
           Chatskee
@@ -261,7 +264,7 @@ function IndexPage() {
         <p className="mt-1 max-w-2xl text-sm text-gray-500">
           Chat with everyone from anywhere!{' '}
         </p>
-        <span className="italic text-sm text-gray-500">
+        <span className="italic text-sm text-gray-400">
           Messages are deleted every 24 hours.
         </span>
       </div>
@@ -299,30 +302,16 @@ function IndexPage() {
 
       {messagesQuery.isSuccess && (
         <>
+          {messagesQuery.data.length === 0 && (
+            <p className="text-sm mt-4 text-gray-500">
+              Looks like nobody sent a message today, be the first one!
+            </p>
+          )}
+
           <ul className="mt-2 divide-y divide-gray-200">
             {messagesQuery.data.map(message => (
               <li className="py-4" key={message.id}>
-                <div className="flex space-x-3 break-all">
-                  <img
-                    className="h-6 w-6 rounded-full"
-                    src="https://res.cloudinary.com/ds9ttumx0/image/upload/v1614296913/chatskee/default_yjml9c_ne1c6w.png"
-                    alt=""
-                  />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-medium">
-                        {message.guestName}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {formatMessageTimestamp(message.createdAt!)}
-                      </p>
-                    </div>
-
-                    <p className="text-sm text-gray-500">
-                      {message.status} - {message.content}
-                    </p>
-                  </div>
-                </div>
+                <Message message={message} />
               </li>
             ))}
           </ul>
