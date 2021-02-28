@@ -8,15 +8,16 @@
       columns:
       - content
       - guest_name
-      - id
+      - nonce
       backend_only: false
   select_permissions:
   - role: guest
     permission:
       columns:
       - content
-      - created_at
       - guest_name
       - id
       - message_number
+      - nonce
+      - timestamp
       filter: {}

@@ -38,10 +38,10 @@ export enum MessageStatus {
 }
 
 export interface IMessage {
-  id: string
   content: string
   guestName: string
-  createdAt?: string | null | undefined
+  timestamp?: string | null | undefined
+  nonce: string
   status: MessageStatus
 }
 
@@ -52,10 +52,10 @@ async function fetchInitialMessages(): Promise<IMessage[]> {
   >(LatestMessagesDocument)
 
   return data.messages.map(message => ({
-    id: message.id,
     content: message.content,
     guestName: message.guest_name,
-    createdAt: message.created_at,
+    timestamp: message.timestamp,
+    nonce: message.nonce,
     status: MessageStatus.DELIVERED,
   }))
 }
@@ -102,7 +102,11 @@ function IndexPage() {
         // If the latest message is in the cache, we don't need to refetch
         // latest messages which lets us skip a lot of unnecessary requests.
         const currentMessages = queryClient.getQueryData<IMessage[]>('Messages')
-        if (currentMessages?.some(message => message.id === latestMessage.id)) {
+        if (
+          currentMessages?.some(
+            message => message.nonce === latestMessage.nonce,
+          )
+        ) {
           return
         }
 
@@ -111,33 +115,29 @@ function IndexPage() {
             MessagesRangeDocument,
             {
               from: latestMessageTsRef.current,
-              to: latestMessage.created_at,
+              to: latestMessage.timestamp,
             },
           )
           .then(latestMessages => {
             queryClient.setQueryData<IMessage[]>(
               'Messages',
-              currentMessages => {
-                const merged = [
-                  ...(currentMessages ?? []),
-                  ...latestMessages.messages.map(message => ({
-                    id: message.id,
-                    content: message.content,
-                    guestName: message.guest_name,
-                    createdAt: message.created_at,
-                    status: MessageStatus.DELIVERED,
-                  })),
-                ]
-
-                return merged
-              },
+              currentMessages => [
+                ...(currentMessages ?? []),
+                ...latestMessages.messages.map(message => ({
+                  content: message.content,
+                  guestName: message.guest_name,
+                  timestamp: message.timestamp,
+                  nonce: message.nonce,
+                  status: MessageStatus.DELIVERED,
+                })),
+              ],
             )
           })
       } else {
         isNewEventRef.current = true
       }
 
-      latestMessageTsRef.current = latestMessage.created_at!
+      latestMessageTsRef.current = latestMessage.timestamp!
     },
   })
 
@@ -149,10 +149,10 @@ function IndexPage() {
     queryClient.setQueryData<IMessage[]>('Messages', currentMessages => [
       ...(currentMessages ?? []),
       {
-        id: nanoid(),
         content: data.content,
         guestName: guestName!,
-        createdAt: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        nonce: nanoid(),
         status: MessageStatus.IN_QUEUE,
       },
     ])
@@ -178,7 +178,7 @@ function IndexPage() {
       queryClient.setQueryData<IMessage[]>('Messages', currentMessages => {
         return (
           currentMessages?.map(message => {
-            if (message.id === input.id) {
+            if (message.nonce === input.nonce) {
               return {
                 ...message,
                 status: MessageStatus.FAILED,
@@ -195,7 +195,7 @@ function IndexPage() {
         queryClient.setQueryData<IMessage[]>('Messages', currentMessages => {
           return (
             currentMessages?.map(message => {
-              if (message.id === data.insert_messages_one?.id) {
+              if (message.nonce === data.insert_messages_one?.nonce) {
                 return {
                   ...message,
                   status: MessageStatus.DELIVERED,
@@ -217,7 +217,7 @@ function IndexPage() {
       const firstMessageInQueue = messagesQuery.data.find(
         message =>
           message.status === MessageStatus.IN_QUEUE &&
-          !pendingMessagesIds.includes(message.id),
+          !pendingMessagesIds.includes(message.nonce),
       )
 
       if (!firstMessageInQueue) {
@@ -226,12 +226,12 @@ function IndexPage() {
 
       setPendingMessagesIds(previouslyPendingIds => [
         ...previouslyPendingIds,
-        firstMessageInQueue.id,
+        firstMessageInQueue.nonce,
       ])
 
       sendMessage({
         input: {
-          id: firstMessageInQueue.id,
+          nonce: firstMessageInQueue.nonce,
           content: firstMessageInQueue.content,
           guest_name: firstMessageInQueue.guestName,
         },
@@ -310,7 +310,7 @@ function IndexPage() {
 
           <ul className="mt-2 divide-y divide-gray-200">
             {messagesQuery.data.map(message => (
-              <li className="py-4" key={message.id}>
+              <li className="py-4" key={message.nonce}>
                 <Message message={message} />
               </li>
             ))}

@@ -23,7 +23,7 @@ function Message({ message }: MessageProps) {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">{message.guestName}</h3>
           <p className="text-sm text-gray-500">
-            {formatMessageTimestamp(message.createdAt!)}
+            {formatMessageTimestamp(message.timestamp!)}
           </p>
         </div>
 
