@@ -1,45 +1,47 @@
 - name: allowed-queries
   definition:
     queries:
-    - name: NewMessage
+    - name: LatestMessages
       query: |-
-        mutation NewMessage($input: messages_insert_input!) {
-          insert_messages_one(object: $input) {
+        query LatestMessages {
+          messages(order_by: {message_number: asc}) {
             ...Message
           }
         }
 
         fragment Message on messages {
           id
-          sent_at
-          guest_name
           content
+          guest_name
+          created_at
         }
     - name: OnNewMessage
       query: |-
         subscription OnNewMessage {
-          messages(limit: 1, order_by: { message_number: desc }) {
-            ...Message
+          messages(limit: 1, order_by: {created_at: desc}) {
+            id
+            created_at
           }
         }
-
-        fragment Message on messages {
-          id
-          sent_at
-          guest_name
-          content
-        }
-    - name: LatestMessages
+    - name: NewMessage
       query: |-
-        query LatestMessages {
-          messages(limit: 30, order_by: { message_number: desc }) {
+        mutation NewMessage($input: messages_insert_input!) {
+          insert_messages_one(object: $input) {
+            id
+            created_at
+          }
+        }
+    - name: MessagesRange
+      query: |-
+        query MessagesRange($from: timestamptz, $to: timestamptz) {
+          messages(where: {created_at: {_gt: $from, _lte: $to}}, order_by: {message_number: asc}) {
             ...Message
           }
         }
 
         fragment Message on messages {
           id
-          sent_at
-          guest_name
           content
+          guest_name
+          created_at
         }
