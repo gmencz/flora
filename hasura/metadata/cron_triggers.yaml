@@ -3,3 +3,6 @@
   schedule: 0 0 * * *
   include_in_metadata: true
   payload: {}
+  headers:
+  - value: "true"
+    name: x-is-hasura-cron-trigger
