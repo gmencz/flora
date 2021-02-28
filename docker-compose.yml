@@ -31,5 +31,9 @@ services:
       ## uncomment next line to set an admin secret
       HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: guest
+      # NOTE: this is the ip assigned to the pc running this
+      # run 'ifconfig' to get it, we need this because this runs
+      # inside docker and the next app runs outside.
+      ACTION_BASE_URL: http://172.25.54.224:3000
 volumes:
   postgres_data:

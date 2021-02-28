@@ -543,6 +543,17 @@ export type MessagesRangeQuery = { __typename?: 'query_root' } & {
   messages: Array<{ __typename?: 'messages' } & MessageFragment>
 }
 
+export type ClearMessagesMutationVariables = Exact<{ [key: string]: never }>
+
+export type ClearMessagesMutation = { __typename?: 'mutation_root' } & {
+  delete_messages?: Maybe<
+    { __typename?: 'messages_mutation_response' } & Pick<
+      Messages_Mutation_Response,
+      'affected_rows'
+    >
+  >
+}
+
 export const MessageFragmentDoc = `
     fragment Message on messages {
   id
@@ -639,5 +650,35 @@ export const useMessagesRangeQuery = <
       MessagesRangeDocument,
       variables,
     ),
+    options,
+  )
+export const ClearMessagesDocument = `
+    mutation ClearMessages {
+  delete_messages(where: {}) {
+    affected_rows
+  }
+}
+    `
+export const useClearMessagesMutation = <TError = unknown, TContext = unknown>(
+  client: GraphQLClient,
+  options?: UseMutationOptions<
+    ClearMessagesMutation,
+    TError,
+    ClearMessagesMutationVariables,
+    TContext
+  >,
+) =>
+  useMutation<
+    ClearMessagesMutation,
+    TError,
+    ClearMessagesMutationVariables,
+    TContext
+  >(
+    (variables?: ClearMessagesMutationVariables) =>
+      fetcher<ClearMessagesMutation, ClearMessagesMutationVariables>(
+        client,
+        ClearMessagesDocument,
+        variables,
+      )(),
     options,
   )

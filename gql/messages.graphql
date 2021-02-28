@@ -33,3 +33,9 @@ query MessagesRange($from: timestamptz, $to: timestamptz) {
     ...Message
   }
 }
+
+mutation ClearMessages {
+  delete_messages(where: {}) {
+    affected_rows
+  }
+}

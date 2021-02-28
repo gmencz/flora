@@ -92,6 +92,9 @@ function IndexPage() {
       const [latestMessage] = data.messages
 
       if (!latestMessage) {
+        // If there's no latest message this means there's no messages
+        // at all so we'll set the messages cache to an empty array.
+        queryClient.setQueryData<Message[]>('Messages', [])
         isNewEventRef.current = true
         return
       }
@@ -250,8 +253,11 @@ function IndexPage() {
           Chatskee
         </h3>
         <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Chat with everyone from anywhere!
+          Chat with everyone from anywhere!{' '}
         </p>
+        <span className="italic text-sm text-gray-500">
+          Messages are deleted every 24 hours.
+        </span>
       </div>
       {messagesQuery.isLoading && (
         <div className="mt-4 flex items-center justify-center">

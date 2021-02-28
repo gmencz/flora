@@ -45,3 +45,6 @@
           guest_name
           created_at
         }
+    - name: ClearMessages
+      query: "mutation ClearMessages {\r\n  delete_messages(where: {}) {\r\n    affected_rows\r\n
+        \ }\r\n}"
