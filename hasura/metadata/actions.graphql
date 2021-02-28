@@ -1,2 +1,20 @@
+type Mutation {
+  sendMessage (
+    input: SendMessageInput!
+  ): SendMessagePayload!
+}
 
+
+
+
+input SendMessageInput {
+  nonce : String!
+  content : String!
+  guest_id : String!
+  guest_name : String!
+}
+
+type SendMessagePayload {
+  message_id : Boolean!
+}
 

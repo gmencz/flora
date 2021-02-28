@@ -1,12 +1,13 @@
 fragment Message on messages {
   content
+  guest_id
   guest_name
   timestamp
   nonce
 }
 
 query LatestMessages {
-  messages(order_by: { message_number: asc }) {
+  messages(order_by: { timestamp: asc }) {
     ...Message
   }
 }
@@ -25,10 +26,19 @@ mutation NewMessage($input: messages_insert_input!) {
   }
 }
 
+mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    message_id
+    message {
+      ...Message
+    }
+  }
+}
+
 query MessagesRange($from: timestamptz, $to: timestamptz) {
   messages(
     where: { timestamp: { _gt: $from, _lte: $to } }
-    order_by: { message_number: asc }
+    order_by: { timestamp: asc }
   ) {
     ...Message
   }

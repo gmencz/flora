@@ -48,3 +48,8 @@
     - name: ClearMessages
       query: "mutation ClearMessages {\r\n  delete_messages(where: {}) {\r\n    affected_rows\r\n
         \ }\r\n}"
+    - name: SendMessage
+      query: "mutation SendMessage($input: SendMessageInput!) {\r\n  sendMessage(input:
+        $input) {\r\n    message_id\r\n    message {\r\n      ...Message\r\n    }\r\n
+        \ }\r\n}\r\n\r\nfragment Message on messages {\r\n  id\r\n  content\r\n  guest_name\r\n
+        \ created_at\r\n}"

@@ -39,6 +39,7 @@ export enum MessageStatus {
 
 export interface IMessage {
   content: string
+  guestId: string
   guestName: string
   timestamp?: string | null | undefined
   nonce: string
@@ -53,6 +54,7 @@ async function fetchInitialMessages(): Promise<IMessage[]> {
 
   return data.messages.map(message => ({
     content: message.content,
+    guestId: message.guest_id,
     guestName: message.guest_name,
     timestamp: message.timestamp,
     nonce: message.nonce,
@@ -72,7 +74,7 @@ function IndexPage() {
   const isNewEventRef = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [guestName, setGuestName] = useState<null | string>(null)
+  const [guest, setGuest] = useState<null | { id: string; name: string }>(null)
   const latestMessageTsRef = useRef<string>()
 
   const messagesQuery = useSubscription<
@@ -81,7 +83,7 @@ function IndexPage() {
     OnNewMessageSubscription
   >('Messages', fetchInitialMessages, {
     staleTime: Infinity,
-    enabled: !!guestName,
+    enabled: !!guest,
     wsUrl: process.env.NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT!,
     subscription: {
       operationName: 'OnNewMessage',
@@ -125,6 +127,7 @@ function IndexPage() {
                 ...(currentMessages ?? []),
                 ...latestMessages.messages.map(message => ({
                   content: message.content,
+                  guestId: message.guest_id,
                   guestName: message.guest_name,
                   timestamp: message.timestamp,
                   nonce: message.nonce,
@@ -150,7 +153,8 @@ function IndexPage() {
       ...(currentMessages ?? []),
       {
         content: data.content,
-        guestName: guestName!,
+        guestName: guest!.name,
+        guestId: guest!.id,
         timestamp: new Date().toISOString(),
         nonce: nanoid(),
         status: MessageStatus.IN_QUEUE,
@@ -233,6 +237,7 @@ function IndexPage() {
         input: {
           nonce: firstMessageInQueue.nonce,
           content: firstMessageInQueue.content,
+          guest_id: firstMessageInQueue.guestId,
           guest_name: firstMessageInQueue.guestName,
         },
       })
@@ -251,13 +256,13 @@ function IndexPage() {
     }
   }, [messagesQuery.data, queryClient])
 
-  if (!guestName) {
-    return <GuestForm setGuestName={setGuestName} />
+  if (!guest) {
+    return <GuestForm setGuest={setGuest} />
   }
 
   return (
     <div className="px-4 w-full max-w-2xl mx-auto min-h-screen flex flex-col">
-      <div className="pt-12 border-b border-gray-200 pb-4 sticky top-0 bg-white">
+      <div className="pt-12 border-b border-gray-200 pb-4 sticky top-0 bg-white z-10">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
           Chatskee
         </h3>
@@ -319,7 +324,7 @@ function IndexPage() {
         </>
       )}
 
-      <div className="sticky mt-auto bottom-0 bg-white pb-8 pt-4 max-w-xl w-full">
+      <div className="sticky mt-auto bottom-0 bg-white pb-8 pt-4 max-w-xl min-w-full z-10">
         <form ref={formRef} onSubmit={handleSubmit(onSubmit)}>
           <div className="flex items-start">
             <textarea

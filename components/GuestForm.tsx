@@ -1,4 +1,5 @@
 import { yupResolver } from '@hookform/resolvers/yup'
+import { nanoid } from 'nanoid'
 import { Dispatch, SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
@@ -8,7 +9,7 @@ interface FormInputs {
 }
 
 interface GuestFormProps {
-  setGuestName: Dispatch<SetStateAction<string | null>>
+  setGuest: Dispatch<SetStateAction<{ id: string; name: string } | null>>
 }
 
 const schema = yup.object().shape({
@@ -18,13 +19,13 @@ const schema = yup.object().shape({
     .max(20, "Nicknames can't be longer than 20 characters."),
 })
 
-function GuestForm({ setGuestName }: GuestFormProps) {
+function GuestForm({ setGuest }: GuestFormProps) {
   const { register, handleSubmit, errors } = useForm<FormInputs>({
     resolver: yupResolver(schema),
   })
 
   const onSubmit = (data: FormInputs) => {
-    setGuestName(data.nickname)
+    setGuest({ id: nanoid(), name: data.nickname })
   }
 
   return (

@@ -7,6 +7,7 @@
       check: {}
       columns:
       - content
+      - guest_id
       - guest_name
       - nonce
       backend_only: false
@@ -15,9 +16,9 @@
     permission:
       columns:
       - content
+      - guest_id
       - guest_name
       - id
-      - message_number
       - nonce
       - timestamp
       filter: {}

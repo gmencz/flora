@@ -24,7 +24,7 @@ const handler: NextApiHandler = async (req, res) => {
   )
 
   return res.json({
-    clearedMessagesCount: clearedMessages.delete_messages?.affected_rows,
+    cleared_messages_count: clearedMessages.delete_messages?.affected_rows,
   })
 }
 

@@ -29,20 +29,22 @@ export type Scalars = {
   Boolean: boolean
   Int: number
   Float: number
+  json: any
   timestamptz: string
+  uuid: any
 }
 
-/** expression to compare columns of type Int. All fields are combined with logical 'AND'. */
-export type Int_Comparison_Exp = {
-  _eq?: Maybe<Scalars['Int']>
-  _gt?: Maybe<Scalars['Int']>
-  _gte?: Maybe<Scalars['Int']>
-  _in?: Maybe<Array<Scalars['Int']>>
-  _is_null?: Maybe<Scalars['Boolean']>
-  _lt?: Maybe<Scalars['Int']>
-  _lte?: Maybe<Scalars['Int']>
-  _neq?: Maybe<Scalars['Int']>
-  _nin?: Maybe<Array<Scalars['Int']>>
+export type SendMessageInput = {
+  content: Scalars['String']
+  guest_id: Scalars['String']
+  guest_name: Scalars['String']
+  nonce: Scalars['String']
+}
+
+export type SendMessagePayload = {
+  __typename?: 'SendMessagePayload'
+  message?: Maybe<Messages>
+  message_id: Scalars['Boolean']
 }
 
 /** expression to compare columns of type String. All fields are combined with logical 'AND'. */
@@ -68,9 +70,9 @@ export type String_Comparison_Exp = {
 export type Messages = {
   __typename?: 'messages'
   content: Scalars['String']
+  guest_id: Scalars['String']
   guest_name: Scalars['String']
   id: Scalars['String']
-  message_number: Scalars['Int']
   nonce: Scalars['String']
   timestamp?: Maybe<Scalars['timestamptz']>
 }
@@ -85,17 +87,9 @@ export type Messages_Aggregate = {
 /** aggregate fields of "messages" */
 export type Messages_Aggregate_Fields = {
   __typename?: 'messages_aggregate_fields'
-  avg?: Maybe<Messages_Avg_Fields>
   count?: Maybe<Scalars['Int']>
   max?: Maybe<Messages_Max_Fields>
   min?: Maybe<Messages_Min_Fields>
-  stddev?: Maybe<Messages_Stddev_Fields>
-  stddev_pop?: Maybe<Messages_Stddev_Pop_Fields>
-  stddev_samp?: Maybe<Messages_Stddev_Samp_Fields>
-  sum?: Maybe<Messages_Sum_Fields>
-  var_pop?: Maybe<Messages_Var_Pop_Fields>
-  var_samp?: Maybe<Messages_Var_Samp_Fields>
-  variance?: Maybe<Messages_Variance_Fields>
 }
 
 /** aggregate fields of "messages" */
@@ -106,17 +100,9 @@ export type Messages_Aggregate_FieldsCountArgs = {
 
 /** order by aggregate values of table "messages" */
 export type Messages_Aggregate_Order_By = {
-  avg?: Maybe<Messages_Avg_Order_By>
   count?: Maybe<Order_By>
   max?: Maybe<Messages_Max_Order_By>
   min?: Maybe<Messages_Min_Order_By>
-  stddev?: Maybe<Messages_Stddev_Order_By>
-  stddev_pop?: Maybe<Messages_Stddev_Pop_Order_By>
-  stddev_samp?: Maybe<Messages_Stddev_Samp_Order_By>
-  sum?: Maybe<Messages_Sum_Order_By>
-  var_pop?: Maybe<Messages_Var_Pop_Order_By>
-  var_samp?: Maybe<Messages_Var_Samp_Order_By>
-  variance?: Maybe<Messages_Variance_Order_By>
 }
 
 /** input type for inserting array relation for remote table "messages" */
@@ -125,26 +111,15 @@ export type Messages_Arr_Rel_Insert_Input = {
   on_conflict?: Maybe<Messages_On_Conflict>
 }
 
-/** aggregate avg on columns */
-export type Messages_Avg_Fields = {
-  __typename?: 'messages_avg_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by avg() on columns of table "messages" */
-export type Messages_Avg_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
 /** Boolean expression to filter rows from the table "messages". All fields are combined with a logical 'AND'. */
 export type Messages_Bool_Exp = {
   _and?: Maybe<Array<Maybe<Messages_Bool_Exp>>>
   _not?: Maybe<Messages_Bool_Exp>
   _or?: Maybe<Array<Maybe<Messages_Bool_Exp>>>
   content?: Maybe<String_Comparison_Exp>
+  guest_id?: Maybe<String_Comparison_Exp>
   guest_name?: Maybe<String_Comparison_Exp>
   id?: Maybe<String_Comparison_Exp>
-  message_number?: Maybe<Int_Comparison_Exp>
   nonce?: Maybe<String_Comparison_Exp>
   timestamp?: Maybe<Timestamptz_Comparison_Exp>
 }
@@ -157,17 +132,12 @@ export enum Messages_Constraint {
   MessagesPkey = 'messages_pkey',
 }
 
-/** input type for incrementing integer column in table "messages" */
-export type Messages_Inc_Input = {
-  message_number?: Maybe<Scalars['Int']>
-}
-
 /** input type for inserting data into table "messages" */
 export type Messages_Insert_Input = {
   content?: Maybe<Scalars['String']>
+  guest_id?: Maybe<Scalars['String']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
-  message_number?: Maybe<Scalars['Int']>
   nonce?: Maybe<Scalars['String']>
   timestamp?: Maybe<Scalars['timestamptz']>
 }
@@ -176,9 +146,9 @@ export type Messages_Insert_Input = {
 export type Messages_Max_Fields = {
   __typename?: 'messages_max_fields'
   content?: Maybe<Scalars['String']>
+  guest_id?: Maybe<Scalars['String']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
-  message_number?: Maybe<Scalars['Int']>
   nonce?: Maybe<Scalars['String']>
   timestamp?: Maybe<Scalars['timestamptz']>
 }
@@ -186,9 +156,9 @@ export type Messages_Max_Fields = {
 /** order by max() on columns of table "messages" */
 export type Messages_Max_Order_By = {
   content?: Maybe<Order_By>
+  guest_id?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
-  message_number?: Maybe<Order_By>
   nonce?: Maybe<Order_By>
   timestamp?: Maybe<Order_By>
 }
@@ -197,9 +167,9 @@ export type Messages_Max_Order_By = {
 export type Messages_Min_Fields = {
   __typename?: 'messages_min_fields'
   content?: Maybe<Scalars['String']>
+  guest_id?: Maybe<Scalars['String']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
-  message_number?: Maybe<Scalars['Int']>
   nonce?: Maybe<Scalars['String']>
   timestamp?: Maybe<Scalars['timestamptz']>
 }
@@ -207,9 +177,9 @@ export type Messages_Min_Fields = {
 /** order by min() on columns of table "messages" */
 export type Messages_Min_Order_By = {
   content?: Maybe<Order_By>
+  guest_id?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
-  message_number?: Maybe<Order_By>
   nonce?: Maybe<Order_By>
   timestamp?: Maybe<Order_By>
 }
@@ -239,9 +209,9 @@ export type Messages_On_Conflict = {
 /** ordering options when selecting data from "messages" */
 export type Messages_Order_By = {
   content?: Maybe<Order_By>
+  guest_id?: Maybe<Order_By>
   guest_name?: Maybe<Order_By>
   id?: Maybe<Order_By>
-  message_number?: Maybe<Order_By>
   nonce?: Maybe<Order_By>
   timestamp?: Maybe<Order_By>
 }
@@ -256,11 +226,11 @@ export enum Messages_Select_Column {
   /** column name */
   Content = 'content',
   /** column name */
+  GuestId = 'guest_id',
+  /** column name */
   GuestName = 'guest_name',
   /** column name */
   Id = 'id',
-  /** column name */
-  MessageNumber = 'message_number',
   /** column name */
   Nonce = 'nonce',
   /** column name */
@@ -270,55 +240,11 @@ export enum Messages_Select_Column {
 /** input type for updating data in table "messages" */
 export type Messages_Set_Input = {
   content?: Maybe<Scalars['String']>
+  guest_id?: Maybe<Scalars['String']>
   guest_name?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
-  message_number?: Maybe<Scalars['Int']>
   nonce?: Maybe<Scalars['String']>
   timestamp?: Maybe<Scalars['timestamptz']>
-}
-
-/** aggregate stddev on columns */
-export type Messages_Stddev_Fields = {
-  __typename?: 'messages_stddev_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by stddev() on columns of table "messages" */
-export type Messages_Stddev_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
-/** aggregate stddev_pop on columns */
-export type Messages_Stddev_Pop_Fields = {
-  __typename?: 'messages_stddev_pop_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by stddev_pop() on columns of table "messages" */
-export type Messages_Stddev_Pop_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
-/** aggregate stddev_samp on columns */
-export type Messages_Stddev_Samp_Fields = {
-  __typename?: 'messages_stddev_samp_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by stddev_samp() on columns of table "messages" */
-export type Messages_Stddev_Samp_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
-/** aggregate sum on columns */
-export type Messages_Sum_Fields = {
-  __typename?: 'messages_sum_fields'
-  message_number?: Maybe<Scalars['Int']>
-}
-
-/** order by sum() on columns of table "messages" */
-export type Messages_Sum_Order_By = {
-  message_number?: Maybe<Order_By>
 }
 
 /** update columns of table "messages" */
@@ -326,48 +252,15 @@ export enum Messages_Update_Column {
   /** column name */
   Content = 'content',
   /** column name */
+  GuestId = 'guest_id',
+  /** column name */
   GuestName = 'guest_name',
   /** column name */
   Id = 'id',
   /** column name */
-  MessageNumber = 'message_number',
-  /** column name */
   Nonce = 'nonce',
   /** column name */
   Timestamp = 'timestamp',
-}
-
-/** aggregate var_pop on columns */
-export type Messages_Var_Pop_Fields = {
-  __typename?: 'messages_var_pop_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by var_pop() on columns of table "messages" */
-export type Messages_Var_Pop_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
-/** aggregate var_samp on columns */
-export type Messages_Var_Samp_Fields = {
-  __typename?: 'messages_var_samp_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by var_samp() on columns of table "messages" */
-export type Messages_Var_Samp_Order_By = {
-  message_number?: Maybe<Order_By>
-}
-
-/** aggregate variance on columns */
-export type Messages_Variance_Fields = {
-  __typename?: 'messages_variance_fields'
-  message_number?: Maybe<Scalars['Float']>
-}
-
-/** order by variance() on columns of table "messages" */
-export type Messages_Variance_Order_By = {
-  message_number?: Maybe<Order_By>
 }
 
 /** mutation root */
@@ -381,6 +274,8 @@ export type Mutation_Root = {
   insert_messages?: Maybe<Messages_Mutation_Response>
   /** insert a single row into the table: "messages" */
   insert_messages_one?: Maybe<Messages>
+  /** perform the action: "sendMessage" */
+  sendMessage: SendMessagePayload
   /** update data of the table: "messages" */
   update_messages?: Maybe<Messages_Mutation_Response>
   /** update single row of the table: "messages" */
@@ -410,15 +305,18 @@ export type Mutation_RootInsert_Messages_OneArgs = {
 }
 
 /** mutation root */
+export type Mutation_RootSendMessageArgs = {
+  input: SendMessageInput
+}
+
+/** mutation root */
 export type Mutation_RootUpdate_MessagesArgs = {
-  _inc?: Maybe<Messages_Inc_Input>
   _set?: Maybe<Messages_Set_Input>
   where: Messages_Bool_Exp
 }
 
 /** mutation root */
 export type Mutation_RootUpdate_Messages_By_PkArgs = {
-  _inc?: Maybe<Messages_Inc_Input>
   _set?: Maybe<Messages_Set_Input>
   pk_columns: Messages_Pk_Columns_Input
 }
@@ -522,7 +420,7 @@ export type Timestamptz_Comparison_Exp = {
 
 export type MessageFragment = { __typename?: 'messages' } & Pick<
   Messages,
-  'content' | 'guest_name' | 'timestamp' | 'nonce'
+  'content' | 'guest_id' | 'guest_name' | 'timestamp' | 'nonce'
 >
 
 export type LatestMessagesQueryVariables = Exact<{ [key: string]: never }>
@@ -549,6 +447,17 @@ export type NewMessageMutation = { __typename?: 'mutation_root' } & {
   >
 }
 
+export type SendMessageMutationVariables = Exact<{
+  input: SendMessageInput
+}>
+
+export type SendMessageMutation = { __typename?: 'mutation_root' } & {
+  sendMessage: { __typename?: 'SendMessagePayload' } & Pick<
+    SendMessagePayload,
+    'message_id'
+  > & { message?: Maybe<{ __typename?: 'messages' } & MessageFragment> }
+}
+
 export type MessagesRangeQueryVariables = Exact<{
   from?: Maybe<Scalars['timestamptz']>
   to?: Maybe<Scalars['timestamptz']>
@@ -572,6 +481,7 @@ export type ClearMessagesMutation = { __typename?: 'mutation_root' } & {
 export const MessageFragmentDoc = `
     fragment Message on messages {
   content
+  guest_id
   guest_name
   timestamp
   nonce
@@ -579,7 +489,7 @@ export const MessageFragmentDoc = `
     `
 export const LatestMessagesDocument = `
     query LatestMessages {
-  messages(order_by: {message_number: asc}) {
+  messages(order_by: {timestamp: asc}) {
     ...Message
   }
 }
@@ -640,11 +550,44 @@ export const useNewMessageMutation = <TError = unknown, TContext = unknown>(
       )(),
     options,
   )
+export const SendMessageDocument = `
+    mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    message_id
+    message {
+      ...Message
+    }
+  }
+}
+    ${MessageFragmentDoc}`
+export const useSendMessageMutation = <TError = unknown, TContext = unknown>(
+  client: GraphQLClient,
+  options?: UseMutationOptions<
+    SendMessageMutation,
+    TError,
+    SendMessageMutationVariables,
+    TContext
+  >,
+) =>
+  useMutation<
+    SendMessageMutation,
+    TError,
+    SendMessageMutationVariables,
+    TContext
+  >(
+    (variables?: SendMessageMutationVariables) =>
+      fetcher<SendMessageMutation, SendMessageMutationVariables>(
+        client,
+        SendMessageDocument,
+        variables,
+      )(),
+    options,
+  )
 export const MessagesRangeDocument = `
     query MessagesRange($from: timestamptz, $to: timestamptz) {
   messages(
     where: {timestamp: {_gt: $from, _lte: $to}}
-    order_by: {message_number: asc}
+    order_by: {timestamp: asc}
   ) {
     ...Message
   }
