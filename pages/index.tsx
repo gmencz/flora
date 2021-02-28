@@ -96,6 +96,7 @@ function IndexPage() {
         // If there's no latest message this means there's no messages
         // at all so we'll set the messages cache to an empty array.
         queryClient.setQueryData<IMessage[]>('Messages', [])
+        latestMessageTsRef.current = undefined
         isNewEventRef.current = true
         return
       }
@@ -109,6 +110,7 @@ function IndexPage() {
             message => message.nonce === latestMessage.nonce,
           )
         ) {
+          latestMessageTsRef.current = latestMessage.timestamp!
           return
         }
 
@@ -313,10 +315,14 @@ function IndexPage() {
             </p>
           )}
 
-          <ul className="mt-2 divide-y divide-gray-200">
-            {messagesQuery.data.map(message => (
-              <li className="py-4" key={message.nonce}>
-                <Message message={message} />
+          <ul>
+            {messagesQuery.data.map((message, index) => (
+              <li key={message.nonce}>
+                <Message
+                  message={message}
+                  previousMessage={messagesQuery.data[index - 1] ?? null}
+                  index={index}
+                />
               </li>
             ))}
           </ul>
