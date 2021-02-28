@@ -244,7 +244,7 @@ function IndexPage() {
   }
 
   return (
-    <div className="w-full max-w-xl mx-auto min-h-screen flex flex-col">
+    <div className="px-4 w-full max-w-xl mx-auto min-h-screen flex flex-col">
       <div className="pt-12 border-b border-gray-200 pb-4 sticky top-0 bg-white">
         <h3 className="text-lg leading-6 font-medium text-gray-900">
           Chatskee
