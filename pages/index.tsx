@@ -161,17 +161,32 @@ function IndexPage() {
     }
   }, [messagesQuery.data])
 
-  const { mutate: sendMessage, variables } = useNewMessageMutation<ClientError>(
-    graphql,
-    {
-      onError: (_, { input }) => {
+  const { mutate: sendMessage } = useNewMessageMutation<ClientError>(graphql, {
+    onError: (_, { input }) => {
+      queryClient.setQueryData<Message[]>('Messages', currentMessages => {
+        return (
+          currentMessages?.map(message => {
+            if (message.id === input.id) {
+              return {
+                ...message,
+                status: MessageStatus.FAILED,
+              }
+            }
+
+            return message
+          }) ?? []
+        )
+      })
+    },
+    onSuccess: data => {
+      if (data.insert_messages_one) {
         queryClient.setQueryData<Message[]>('Messages', currentMessages => {
           return (
             currentMessages?.map(message => {
-              if (message.id === input.id) {
+              if (message.id === data.insert_messages_one?.id) {
                 return {
                   ...message,
-                  status: MessageStatus.FAILED,
+                  status: MessageStatus.DELIVERED,
                 }
               }
 
@@ -179,39 +194,28 @@ function IndexPage() {
             }) ?? []
           )
         })
-      },
-      onSuccess: data => {
-        if (data.insert_messages_one) {
-          queryClient.setQueryData<Message[]>('Messages', currentMessages => {
-            return (
-              currentMessages?.map(message => {
-                if (message.id === data.insert_messages_one?.id) {
-                  return {
-                    ...message,
-                    status: MessageStatus.DELIVERED,
-                  }
-                }
-
-                return message
-              }) ?? []
-            )
-          })
-        }
-      },
+      }
     },
-  )
+  })
+
+  const [pendingMessagesIds, setPendingMessagesIds] = useState<string[]>([])
 
   useEffect(() => {
     if (messagesQuery.data && messagesQuery.data.length > 0) {
       const firstMessageInQueue = messagesQuery.data.find(
         message =>
           message.status === MessageStatus.IN_QUEUE &&
-          message.id !== variables?.input.id,
+          !pendingMessagesIds.includes(message.id),
       )
 
       if (!firstMessageInQueue) {
         return
       }
+
+      setPendingMessagesIds(previouslyPendingIds => [
+        ...previouslyPendingIds,
+        firstMessageInQueue.id,
+      ])
 
       sendMessage({
         input: {
@@ -221,7 +225,19 @@ function IndexPage() {
         },
       })
     }
-  }, [messagesQuery.data, sendMessage, variables?.input.id])
+  }, [messagesQuery.data, pendingMessagesIds, sendMessage])
+
+  useEffect(() => {
+    if (messagesQuery.data) {
+      const areAllMessagesDelivered = queryClient
+        .getQueryData<Message[]>('Messages')
+        ?.every(message => message.status === MessageStatus.DELIVERED)
+
+      if (areAllMessagesDelivered) {
+        setPendingMessagesIds([])
+      }
+    }
+  }, [messagesQuery.data, queryClient])
 
   if (!guestName) {
     return <GuestForm setGuestName={setGuestName} />
