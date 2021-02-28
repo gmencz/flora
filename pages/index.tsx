@@ -25,7 +25,6 @@ import * as yup from 'yup'
 import { ClientError } from 'graphql-request'
 import GuestForm from '../components/GuestForm'
 import { nanoid } from 'nanoid'
-import uniquify from '../utils/uniquify'
 import formatMessageTimestamp from '../utils/formatMessageTimestamp'
 
 interface FormInputs {
@@ -100,6 +99,13 @@ function IndexPage() {
       }
 
       if (isNewEventRef.current) {
+        // If the latest message is in the cache, we don't need to refetch
+        // latest messages which lets us skip a lot of unnecessary requests.
+        const currentMessages = queryClient.getQueryData<Message[]>('Messages')
+        if (currentMessages?.some(message => message.id === latestMessage.id)) {
+          return
+        }
+
         graphql
           .request<MessagesRangeQuery, MessagesRangeQueryVariables>(
             MessagesRangeDocument,
@@ -121,7 +127,7 @@ function IndexPage() {
                 })),
               ]
 
-              return uniquify(merged, 'id')
+              return merged
             })
           })
       } else {
