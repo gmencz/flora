@@ -1,12 +1,19 @@
+import { GetServerSideProps } from 'next'
+
+// We will remove this withAuthenticationRequired HOC
+// when this page is done.
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/app',
+      permanent: false,
+    },
+  }
+}
+
 function IndexPage() {
-  return (
-    <h1>
-      Hello{' '}
-      <span aria-label="man waving" role="img">
-        🙋‍♂️
-      </span>
-    </h1>
-  )
+  // TODO: Marketing page
+  return null
 }
 
 export default IndexPage
