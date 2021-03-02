@@ -36,9 +36,7 @@ function Login() {
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
-    auth.signInWithPopup(provider).then(res => {
-      console.log({ res })
-    })
+    auth.signInWithRedirect(provider)
   }
 
   const signInWithGoogle = () => signIn(googleProvider)
