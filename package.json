@@ -5,7 +5,8 @@
     "dev": "next",
     "build": "next build",
     "start": "next start",
-    "type-check": "tsc"
+    "type-check": "tsc",
+    "firebase": "firebase emulators:start --import=./saved-data --export-on-exit"
   },
   "dependencies": {
     "@hookform/resolvers": "^1.3.5",

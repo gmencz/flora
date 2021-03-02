@@ -1,13 +1,13 @@
 import Link from 'next/link'
-import ServersList from './ServersList'
-import ServersSidebarTooltip from './ServersSidebarTooltip'
+import List from './List'
+import Tooltip from './SidebarTooltip'
 
 function ServersSidebar() {
   return (
     <aside className="flex flex-col py-4 w-servers-sidebar bg-gray-200 min-h-screen max-h-screen space-y-3">
       <ul className="flex justify-center">
         <li className="relative">
-          <ServersSidebarTooltip label="Home">
+          <Tooltip label="Home">
             <Link href="/app">
               <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
                 <svg
@@ -21,7 +21,7 @@ function ServersSidebar() {
                 <span className="sr-only">Home</span>
               </a>
             </Link>
-          </ServersSidebarTooltip>
+          </Tooltip>
         </li>
       </ul>
 
@@ -31,10 +31,10 @@ function ServersSidebar() {
       <nav>
         {/* Servers list */}
         <ul className="flex flex-col items-center space-y-2">
-          <ServersList />
+          <List />
 
           <li className="relative">
-            <ServersSidebarTooltip label="Add a Server">
+            <Tooltip label="Add a Server">
               <div className="group">
                 <Link href="/servers/new">
                   <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
@@ -55,7 +55,7 @@ function ServersSidebar() {
                   </a>
                 </Link>
               </div>
-            </ServersSidebarTooltip>
+            </Tooltip>
           </li>
         </ul>
       </nav>

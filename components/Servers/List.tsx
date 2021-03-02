@@ -2,7 +2,7 @@ import db from '@/lib/db'
 import useUser from '@/lib/useUser'
 import Link from 'next/link'
 import { useQuery } from 'react-query'
-import ServersSidebarTooltip from './ServersSidebarTooltip'
+import ServersSidebarTooltip from './SidebarTooltip'
 
 interface Server {
   id: string
@@ -11,19 +11,26 @@ interface Server {
 }
 
 async function fetchServers(userId: string): Promise<Server[]> {
-  const snapshot = await db
+  const serversRef = await db
     .collection('servers')
-    .where('users', 'array-contains', db.collection('users').doc(userId))
+    .where('members', 'in', [userId])
     .get()
 
-  return snapshot.docs.map(doc => {
-    const server = doc.data()
-    return {
-      id: doc.id,
-      name: server.name,
-      photo: server.photo,
-    }
+  serversRef.forEach(s => {
+    console.log(s.data())
   })
+
+  return []
+  // return snapshot.docs.map(doc => {
+  //   const server = doc.data()
+  //   console.log({ server })
+
+  //   return {
+  //     id: doc.id,
+  //     name: server.name,
+  //     photo: server.photo,
+  //   }
+  // })
 }
 
 function ServersList() {

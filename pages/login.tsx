@@ -1,8 +1,8 @@
+import db from '@/lib/db'
 import firebase from '@/lib/firebase'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { useEffect } from 'react'
 
 // Providers
 const googleProvider = new firebase.auth.GoogleAuthProvider()
@@ -20,11 +20,18 @@ interface RouterQuery extends ParsedUrlQuery {
 function Login() {
   const router = useRouter()
 
-  useEffect(() => {
+  const signIn = (provider: AuthProvider) => {
+    auth.useDeviceLanguage()
     auth
-      .getRedirectResult()
-      .then(result => {
+      .signInWithPopup(provider)
+      .then(async result => {
         if (result.user) {
+          await db.collection('users').doc(result.user.uid).set({
+            displayName: result.user.displayName,
+            email: result.user.email,
+            photoURL: result.user.photoURL,
+          })
+
           const { next = '/app' } = router.query as RouterQuery
           router.push(next)
         }
@@ -32,15 +39,15 @@ function Login() {
       .catch(error => {
         console.error(error)
       })
-  }, [router])
-
-  const signIn = (provider: AuthProvider) => {
-    auth.useDeviceLanguage()
-    auth.signInWithRedirect(provider)
   }
 
-  const signInWithGoogle = () => signIn(googleProvider)
-  const signInWithGithub = () => signIn(githubProvider)
+  const signInWithGoogle = () => {
+    signIn(googleProvider)
+  }
+
+  const signInWithGithub = () => {
+    signIn(githubProvider)
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center flex-col space-y-6">
