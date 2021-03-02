@@ -1,13 +1,16 @@
 import clsx from 'clsx'
 import { cloneElement, ReactElement } from 'react'
 
-interface SidebarTooltipProps {
+interface ServersSidebarTooltipProps {
   label: string
   children: ReactElement
   className?: string
 }
 
-function SidebarTooltip({ children, label }: SidebarTooltipProps) {
+function ServersSidebarTooltip({
+  children,
+  label,
+}: ServersSidebarTooltipProps) {
   return (
     <div className="group rounded-2xl">
       {cloneElement(children)}
@@ -34,4 +37,4 @@ function SidebarTooltip({ children, label }: SidebarTooltipProps) {
   )
 }
 
-export default SidebarTooltip
+export default ServersSidebarTooltip

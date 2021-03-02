@@ -7,7 +7,8 @@ module.exports = {
   theme: {
     extend: {
       width: {
-        sidebar: '72px',
+        'servers-sidebar': '72px',
+        sidebar: '225px',
       },
       fontFamily: {
         sans: ['Inter', ...defaultTheme.fontFamily.sans],
