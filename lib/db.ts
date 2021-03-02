@@ -1,3 +1,9 @@
 import firebase from '@/lib/firebase'
 
-export default firebase.firestore()
+const db = firebase.firestore()
+
+if (process.env.NODE_ENV !== 'production') {
+  db.useEmulator('localhost', 8080)
+}
+
+export default db
