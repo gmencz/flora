@@ -1,4 +1,6 @@
+import { client, q } from '@/lib/faunadb'
 import firebase from '@/lib/firebase'
+import { Now } from 'faunadb'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
@@ -25,7 +27,30 @@ function Login() {
       .signInWithPopup(provider)
       .then(async result => {
         if (result.user) {
-          // Add user to db
+          await client.query(
+            q.Let(
+              {
+                match: q.Match(q.Index('users_by_uid'), result.user.uid),
+                data: {
+                  data: {
+                    name: result.user.displayName,
+                    uid: result.user.uid,
+                    photoURL: result.user.photoURL,
+                    email: result.user.email,
+                    created: Now(),
+                  },
+                },
+              },
+              q.If(
+                q.Exists(q.Var('match')),
+                q.Update(
+                  q.Select(['ref'], q.Get(q.Var('match'))),
+                  q.Var('data'),
+                ),
+                q.Create(q.Collection('users'), q.Var('data')),
+              ),
+            ),
+          )
 
           const { next = '/app' } = router.query as RouterQuery
           router.push(next)

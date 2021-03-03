@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  fauna:
+    image: fauna/faunadb
+    ports:
+      - 8443:8443
+      - 8084:8084
+    volumes:
+      - fauna_data:/var/lib/faunadb
+
+volumes:
+  fauna_data:
+    driver: local

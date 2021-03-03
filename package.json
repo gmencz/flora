@@ -6,12 +6,14 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc",
-    "firebase": "firebase emulators:start --import=./saved-data --export-on-exit"
+    "firebase": "firebase emulators:start --import=./saved-data --export-on-exit",
+    "fauna-shell": "fauna shell chatskee --endpoint=localhost"
   },
   "dependencies": {
     "@hookform/resolvers": "^1.3.5",
     "clsx": "^1.1.1",
     "date-fns": "^2.18.0",
+    "faunadb": "^4.1.1",
     "firebase": "^8.2.9",
     "nanoid": "^3.1.20",
     "next": "latest",
