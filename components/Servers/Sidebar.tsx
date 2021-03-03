@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import List from './List'
-import Tooltip from './SidebarTooltip'
+import Tooltip from '../Tooltip'
 
 function ServersSidebar() {
   return (
-    <aside className="flex flex-col py-4 w-servers-sidebar bg-gray-200 min-h-screen max-h-screen space-y-3">
+    <aside className="flex relative z-10 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
       <ul className="flex justify-center">
         <li className="relative">
           <Tooltip label="Home">
@@ -36,7 +36,7 @@ function ServersSidebar() {
           <li className="relative">
             <Tooltip label="Add a Server">
               <div className="group">
-                <Link href="/servers/new">
+                <Link href="/app/servers/new">
                   <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

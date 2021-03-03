@@ -6,6 +6,9 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
+      fontSize: {
+        tiny: '.7rem',
+      },
       width: {
         'servers-sidebar': '72px',
         sidebar: '240px',

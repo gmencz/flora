@@ -1,8 +1,9 @@
 import db from '@/lib/db'
 import useUser from '@/lib/useUser'
+import firebase from '@/lib/firebase'
 import Link from 'next/link'
 import { useQuery } from 'react-query'
-import ServersSidebarTooltip from './SidebarTooltip'
+import Tooltip from '../Tooltip'
 
 interface Server {
   id: string
@@ -10,42 +11,44 @@ interface Server {
   photo: string
 }
 
+interface ServerDocument {
+  joinedAt: firebase.firestore.Timestamp
+  serverName: string
+  serverPhoto: string
+}
+
 async function fetchServers(userId: string): Promise<Server[]> {
-  const serversRef = await db
+  const serversDocuments = await db
+    .collection('users')
+    .doc(userId)
     .collection('servers')
-    .where('members', 'in', [userId])
+    .orderBy('joinedAt', 'desc')
     .get()
 
-  serversRef.forEach(s => {
-    console.log(s.data())
+  return serversDocuments.docs.map(doc => {
+    const server = doc.data() as ServerDocument
+
+    return {
+      id: doc.id,
+      name: server.serverName,
+      photo: server.serverPhoto,
+    }
   })
-
-  return []
-  // return snapshot.docs.map(doc => {
-  //   const server = doc.data()
-  //   console.log({ server })
-
-  //   return {
-  //     id: doc.id,
-  //     name: server.name,
-  //     photo: server.photo,
-  //   }
-  // })
 }
 
 function ServersList() {
   const { uid } = useUser()
-  const serversQuery = useQuery('servers', () => fetchServers(uid), {
+  const { data: servers } = useQuery('servers', () => fetchServers(uid), {
     staleTime: Infinity,
   })
 
   return (
     <>
-      {serversQuery.data?.map(server => (
+      {servers?.map(server => (
         <li key={server.id} className="relative">
-          <ServersSidebarTooltip label={server.name}>
+          <Tooltip label={server.name}>
             <div>
-              <Link href={`/servers/${server.id}`}>
+              <Link href={`/app/servers/${server.id}`}>
                 <a className="flex h-12 w-12 justify-center items-center">
                   <img
                     className="rounded-2xl"
@@ -55,7 +58,7 @@ function ServersList() {
                 </a>
               </Link>
             </div>
-          </ServersSidebarTooltip>
+          </Tooltip>
         </li>
       ))}
     </>
