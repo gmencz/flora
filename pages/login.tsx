@@ -1,4 +1,3 @@
-import db from '@/lib/db'
 import firebase from '@/lib/firebase'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -26,11 +25,7 @@ function Login() {
       .signInWithPopup(provider)
       .then(async result => {
         if (result.user) {
-          await db.collection('users').doc(result.user.uid).set({
-            displayName: result.user.displayName,
-            email: result.user.email,
-            photoURL: result.user.photoURL,
-          })
+          // Add user to db
 
           const { next = '/app' } = router.query as RouterQuery
           router.push(next)

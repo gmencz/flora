@@ -1,54 +1,18 @@
 import ServersSidebar from '@/components/Servers/Sidebar'
 import Tooltip from '@/components/Tooltip'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
-import db from '@/lib/db'
-import firebase from '@/lib/firebase'
 import useUser from '@/lib/useUser'
 import Link from 'next/link'
-import { useQuery } from 'react-query'
 
-interface DM {
-  id: string
-  recipient: {
-    displayName: string
-    photoURL: string
-  }
-}
-
-interface DMDocument {
-  latestMessageTimestamp: firebase.firestore.Timestamp
-  recipientDisplayName: string
-  recipientPhotoURL: string
-  recipientUid: string
-}
-
-async function fetchDMs(userId: string): Promise<DM[]> {
-  const dmsDocuments = await db
-    .collection('users')
-    .doc(userId)
-    .collection('dms')
-    .orderBy('latestMessageTimestamp', 'desc')
-    .get()
-
-  return dmsDocuments.docs.map(doc => {
-    const dm = doc.data() as DMDocument
-
-    return {
-      id: doc.id,
-      recipient: {
-        displayName: dm.recipientDisplayName,
-        photoURL: dm.recipientPhotoURL,
-      },
-    }
-  })
-}
+// async function fetchDMs() {
+//   return []
+// }
 
 function AppPage() {
-  const { uid } = useUser()
   const { displayName, photoURL, email } = useUser()
-  const { data: dms } = useQuery('dms', () => fetchDMs(uid), {
-    staleTime: Infinity,
-  })
+  // const { data: dms } = useQuery('dms', () => fetchDMs(uid), {
+  //   staleTime: Infinity,
+  // })
 
   return (
     <div className="flex">
@@ -103,7 +67,7 @@ function AppPage() {
             </div>
 
             <ul className="space-y-1">
-              {dms?.map(dm => (
+              {/* {dms?.map(dm => (
                 <li key={dm.id}>
                   <Link href={`/app/dms/${dm.id}`}>
                     <a className="text-gray-600 flex space-x-3 px-1.5 py-1 items-center hover:bg-gray-300 rounded hover:text-gray-700">
@@ -119,7 +83,7 @@ function AppPage() {
                     </a>
                   </Link>
                 </li>
-              ))}
+              ))} */}
             </ul>
           </div>
         </div>
