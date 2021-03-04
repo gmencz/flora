@@ -7,7 +7,7 @@ import 'firebase/auth'
 const firebaseConfig = {
   apiKey: 'AIzaSyBG0y5UgN5PBuhXTzGJ1G-p8aGzVNIryjs',
   authDomain: 'chatskee-ca7cf.firebaseapp.com',
-  projectId: 'chatskee-ca7cf',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: 'chatskee-ca7cf.appspot.com',
   messagingSenderId: '215273238907',
   appId: '1:215273238907:web:da580d5e8714f676100dde',

@@ -1,4 +1,3 @@
-import { client, q } from '@/lib/faunadb'
 import firebase from '@/lib/firebase'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -26,41 +25,13 @@ function Login() {
       .signInWithPopup(provider)
       .then(async result => {
         if (result.user) {
-          // Upsert and authenticate user
-          const res = await client.query(
-            q.Let(
-              {
-                match: q.Match(q.Index('users_by_uid'), result.user.uid),
-                baseUserData: {
-                  name: result.user.displayName,
-                  uid: result.user.uid,
-                  photoURL: result.user.photoURL,
-                  email: result.user.email,
-                },
-              },
-              q.If(
-                q.Exists(q.Var('match')),
-                q.Do(
-                  q.Update(q.Select('ref', q.Get(q.Var('match'))), {
-                    data: q.Var('baseUserData'),
-                  }),
-                  q.Create(q.Tokens(), {
-                    instance: q.Select('ref', q.Get(q.Var('match'))),
-                  }),
-                ),
-                q.Do(
-                  q.Create(q.Collection('users'), {
-                    data: q.Merge(q.Var('baseUserData'), { created: q.Now() }),
-                  }),
-                  q.Create(q.Tokens(), {
-                    instance: q.Select('ref', q.Get(q.Var('match'))),
-                  }),
-                ),
-              ),
-            ),
-          )
-
-          console.log({ res })
+          const idToken = await result.user.getIdToken()
+          await fetch('/api/authenticate-fauna', {
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${idToken}`,
+            },
+          })
 
           const { next = '/app' } = router.query as RouterQuery
           router.push(next)

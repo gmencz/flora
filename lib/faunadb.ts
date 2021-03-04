@@ -1,17 +1,21 @@
-import faunadb from 'faunadb'
+import { Client, ClientConfig } from 'faunadb'
 
-const config: faunadb.ClientConfig =
+const baseConfig: Omit<ClientConfig, 'secret'> =
   process.env.NODE_ENV === 'production'
-    ? { secret: process.env.NEXT_PUBLIC_FAUNADB_KEY! }
+    ? {}
     : {
-        secret: process.env.NEXT_PUBLIC_FAUNADB_KEY!,
         scheme: 'http',
         domain: '127.0.0.1',
         port: 8443,
       }
 
-const client = new faunadb.Client(config)
+export default function createClient(
+  secret: string = process.env.FAUNADB_SERVER_KEY!,
+) {
+  const client = new Client({
+    ...baseConfig,
+    secret,
+  })
 
-const q = faunadb.query
-
-export { client, q }
+  return client
+}
