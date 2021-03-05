@@ -1,23 +1,22 @@
-[debug] [2021-03-04T17:06:58.567Z] ----------------------------------------------------------------------
-[debug] [2021-03-04T17:06:58.568Z] Command:       /home/gabe/.nvm/versions/node/v14.13.1/bin/node /home/gabe/.nvm/versions/node/v14.13.1/bin/firebase emulators:start --import=./saved-data --export-on-exit
-[debug] [2021-03-04T17:06:58.569Z] CLI Version:   9.5.0
-[debug] [2021-03-04T17:06:58.569Z] Platform:      linux
-[debug] [2021-03-04T17:06:58.569Z] Node Version:  v14.13.1
-[debug] [2021-03-04T17:06:58.569Z] Time:          Thu Mar 04 2021 18:06:58 GMT+0100 (Central European Standard Time)
-[debug] [2021-03-04T17:06:58.569Z] ----------------------------------------------------------------------
-[debug] [2021-03-04T17:06:58.569Z] 
-[debug] [2021-03-04T17:06:58.571Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
-[debug] [2021-03-04T17:06:58.588Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2021-03-04T17:06:58.588Z] > authorizing via signed-in user
+[debug] [2021-03-05T14:25:22.162Z] ----------------------------------------------------------------------
+[debug] [2021-03-05T14:25:22.164Z] Command:       /home/gabe/.nvm/versions/node/v14.13.1/bin/node /home/gabe/.nvm/versions/node/v14.13.1/bin/firebase emulators:start --import=./firebase --export-on-exit
+[debug] [2021-03-05T14:25:22.164Z] CLI Version:   9.5.0
+[debug] [2021-03-05T14:25:22.164Z] Platform:      linux
+[debug] [2021-03-05T14:25:22.164Z] Node Version:  v14.13.1
+[debug] [2021-03-05T14:25:22.167Z] Time:          Fri Mar 05 2021 15:25:22 GMT+0100 (Central European Standard Time)
+[debug] [2021-03-05T14:25:22.168Z] ----------------------------------------------------------------------
+[debug] [2021-03-05T14:25:22.168Z] 
+[debug] [2021-03-05T14:25:22.173Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2021-03-05T14:25:22.173Z] > authorizing via signed-in user
 [info] i  emulators: Starting emulators: auth {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth"}}
-[debug] [2021-03-04T17:06:58.602Z] [hub] writing locator at /tmp/hub-chatskee-ca7cf.json
-[info] i  auth: Importing config from /home/gabe/code/personal/chatskee/saved-data/auth_export/config.json {"metadata":{"emulator":{"name":"database"},"message":"Importing config from /home/gabe/code/personal/chatskee/saved-data/auth_export/config.json"}}
-[info] i  auth: Importing accounts from /home/gabe/code/personal/chatskee/saved-data/auth_export/accounts.json {"metadata":{"emulator":{"name":"database"},"message":"Importing accounts from /home/gabe/code/personal/chatskee/saved-data/auth_export/accounts.json"}}
-[debug] [2021-03-04T17:07:00.565Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
-[debug] [2021-03-04T17:07:00.566Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
-[debug] [2021-03-04T17:07:00.566Z] Starting Emulator UI with command {"binary":"node","args":["/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js"],"optionalArgs":[],"joinArgs":false} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js\"],\"optionalArgs\":[],\"joinArgs\":false}"}}
+[debug] [2021-03-05T14:25:22.190Z] [hub] writing locator at /tmp/hub-chatskee-ca7cf.json
+[info] i  auth: Importing config from /home/gabe/code/personal/chatskee/firebase/auth_export/config.json {"metadata":{"emulator":{"name":"database"},"message":"Importing config from /home/gabe/code/personal/chatskee/firebase/auth_export/config.json"}}
+[info] i  auth: Importing accounts from /home/gabe/code/personal/chatskee/firebase/auth_export/accounts.json {"metadata":{"emulator":{"name":"database"},"message":"Importing accounts from /home/gabe/code/personal/chatskee/firebase/auth_export/accounts.json"}}
+[debug] [2021-03-05T14:25:24.623Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2021-03-05T14:25:24.623Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2021-03-05T14:25:24.623Z] Starting Emulator UI with command {"binary":"node","args":["/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js"],"optionalArgs":[],"joinArgs":false} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js\"],\"optionalArgs\":[],\"joinArgs\":false}"}}
 [info] i  ui: Emulator UI logging to ui-debug.log {"metadata":{"emulator":{"name":"ui"},"message":"Emulator UI logging to \u001b[1mui-debug.log\u001b[22m"}}
-[debug] [2021-03-04T17:07:00.629Z] Web / API server started at http://127.0.0.1:4000
+[debug] [2021-03-05T14:25:24.688Z] Web / API server started at http://127.0.0.1:4000
  {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at http://127.0.0.1:4000\n"}}
 [info] 
 ┌─────────────────────────────────────────────────────────────┐
@@ -35,5 +34,3 @@
 
 Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
  
-[debug] [2021-03-04T17:07:00.956Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
-[debug] [2021-03-04T17:07:00.956Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}

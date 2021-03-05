@@ -1,21 +1,26 @@
-import useUser from '@/lib/useUser'
 import Link from 'next/link'
 import { useQuery } from 'react-query'
 import Tooltip from '../Tooltip'
+import { Server } from '../../pages/api/servers'
 
-// async function fetchServers() {
-//   return []
-// }
+async function fetchServers() {
+  const response = await fetch('/api/servers', {
+    method: 'POST',
+    credentials: 'include',
+  })
+
+  const servers = (await response.json()) as Server[]
+  return servers
+}
 
 function ServersList() {
-  // const { uid } = useUser()
-  // const { data: servers } = useQuery('servers', () => fetchServers(uid), {
-  //   staleTime: Infinity,
-  // })
+  const { data: servers } = useQuery('servers', fetchServers, {
+    staleTime: Infinity,
+  })
 
   return (
     <>
-      {/* {servers?.map(server => (
+      {servers?.map(server => (
         <li key={server.id} className="relative">
           <Tooltip label={server.name}>
             <div>
@@ -31,7 +36,7 @@ function ServersList() {
             </div>
           </Tooltip>
         </li>
-      ))} */}
+      ))}
     </>
   )
 }

@@ -11,8 +11,10 @@ import {
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
 
-interface Server {
+export interface Server {
+  id: string
   name: string
+  photo: string
 }
 
 const DEFAULT_LIMIT = 50
