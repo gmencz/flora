@@ -1,7 +1,7 @@
 import Link from 'next/link'
+import { ServersPayload } from 'pages/api/servers'
 import { useQuery } from 'react-query'
 import Tooltip from '../Tooltip'
-import { Server } from '../../pages/api/servers'
 
 async function fetchServers() {
   const response = await fetch('/api/servers', {
@@ -9,8 +9,8 @@ async function fetchServers() {
     credentials: 'include',
   })
 
-  const servers = (await response.json()) as Server[]
-  return servers
+  const servers = await response.json()
+  return servers as ServersPayload
 }
 
 function ServersList() {
@@ -20,7 +20,7 @@ function ServersList() {
 
   return (
     <>
-      {servers?.map(server => (
+      {servers?.data.map(server => (
         <li key={server.id} className="relative">
           <Tooltip label={server.name}>
             <div>

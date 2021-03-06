@@ -1,5 +1,6 @@
 import createClient from '@/lib/faunadb'
 import {
+  Collection,
   CurrentIdentity,
   Get,
   Index,
@@ -8,15 +9,22 @@ import {
   Map,
   Match,
   Paginate,
+  Ref,
   Select,
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
 
-export interface Server {
+interface Server {
   id: string
   name: string
   photo: string
+}
+
+export interface ServersPayload {
+  data: Server[]
+  after?: any[]
+  before?: any[]
 }
 
 const DEFAULT_LIMIT = 50
@@ -29,7 +37,7 @@ export default async function handle(
   const faunaToken = req.cookies.chatskeeFaunaToken
   const fauna = createClient(faunaToken)
 
-  const { limit = DEFAULT_LIMIT } = req.query
+  const { limit = DEFAULT_LIMIT, after } = req.query
 
   if (limit > MAX_LIMIT) {
     return res.status(400).json({
@@ -37,10 +45,11 @@ export default async function handle(
     })
   }
 
-  const servers = await fauna.query<Server[]>(
+  const paginatedServers = await fauna.query<ServersPayload>(
     Map(
       Paginate(Match(Index('server_users_by_userRef'), CurrentIdentity()), {
         size: Number(limit),
+        after: after ? Ref(Collection('server_users'), after) : undefined,
       }),
       Lambda(
         'userAndServerRefs',
@@ -56,5 +65,5 @@ export default async function handle(
     ),
   )
 
-  return res.json(servers)
+  return res.json(paginatedServers)
 }
