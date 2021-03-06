@@ -1,12 +1,15 @@
 import createClient from '@/lib/faunadb'
 import {
+  Collection,
   CurrentIdentity,
   Get,
+  Index,
   Lambda,
+  Let,
   Map,
-  Merge,
-  Select,
-  Take,
+  Match,
+  Paginate,
+  Ref,
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -25,8 +28,9 @@ export default async function handle(
   res: NextApiResponse,
 ) {
   const faunaToken = req.cookies.chatskeeFaunaToken
+  const fauna = createClient(faunaToken)
+
   const { limit = DEFAULT_LIMIT } = req.query
-  const client = createClient(faunaToken)
 
   if (limit > MAX_LIMIT) {
     return res.status(400).json({
@@ -34,18 +38,14 @@ export default async function handle(
     })
   }
 
-  const servers = await client.query<Server[]>(
+  const servers = await fauna.query<Server[]>(
     Map(
-      Take(Number(limit), Select(['data', 'servers'], Get(CurrentIdentity()))),
-      Lambda(
-        'ref',
-        Merge(
-          { id: Select('id', Var('ref')) },
-          Select(['data'], Get(Var('ref'))),
-        ),
-      ),
+      Paginate(Match(Index('server_users_by_user'), CurrentIdentity())),
+      Lambda('ref', Get(Var('ref'))),
     ),
   )
+
+  console.log({ servers })
 
   return res.json(servers)
 }

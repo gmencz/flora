@@ -1,0 +1,12 @@
+Update(Role("user"), {
+  membership: {
+    resource: Collection("users")
+  },
+  privileges: [{
+    resource: Index("server_users_by_user"),
+    actions: {
+      unrestricted_read: true
+    }
+  }],
+  data: null
+})

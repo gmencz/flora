@@ -17,6 +17,12 @@ CreateRole({
             )
           )
         }
+      },
+      {
+        resource: Index('server_users_by_user'),
+        actions: {
+          read: true
+        }
       }
     ]
 })
