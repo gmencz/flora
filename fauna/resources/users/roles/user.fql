@@ -4,24 +4,45 @@ CreateRole({
     resource: Collection('users')
   },
   privileges: [
+      { 
+        resource: Collection('server_users'),
+        actions: {
+          read: Query(
+            Lambda("ref",
+              Equals(
+                Select(['data', 'userRef'], Get(Var('ref'))),
+                CurrentIdentity()
+              )
+            )
+          )
+        }
+      },
       { resource: Collection('servers'), actions: { read: true } },
       {
         resource: Collection('users'),
         actions: {
           read: Query(
-            Lambda("ref",
+            Lambda("userRef",
               Equals(
                 CurrentIdentity(),
-                Var("ref")
+                Var("userRef")
               )
             )
           )
         }
       },
       {
-        resource: Index('server_users_by_user'),
+        resource: Index('server_users_by_userRef'),
         actions: {
-          read: true
+          read: Query(
+            Lambda(
+              'userAndServerRefs',
+              Equals(
+                CurrentIdentity(),
+                Select([0], Var('userAndServerRefs'))
+              )
+            )
+          )
         }
       }
     ]

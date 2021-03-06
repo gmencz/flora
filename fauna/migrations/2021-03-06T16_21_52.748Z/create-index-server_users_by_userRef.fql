@@ -1,0 +1,12 @@
+CreateIndex({
+  name: "server_users_by_userRef",
+  source: [Collection("server_users")],
+  terms: [{
+    field: ["data", "userRef"]
+  }],
+  values: [{
+    field: ["data", "userRef"]
+  }, {
+    field: ["data", "serverRef"]
+  }]
+})

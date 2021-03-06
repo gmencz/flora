@@ -1,6 +1,5 @@
 import createClient from '@/lib/faunadb'
 import {
-  Collection,
   CurrentIdentity,
   Get,
   Index,
@@ -9,7 +8,7 @@ import {
   Map,
   Match,
   Paginate,
-  Ref,
+  Select,
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -34,18 +33,28 @@ export default async function handle(
 
   if (limit > MAX_LIMIT) {
     return res.status(400).json({
-      message: `The 'limit' query parameter must be less than or equal to 100`,
+      message: `The 'limit' query parameter must be less than or equal to ${MAX_LIMIT}`,
     })
   }
 
   const servers = await fauna.query<Server[]>(
     Map(
-      Paginate(Match(Index('server_users_by_user'), CurrentIdentity())),
-      Lambda('ref', Get(Var('ref'))),
+      Paginate(Match(Index('server_users_by_userRef'), CurrentIdentity()), {
+        size: Number(limit),
+      }),
+      Lambda(
+        'userAndServerRefs',
+        Let(
+          { serverDoc: Get(Select([1], Var('userAndServerRefs'))) },
+          {
+            id: Select(['ref', 'id'], Var('serverDoc')),
+            name: Select(['data', 'name'], Var('serverDoc')),
+            photo: Select(['data', 'photo'], Var('serverDoc')),
+          },
+        ),
+      ),
     ),
   )
-
-  console.log({ servers })
 
   return res.json(servers)
 }
