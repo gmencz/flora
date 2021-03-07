@@ -50,7 +50,28 @@ CreateRole({
       {
         resource: Collection('channels'),
         actions: {
-          read: true
+          read: Query(
+            Lambda(
+              "channelRef",
+              Let(
+                {
+                  subscribers: Select(['data', 'subscribers'], Get(Var('channelRef')), [])
+                },
+                Any(
+                  Map(
+                    Var('subscribers'),
+                    Lambda(
+                      'subscriberRef',
+                      Equals(
+                        CurrentIdentity(),
+                        Var('subscriberRef')
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
         }
       },
       {
@@ -82,7 +103,21 @@ CreateRole({
       {
         resource: Collection('dms'),
         actions: {
-          read: true
+          read: Query(
+            Lambda(
+              'dmRef',
+              Let(
+                {
+                  user1: Select(['data', 'user1Ref'], Get(Var('dmRef'))),
+                  user2: Select(['data', 'user2Ref'], Get(Var('dmRef'))),
+                },
+                Or(
+                  Equals(CurrentIdentity(), Var('user1')),
+                  Equals(CurrentIdentity(), Var('user2')),
+                )
+              )
+            )
+          )
         }
       },
       {

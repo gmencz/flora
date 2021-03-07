@@ -1,18 +1,26 @@
 import ServersSidebar from '@/components/Servers/Sidebar'
 import Tooltip from '@/components/Tooltip'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
+import { Page } from '@/lib/types'
 import useUser from '@/lib/useUser'
 import Link from 'next/link'
+import { DM } from 'pages/api/dms'
+import { useQuery } from 'react-query'
 
-// async function fetchDMs() {
-//   return []
-// }
+async function fetchDMs(): Promise<Page<DM>> {
+  const response = await fetch('/api/dms', {
+    credentials: 'include',
+  })
+
+  const dms = await response.json()
+  return dms
+}
 
 function AppPage() {
   const { displayName, photoURL, email } = useUser()
-  // const { data: dms } = useQuery('dms', () => fetchDMs(uid), {
-  //   staleTime: Infinity,
-  // })
+  const { data: dms } = useQuery('dms', fetchDMs, {
+    staleTime: Infinity,
+  })
 
   return (
     <div className="flex">
@@ -38,7 +46,7 @@ function AppPage() {
             </Link>
           </div>
 
-          <div className="mt-4 z-10 space-y-1.5">
+          <div className="mt-4 z-10 space-y-2">
             <div className="flex px-2 items-center justify-between">
               <h2 className="uppercase text-tiny font-semibold text-gray-600">
                 Direct messages
@@ -67,23 +75,23 @@ function AppPage() {
             </div>
 
             <ul className="space-y-1">
-              {/* {dms?.map(dm => (
+              {dms?.data.map(dm => (
                 <li key={dm.id}>
                   <Link href={`/app/dms/${dm.id}`}>
-                    <a className="text-gray-600 flex space-x-3 px-1.5 py-1 items-center hover:bg-gray-300 rounded hover:text-gray-700">
+                    <a className="text-gray-600 flex space-x-3 p-1.5 items-center hover:bg-gray-300 rounded hover:text-gray-700">
                       <img
-                        src={dm.recipient.photoURL}
-                        alt={dm.recipient.displayName}
+                        src={dm.withUser.photo}
+                        alt={dm.withUser.name}
                         className="w-8 h-8 rounded-full"
                       />
 
                       <span className="text-sm font-medium">
-                        {dm.recipient.displayName}
+                        {dm.withUser.name}
                       </span>
                     </a>
                   </Link>
                 </li>
-              ))} */}
+              ))}
             </ul>
           </div>
         </div>

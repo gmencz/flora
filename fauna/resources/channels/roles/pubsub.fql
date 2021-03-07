@@ -1,6 +1,0 @@
-CreateRole({
-  name: 'channels_pubsub',
-  privileges: [
-      { resource: Collection('channels'), actions: { read: true } },
-    ]
-})

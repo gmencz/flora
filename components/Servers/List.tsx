@@ -1,16 +1,16 @@
+import { Page } from '@/lib/types'
 import Link from 'next/link'
-import { ServersPayload } from 'pages/api/servers'
+import { Server } from 'pages/api/servers'
 import { useQuery } from 'react-query'
 import Tooltip from '../Tooltip'
 
-async function fetchServers() {
+async function fetchServers(): Promise<Page<Server>> {
   const response = await fetch('/api/servers', {
-    method: 'POST',
     credentials: 'include',
   })
 
   const servers = await response.json()
-  return servers as ServersPayload
+  return servers
 }
 
 function ServersList() {
