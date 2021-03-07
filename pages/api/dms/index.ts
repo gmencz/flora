@@ -2,7 +2,6 @@ import createClient from '@/lib/faunadb'
 import catchHandler from '@/util/catchHandler'
 import ifThruthy from '@/util/ifTruthy'
 import {
-  Any,
   Collection,
   CurrentIdentity,
   Equals,
