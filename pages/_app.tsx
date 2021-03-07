@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
 import Head from 'next/head'
 import '../styles/globals.css'
+import ServersSidebar from '@/components/Servers/Sidebar'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
@@ -24,7 +25,11 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           />
           <title>Chatskee</title>
         </Head>
-        <Component {...pageProps} />
+        <div className="flex">
+          <ServersSidebar />
+
+          <Component {...pageProps} />
+        </div>
       </Hydrate>
       <ReactQueryDevtools />
     </QueryClientProvider>

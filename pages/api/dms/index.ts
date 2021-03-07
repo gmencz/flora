@@ -28,6 +28,7 @@ interface User {
 
 export interface DM {
   id: string
+  channelId: string
   withUser: User
 }
 
@@ -66,6 +67,10 @@ async function handle(req: NextApiRequest, res: NextApiResponse) {
               },
               {
                 id: Select(['ref', 'id'], Var('dmDoc')),
+                channelId: Select(
+                  ['ref', 'id'],
+                  Get(Select(['data', 'channel'], Var('dmDoc'))),
+                ),
                 withUser: {
                   id: Select(['ref', 'id'], Var('withUser')),
                   name: Select(['data', 'name'], Var('withUser')),

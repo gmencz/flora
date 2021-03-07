@@ -4,7 +4,7 @@ import Tooltip from '../Tooltip'
 
 function ServersSidebar() {
   return (
-    <aside className="flex relative z-10 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
+    <aside className="flex sticky top-0 z-20 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
       <ul className="flex justify-center">
         <li className="relative">
           <Tooltip label="Home">
