@@ -36,11 +36,17 @@ export default async function handle(
     })
   }
 
+  if (!req.headers.authorization.startsWith('Bearer')) {
+    return res.status(401).json({
+      message: 'Invalid authorization header, must use the Bearer format',
+    })
+  }
+
   const [, idToken] = req.headers.authorization.split(' ')
 
   if (!idToken) {
     return res.status(401).json({
-      message: 'Invalid authorization header',
+      message: 'Invalid authorization header, missing token',
     })
   }
 

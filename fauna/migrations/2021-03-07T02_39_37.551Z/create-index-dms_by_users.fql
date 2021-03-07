@@ -1,0 +1,9 @@
+CreateIndex({
+  name: "dms_by_users",
+  source: [Collection("dms")],
+  terms: [{
+    field: ["data", "user1Ref"]
+  }, {
+    field: ["data", "user2Ref"]
+  }]
+})

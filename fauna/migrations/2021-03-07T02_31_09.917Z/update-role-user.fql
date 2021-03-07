@@ -1,0 +1,37 @@
+Update(Role("user"), {
+  membership: {
+    resource: Collection("users")
+  },
+  privileges: [{
+    resource: Collection("server_users"),
+    actions: {
+      read: Query(Lambda("ref", Equals(Select(["data", "userRef"], Get(Var("ref"))), CurrentIdentity())))
+    }
+  }, {
+    resource: Collection("servers"),
+    actions: {
+      read: Query(Lambda("serverRef", Any(Select(["data"], Map(Paginate(Match(Index("server_users_by_user"), CurrentIdentity())), Lambda("ref", Equals(Var("serverRef"), Select(["data", "serverRef"], Get(Var("ref"))))))))))
+    }
+  }, {
+    resource: Collection("users"),
+    actions: {
+      read: Query(Lambda("userRef", Equals(CurrentIdentity(), Var("userRef"))))
+    }
+  }, {
+    resource: Index("dms_by_initiator"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Select([0], Var("dmRef")))))
+    }
+  }, {
+    resource: Collection("dms"),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Index("server_users_by_user"),
+    actions: {
+      read: Query(Lambda("userAndServerRefs", Equals(CurrentIdentity(), Select([0], Var("userAndServerRefs")))))
+    }
+  }],
+  data: null
+})

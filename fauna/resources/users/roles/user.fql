@@ -17,22 +17,76 @@ CreateRole({
           )
         }
       },
-      { resource: Collection('servers'), actions: { read: true } },
+      { 
+        resource: Collection('servers'), 
+        actions: { 
+          read: Query(
+            Lambda(
+              'serverRef',
+              Any(
+                Select(['data'], Map(
+                  Paginate(
+                    Match(Index('server_users_by_user'), CurrentIdentity())
+                  ),
+                  Lambda(
+                    'ref',
+                    Equals(
+                      Var('serverRef'),
+                      Select(['data', 'serverRef'], Get(Var('ref')))
+                    )
+                  )
+                ))
+              )
+            )
+          ) 
+        }
+      },
       {
         resource: Collection('users'),
         actions: {
+          read: true
+        }
+      },
+      {
+        resource: Collection('channels'),
+        actions: {
+          read: true
+        }
+      },
+      {
+        resource: Index('dms_by_user1'),
+        actions: {
           read: Query(
-            Lambda("userRef",
+            Lambda("dmRef",
               Equals(
                 CurrentIdentity(),
-                Var("userRef")
+                Select([0], Var("dmRef"))
               )
             )
           )
         }
       },
       {
-        resource: Index('server_users_by_userRef'),
+        resource: Index('dms_by_user2'),
+        actions: {
+          read: Query(
+            Lambda("dmRef",
+              Equals(
+                CurrentIdentity(),
+                Select([0], Var("dmRef"))
+              )
+            )
+          )
+        }
+      },
+      {
+        resource: Collection('dms'),
+        actions: {
+          read: true
+        }
+      },
+      {
+        resource: Index('server_users_by_user'),
         actions: {
           read: Query(
             Lambda(

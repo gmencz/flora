@@ -1,4 +1,6 @@
-import createClient from '@/lib/faunadb'
+import createClient, { Reference } from '@/lib/faunadb'
+import ifTruthy from '@/util/ifTruthy'
+import { NextApiRequest, NextApiResponse } from 'next'
 import {
   Collection,
   CurrentIdentity,
@@ -13,7 +15,6 @@ import {
   Select,
   Var,
 } from 'faunadb'
-import { NextApiRequest, NextApiResponse } from 'next'
 
 interface Server {
   id: string
@@ -23,12 +24,9 @@ interface Server {
 
 export interface ServersPayload {
   data: Server[]
-  after?: any[]
-  before?: any[]
+  after?: Reference[]
+  before?: Reference[]
 }
-
-const DEFAULT_LIMIT = 50
-const MAX_LIMIT = 100
 
 export default async function handle(
   req: NextApiRequest,
@@ -37,24 +35,20 @@ export default async function handle(
   const faunaToken = req.cookies.chatskeeFaunaToken
   const fauna = createClient(faunaToken)
 
-  const { limit = DEFAULT_LIMIT, after } = req.query
-
-  if (limit > MAX_LIMIT) {
-    return res.status(400).json({
-      message: `The 'limit' query parameter must be less than or equal to ${MAX_LIMIT}`,
-    })
-  }
+  const { limit, after } = req.query
 
   const paginatedServers = await fauna.query<ServersPayload>(
     Map(
-      Paginate(Match(Index('server_users_by_userRef'), CurrentIdentity()), {
-        size: Number(limit),
-        after: after ? Ref(Collection('server_users'), after) : undefined,
+      Paginate(Match(Index('server_users_by_user'), CurrentIdentity()), {
+        size: ifTruthy(limit, Number(limit)),
+        after: ifTruthy(after, Ref(Collection('server_users'), after)),
       }),
       Lambda(
-        'userAndServerRefs',
+        'ref',
         Let(
-          { serverDoc: Get(Select([1], Var('userAndServerRefs'))) },
+          {
+            serverDoc: Get(Select(['data', 'serverRef'], Get(Var('ref')))),
+          },
           {
             id: Select(['ref', 'id'], Var('serverDoc')),
             name: Select(['data', 'name'], Var('serverDoc')),
