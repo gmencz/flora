@@ -1,0 +1,17 @@
+Update(Role("user_session"), {
+  membership: {
+    resource: Collection("users_sessions")
+  },
+  privileges: [{
+    resource: Tokens(),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Collection("users_sessions"),
+    actions: {
+      read: true
+    }
+  }],
+  data: null
+})

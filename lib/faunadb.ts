@@ -1,13 +1,5 @@
 import { Client, ClientConfig } from 'faunadb'
 
-interface InternalReference extends Record<string, unknown> {
-  id: string
-}
-
-export interface Reference {
-  '@ref': InternalReference
-}
-
 const baseConfig: Omit<ClientConfig, 'secret'> =
   process.env.NODE_ENV === 'production'
     ? {}

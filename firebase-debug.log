@@ -1,22 +1,22 @@
-[debug] [2021-03-07T15:26:25.825Z] ----------------------------------------------------------------------
-[debug] [2021-03-07T15:26:25.827Z] Command:       /home/gabe/.nvm/versions/node/v14.13.1/bin/node /home/gabe/.nvm/versions/node/v14.13.1/bin/firebase emulators:start --import=./firebase --export-on-exit
-[debug] [2021-03-07T15:26:25.827Z] CLI Version:   9.5.0
-[debug] [2021-03-07T15:26:25.827Z] Platform:      linux
-[debug] [2021-03-07T15:26:25.827Z] Node Version:  v14.13.1
-[debug] [2021-03-07T15:26:25.831Z] Time:          Sun Mar 07 2021 16:26:25 GMT+0100 (Central European Standard Time)
-[debug] [2021-03-07T15:26:25.831Z] ----------------------------------------------------------------------
-[debug] [2021-03-07T15:26:25.831Z] 
-[debug] [2021-03-07T15:26:25.836Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2021-03-07T15:26:25.836Z] > authorizing via signed-in user
+[debug] [2021-03-07T20:36:40.643Z] ----------------------------------------------------------------------
+[debug] [2021-03-07T20:36:40.645Z] Command:       /home/gabe/.nvm/versions/node/v14.13.1/bin/node /home/gabe/.nvm/versions/node/v14.13.1/bin/firebase emulators:start --import=./firebase --export-on-exit
+[debug] [2021-03-07T20:36:40.645Z] CLI Version:   9.5.0
+[debug] [2021-03-07T20:36:40.645Z] Platform:      linux
+[debug] [2021-03-07T20:36:40.645Z] Node Version:  v14.13.1
+[debug] [2021-03-07T20:36:40.648Z] Time:          Sun Mar 07 2021 21:36:40 GMT+0100 (Central European Standard Time)
+[debug] [2021-03-07T20:36:40.649Z] ----------------------------------------------------------------------
+[debug] [2021-03-07T20:36:40.649Z] 
+[debug] [2021-03-07T20:36:40.657Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2021-03-07T20:36:40.657Z] > authorizing via signed-in user
 [info] i  emulators: Starting emulators: auth {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth"}}
-[debug] [2021-03-07T15:26:25.855Z] [hub] writing locator at /tmp/hub-chatskee-ca7cf.json
+[debug] [2021-03-07T20:36:40.677Z] [hub] writing locator at /tmp/hub-chatskee-ca7cf.json
 [info] i  auth: Importing config from /home/gabe/code/personal/chatskee/firebase/auth_export/config.json {"metadata":{"emulator":{"name":"database"},"message":"Importing config from /home/gabe/code/personal/chatskee/firebase/auth_export/config.json"}}
 [info] i  auth: Importing accounts from /home/gabe/code/personal/chatskee/firebase/auth_export/accounts.json {"metadata":{"emulator":{"name":"database"},"message":"Importing accounts from /home/gabe/code/personal/chatskee/firebase/auth_export/accounts.json"}}
-[debug] [2021-03-07T15:26:27.852Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
-[debug] [2021-03-07T15:26:27.853Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
-[debug] [2021-03-07T15:26:27.853Z] Starting Emulator UI with command {"binary":"node","args":["/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js"],"optionalArgs":[],"joinArgs":false} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js\"],\"optionalArgs\":[],\"joinArgs\":false}"}}
+[debug] [2021-03-07T20:36:42.647Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2021-03-07T20:36:42.647Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"ui"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2021-03-07T20:36:42.648Z] Starting Emulator UI with command {"binary":"node","args":["/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js"],"optionalArgs":[],"joinArgs":false} {"metadata":{"emulator":{"name":"ui"},"message":"Starting Emulator UI with command {\"binary\":\"node\",\"args\":[\"/home/gabe/.cache/firebase/emulators/ui-v1.4.2/server.bundle.js\"],\"optionalArgs\":[],\"joinArgs\":false}"}}
 [info] i  ui: Emulator UI logging to ui-debug.log {"metadata":{"emulator":{"name":"ui"},"message":"Emulator UI logging to \u001b[1mui-debug.log\u001b[22m"}}
-[debug] [2021-03-07T15:26:27.940Z] Web / API server started at http://127.0.0.1:4000
+[debug] [2021-03-07T20:36:42.719Z] Web / API server started at http://127.0.0.1:4000
  {"metadata":{"emulator":{"name":"ui"},"message":"Web / API server started at http://127.0.0.1:4000\n"}}
 [info] 
 ┌─────────────────────────────────────────────────────────────┐

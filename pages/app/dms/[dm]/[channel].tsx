@@ -1,4 +1,5 @@
 import DMsSidebar from '@/components/DMs/Sidebar'
+import ServersSidebar from '@/components/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
 import fetcher from '@/util/fetcher'
 import { useRouter } from 'next/router'
@@ -16,10 +17,12 @@ function DM() {
   )
 
   return (
-    <>
+    <div className="flex">
+      <ServersSidebar />
+
       <DMsSidebar />
 
-      <div className="bg-gray-100 flex-1">
+      <div className="flex-1">
         <header className="py-4 sticky top-0 px-6 bg-gray-100 shadow-sm">
           <div className="flex space-x-2.5 items-center">
             <svg
@@ -45,7 +48,7 @@ function DM() {
           {channel}
         </section>
       </div>
-    </>
+    </div>
   )
 }
 

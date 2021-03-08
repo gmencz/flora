@@ -12,16 +12,19 @@ import {
   Merge,
   Now,
   Select,
-  Tokens,
+  ToString,
   Update,
   Var,
 } from 'faunadb'
 import createClient from '@/lib/faunadb'
-import setCookie from '@/util/setCookie'
 import admin from '@/lib/firebase-admin'
+import { createAccessAndRefreshTokens } from '@/lib/auth'
+import setCookie from '@/util/setCookie'
 
 interface FaunaAuthResult {
-  secret: string
+  accessToken: string
+  accessTokenExp: string
+  refreshToken: string
 }
 
 export default async function handle(
@@ -61,10 +64,15 @@ export default async function handle(
   }
 
   const { name, uid, picture, email } = user
-  const { secret } = await client.query<FaunaAuthResult>(
+  const {
+    accessToken,
+    refreshToken,
+    accessTokenExp,
+  } = await client.query<FaunaAuthResult>(
     Let(
       {
         match: Match(Index('users_by_uid'), uid),
+        userRef: Select(['ref'], Get(Var('match'))),
         baseUserData: {
           name,
           uid,
@@ -75,27 +83,41 @@ export default async function handle(
       If(
         Exists(Var('match')),
         Do(
-          Update(Select(['ref'], Get(Var('match'))), {
+          Update(Var('userRef'), {
             data: Var('baseUserData'),
           }),
-          Create(Tokens(), {
-            instance: Select(['ref'], Get(Var('match'))),
-          }),
+          Let(
+            {
+              tokens: createAccessAndRefreshTokens(Var('userRef')),
+            },
+            {
+              accessToken: Select(['accessToken', 'secret'], Var('tokens')),
+              refreshToken: Select(['refreshToken', 'secret'], Var('tokens')),
+            },
+          ),
         ),
         Do(
           Create(Collection('users'), {
             data: Merge(Var('baseUserData'), { created: Now() }),
           }),
-          Create(Tokens(), {
-            instance: Select(['ref'], Get(Var('match'))),
-          }),
+          Let(
+            {
+              tokens: createAccessAndRefreshTokens(Var('userRef')),
+              accessToken: Select(['accessToken', 'secret'], Var('tokens')),
+            },
+            {
+              refreshToken: Select(['refreshToken', 'secret'], Var('tokens')),
+              accessToken: Select(['secret'], Var('accessToken')),
+              accessTokenExp: ToString(Select(['ttl'], Var('accessToken'))),
+            },
+          ),
         ),
       ),
     ),
   )
 
   const tenYears = 315569520 * 1000
-  setCookie(res, 'chatskeeFaunaToken', secret, {
+  setCookie(res, 'chatskeeFaunaToken', refreshToken, {
     maxAge: tenYears,
     httpOnly: true,
     sameSite: 'strict',
@@ -104,6 +126,7 @@ export default async function handle(
   })
 
   return res.json({
-    ok: true,
+    accessToken,
+    accessTokenExp,
   })
 }

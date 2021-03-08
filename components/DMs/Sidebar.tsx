@@ -1,28 +1,99 @@
 import { Page } from '@/lib/types'
+import useFauna from '@/lib/useFauna'
 import useUser from '@/lib/useUser'
+import resolvePagination from '@/util/resolvePagination'
 import clsx from 'clsx'
+import {
+  CurrentIdentity,
+  Equals,
+  Get,
+  If,
+  Index,
+  Lambda,
+  Let,
+  Map,
+  Match,
+  Paginate,
+  Select,
+  Union,
+  Var,
+} from 'faunadb'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { DM } from 'pages/api/dms'
 import { useQuery } from 'react-query'
 import Tooltip from '../Tooltip'
 
-async function fetchDMs(): Promise<Page<DM>> {
-  const response = await fetch('/api/dms', {
-    credentials: 'include',
-  })
+interface User {
+  id: string
+  name: string
+  photo: string
+}
 
-  const dms = await response.json()
-  return dms
+interface DM {
+  id: string
+  channelId: string
+  withUser: User
 }
 
 export default function DMsSidebar() {
   const router = useRouter()
   const { dm: activeDm } = router.query as Record<string, string | undefined>
   const { displayName, photoURL, email } = useUser()
-  const { data: dms } = useQuery('dms', fetchDMs, {
-    staleTime: Infinity,
-  })
+  const fauna = useFauna()
+
+  const { data: dms } = useQuery(
+    'dms',
+    async () => {
+      const paginatedDms = await fauna!.query<Page<DM>>(
+        Let(
+          {
+            paginationResult: Map(
+              Paginate(
+                Union(
+                  Match(Index('dms_by_user1'), CurrentIdentity()),
+                  Match(Index('dms_by_user2'), CurrentIdentity()),
+                ),
+              ),
+              Lambda(
+                'ref',
+                Let(
+                  {
+                    dmDoc: Get(Var('ref')),
+                    user1: Select(['data', 'user1Ref'], Var('dmDoc')),
+                    user2: Select(['data', 'user2Ref'], Var('dmDoc')),
+                    withUser: If(
+                      Equals(Var('user1'), CurrentIdentity()),
+                      Get(Var('user2')),
+                      Get(Var('user1')),
+                    ),
+                  },
+                  {
+                    id: Select(['ref', 'id'], Var('dmDoc')),
+                    channelId: Select(
+                      ['ref', 'id'],
+                      Get(Select(['data', 'channel'], Var('dmDoc'))),
+                    ),
+                    withUser: {
+                      id: Select(['ref', 'id'], Var('withUser')),
+                      name: Select(['data', 'name'], Var('withUser')),
+                      photo: Select(['data', 'photoURL'], Var('withUser')),
+                    },
+                  },
+                ),
+              ),
+            ),
+          },
+          resolvePagination(Var('paginationResult')),
+        ),
+      )
+
+      return paginatedDms
+    },
+    {
+      staleTime: Infinity,
+      enabled: !!fauna,
+    },
+  )
 
   return (
     <div className="flex sticky z-10 top-0 flex-col w-sidebar min-h-screen max-h-screen bg-gray-200">

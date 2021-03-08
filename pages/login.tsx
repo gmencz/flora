@@ -1,7 +1,9 @@
 import firebase from '@/lib/firebase'
+import { useSession } from '@/lib/session'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
+import { useEffect } from 'react'
 
 // Providers
 const googleProvider = new firebase.auth.GoogleAuthProvider()
@@ -18,6 +20,14 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
+  const { accessToken, setAccessToken } = useSession()
+
+  useEffect(() => {
+    if (accessToken) {
+      const { next = '/app' } = router.query as RouterQuery
+      router.push(next)
+    }
+  }, [accessToken, router])
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -26,15 +36,17 @@ function Login() {
       .then(async result => {
         if (result.user) {
           const idToken = await result.user.getIdToken()
-          await fetch('/api/authenticate-fauna', {
+          const authorization = await fetch('/api/fauna/authorize', {
             method: 'POST',
             headers: {
               authorization: `Bearer ${idToken}`,
             },
-          })
+          }).then(res => res.json())
 
-          const { next = '/app' } = router.query as RouterQuery
-          router.push(next)
+          setAccessToken({
+            token: authorization.accessToken,
+            exp: authorization.accessTokenExp,
+          })
         }
       })
       .catch(error => {
