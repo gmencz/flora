@@ -1,5 +1,4 @@
 import { useQuery } from 'react-query'
-import useFauna from '@/lib/useFauna'
 import {
   CurrentIdentity,
   Get,
@@ -16,6 +15,7 @@ import { Page } from '@/lib/types'
 import resolvePagination from '@/util/resolvePagination'
 import Tooltip from '../Tooltip'
 import Link from 'next/link'
+import { useFauna } from '@/lib/fauna'
 
 interface Server {
   id: string
@@ -24,47 +24,47 @@ interface Server {
 }
 
 function ServersList() {
-  const fauna = useFauna()
+  const { client } = useFauna()
   const { data: servers } = useQuery(
     'servers',
     async () => {
-      const paginatedServers = await fauna!.query<Page<Server>>(
-        Let(
-          {
-            paginationResult: Map(
-              Paginate(Match(Index('server_users_by_user'), CurrentIdentity())),
-              Lambda(
-                'ref',
-                Let(
-                  {
-                    serverDoc: Get(
-                      Select(['data', 'serverRef'], Get(Var('ref'))),
-                    ),
-                  },
-                  {
-                    id: Select(['ref', 'id'], Var('serverDoc')),
-                    name: Select(['data', 'name'], Var('serverDoc')),
-                    photo: Select(['data', 'photo'], Var('serverDoc')),
-                  },
-                ),
-              ),
-            ),
-          },
-          resolvePagination(Var('paginationResult')),
-        ),
-      )
+      return []
+      // const paginatedServers = await fauna!.query<Page<Server>>(
+      //   Let(
+      //     {
+      //       paginationResult: Map(
+      //         Paginate(Match(Index('server_users_by_user'), CurrentIdentity())),
+      //         Lambda(
+      //           'ref',
+      //           Let(
+      //             {
+      //               serverDoc: Get(
+      //                 Select(['data', 'serverRef'], Get(Var('ref'))),
+      //               ),
+      //             },
+      //             {
+      //               id: Select(['ref', 'id'], Var('serverDoc')),
+      //               name: Select(['data', 'name'], Var('serverDoc')),
+      //               photo: Select(['data', 'photo'], Var('serverDoc')),
+      //             },
+      //           ),
+      //         ),
+      //       ),
+      //     },
+      //     resolvePagination(Var('paginationResult')),
+      //   ),
+      // )
 
-      return paginatedServers
+      // return paginatedServers
     },
     {
       staleTime: Infinity,
-      enabled: !!fauna,
     },
   )
 
   return (
     <>
-      {servers?.data.map(server => (
+      {/* {servers?.data.map(server => (
         <li key={server.id} className="relative">
           <Tooltip label={server.name}>
             <div>
@@ -80,7 +80,7 @@ function ServersList() {
             </div>
           </Tooltip>
         </li>
-      ))}
+      ))} */}
     </>
   )
 }

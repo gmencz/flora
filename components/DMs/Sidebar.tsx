@@ -1,5 +1,5 @@
+import { useFauna } from '@/lib/fauna'
 import { Page } from '@/lib/types'
-import useFauna from '@/lib/useFauna'
 import useUser from '@/lib/useUser'
 import resolvePagination from '@/util/resolvePagination'
 import clsx from 'clsx'
@@ -39,59 +39,59 @@ export default function DMsSidebar() {
   const router = useRouter()
   const { dm: activeDm } = router.query as Record<string, string | undefined>
   const { displayName, photoURL, email } = useUser()
-  const fauna = useFauna()
+  const { client } = useFauna()
 
   const { data: dms } = useQuery(
     'dms',
     async () => {
-      const paginatedDms = await fauna!.query<Page<DM>>(
-        Let(
-          {
-            paginationResult: Map(
-              Paginate(
-                Union(
-                  Match(Index('dms_by_user1'), CurrentIdentity()),
-                  Match(Index('dms_by_user2'), CurrentIdentity()),
-                ),
-              ),
-              Lambda(
-                'ref',
-                Let(
-                  {
-                    dmDoc: Get(Var('ref')),
-                    user1: Select(['data', 'user1Ref'], Var('dmDoc')),
-                    user2: Select(['data', 'user2Ref'], Var('dmDoc')),
-                    withUser: If(
-                      Equals(Var('user1'), CurrentIdentity()),
-                      Get(Var('user2')),
-                      Get(Var('user1')),
-                    ),
-                  },
-                  {
-                    id: Select(['ref', 'id'], Var('dmDoc')),
-                    channelId: Select(
-                      ['ref', 'id'],
-                      Get(Select(['data', 'channel'], Var('dmDoc'))),
-                    ),
-                    withUser: {
-                      id: Select(['ref', 'id'], Var('withUser')),
-                      name: Select(['data', 'name'], Var('withUser')),
-                      photo: Select(['data', 'photoURL'], Var('withUser')),
-                    },
-                  },
-                ),
-              ),
-            ),
-          },
-          resolvePagination(Var('paginationResult')),
-        ),
-      )
+      return []
+      // const paginatedDms = await fauna!.query<Page<DM>>(
+      //   Let(
+      //     {
+      //       paginationResult: Map(
+      //         Paginate(
+      //           Union(
+      //             Match(Index('dms_by_user1'), CurrentIdentity()),
+      //             Match(Index('dms_by_user2'), CurrentIdentity()),
+      //           ),
+      //         ),
+      //         Lambda(
+      //           'ref',
+      //           Let(
+      //             {
+      //               dmDoc: Get(Var('ref')),
+      //               user1: Select(['data', 'user1Ref'], Var('dmDoc')),
+      //               user2: Select(['data', 'user2Ref'], Var('dmDoc')),
+      //               withUser: If(
+      //                 Equals(Var('user1'), CurrentIdentity()),
+      //                 Get(Var('user2')),
+      //                 Get(Var('user1')),
+      //               ),
+      //             },
+      //             {
+      //               id: Select(['ref', 'id'], Var('dmDoc')),
+      //               channelId: Select(
+      //                 ['ref', 'id'],
+      //                 Get(Select(['data', 'channel'], Var('dmDoc'))),
+      //               ),
+      //               withUser: {
+      //                 id: Select(['ref', 'id'], Var('withUser')),
+      //                 name: Select(['data', 'name'], Var('withUser')),
+      //                 photo: Select(['data', 'photoURL'], Var('withUser')),
+      //               },
+      //             },
+      //           ),
+      //         ),
+      //       ),
+      //     },
+      //     resolvePagination(Var('paginationResult')),
+      //   ),
+      // )
 
-      return paginatedDms
+      // return paginatedDms
     },
     {
       staleTime: Infinity,
-      enabled: !!fauna,
     },
   )
 
@@ -145,7 +145,7 @@ export default function DMsSidebar() {
           </div>
 
           <ul className="space-y-1">
-            {dms?.data.map(dm => (
+            {/* {dms?.data.map(dm => (
               <li key={dm.id}>
                 <Link href={`/app/dms/${dm.id}/${dm.channelId}`}>
                   <a
@@ -169,7 +169,7 @@ export default function DMsSidebar() {
                   </a>
                 </Link>
               </li>
-            ))}
+            ))} */}
           </ul>
         </div>
       </div>

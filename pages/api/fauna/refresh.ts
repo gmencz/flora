@@ -1,4 +1,4 @@
-import createClient from '@/lib/faunadb'
+import { createClient } from '@/lib/fauna'
 import catchHandler from '@/util/catchHandler'
 import { createAccessToken } from '@/lib/auth'
 import { CurrentToken, Get, Let, Select, ToString, Var } from 'faunadb'

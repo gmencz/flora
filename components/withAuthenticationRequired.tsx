@@ -1,4 +1,4 @@
-import firebase from '@/lib/firebase'
+import firebase from '@/lib/firebase/client'
 import { ComponentType } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'

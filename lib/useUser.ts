@@ -1,4 +1,4 @@
-import firebase from '@/lib/firebase'
+import firebase from '@/lib/firebase/client'
 import { useAuthState } from 'react-firebase-hooks/auth'
 
 function useUser() {

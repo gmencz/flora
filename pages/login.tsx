@@ -1,5 +1,5 @@
-import firebase from '@/lib/firebase'
-import { useSession } from '@/lib/session'
+import { useFauna } from '@/lib/fauna'
+import firebase from '@/lib/firebase/client'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
@@ -20,7 +20,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const { accessToken, setAccessToken } = useSession()
+  const { accessToken, setAccessToken } = useFauna()
 
   useEffect(() => {
     if (accessToken) {
@@ -43,10 +43,7 @@ function Login() {
             },
           }).then(res => res.json())
 
-          setAccessToken({
-            token: authorization.accessToken,
-            exp: authorization.accessTokenExp,
-          })
+          setAccessToken(authorization.accessToken)
         }
       })
       .catch(error => {

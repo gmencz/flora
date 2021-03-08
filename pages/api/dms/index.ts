@@ -1,4 +1,4 @@
-import createClient from '@/lib/faunadb'
+import { createClient } from '@/lib/fauna'
 import { Page } from '@/lib/types'
 import catchHandler from '@/util/catchHandler'
 import getPaginationOptions from '@/util/getPaginationOptions'

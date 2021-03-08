@@ -1,4 +1,4 @@
-import createClient from '@/lib/faunadb'
+import { createClient } from '@/lib/fauna'
 import catchHandler from '@/util/catchHandler'
 import {
   Collection,

@@ -16,8 +16,8 @@ import {
   Update,
   Var,
 } from 'faunadb'
-import createClient from '@/lib/faunadb'
-import admin from '@/lib/firebase-admin'
+import { createClient } from '@/lib/fauna'
+import admin from '@/lib/firebase/server'
 import { createAccessAndRefreshTokens } from '@/lib/auth'
 import setCookie from '@/util/setCookie'
 

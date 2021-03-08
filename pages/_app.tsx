@@ -5,18 +5,25 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
 import Head from 'next/head'
 import '../styles/globals.css'
-import { SessionProvider } from '@/lib/session'
+import { FaunaProvider, createClient } from '@/lib/fauna'
+import { Client as FaunaClient } from 'faunadb'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
+  const faunaClientRef = useRef<FaunaClient>()
+
   if (!queryClientRef.current) {
     queryClientRef.current = new QueryClient()
+  }
+
+  if (!faunaClientRef.current) {
+    faunaClientRef.current = createClient()
   }
 
   return (
     <QueryClientProvider client={queryClientRef.current}>
       <Hydrate state={pageProps.dehydratedState}>
-        <SessionProvider>
+        <FaunaProvider client={faunaClientRef.current}>
           <Head>
             <meta charSet="UTF-8" />
             <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -29,7 +36,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           <div className="bg-gray-100">
             <Component {...pageProps} />
           </div>
-        </SessionProvider>
+        </FaunaProvider>
       </Hydrate>
       <ReactQueryDevtools />
     </QueryClientProvider>
