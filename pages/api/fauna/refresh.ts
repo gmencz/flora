@@ -1,12 +1,11 @@
 import { createClient } from '@/lib/fauna'
 import catchHandler from '@/util/catchHandler'
 import { createAccessToken } from '@/lib/auth'
-import { CurrentToken, Get, Let, Select, ToString, Var } from 'faunadb'
+import { CurrentToken, Get, Let, Select, Var } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export interface FaunaRefreshResult {
   accessToken: string
-  exp: string
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,7 +30,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           accessToken: createAccessToken(Var('userRef'), Var('currentToken')),
         },
         {
-          exp: ToString(Select(['ttl'], Var('accessToken'))),
           accessToken: Select(['secret'], Var('accessToken')),
         },
       ),

@@ -2,6 +2,7 @@ import { Client as FaunaClient, ClientConfig } from 'faunadb'
 import {
   createContext,
   Dispatch,
+  MutableRefObject,
   ReactNode,
   SetStateAction,
   useContext,
@@ -30,22 +31,22 @@ export function createClient(secret: string = process.env.FAUNADB_SERVER_KEY!) {
 interface IFaunaContext {
   accessToken: string | null
   setAccessToken: Dispatch<SetStateAction<string | null>>
-  client: FaunaClient
+  client: FaunaClient | undefined
 }
 
 const FaunaContext = createContext<IFaunaContext | null>(null)
 
 interface FaunaProviderProps {
   children: ReactNode
-  client: FaunaClient
+  clientRef: MutableRefObject<FaunaClient | undefined>
 }
 
-export function FaunaProvider({ children, client }: FaunaProviderProps) {
+export function FaunaProvider({ children, clientRef }: FaunaProviderProps) {
   const [accessToken, setAccessToken] = useState<null | string>(null)
 
   const memoizedValue = useMemo(
-    () => ({ accessToken, setAccessToken, client }),
-    [accessToken, client],
+    () => ({ accessToken, setAccessToken, client: clientRef.current }),
+    [accessToken, clientRef],
   )
 
   return (

@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
 import Head from 'next/head'
 import '../styles/globals.css'
-import { FaunaProvider, createClient } from '@/lib/fauna'
+import { FaunaProvider } from '@/lib/fauna'
 import { Client as FaunaClient } from 'faunadb'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
@@ -16,14 +16,10 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     queryClientRef.current = new QueryClient()
   }
 
-  if (!faunaClientRef.current) {
-    faunaClientRef.current = createClient()
-  }
-
   return (
     <QueryClientProvider client={queryClientRef.current}>
       <Hydrate state={pageProps.dehydratedState}>
-        <FaunaProvider client={faunaClientRef.current}>
+        <FaunaProvider clientRef={faunaClientRef}>
           <Head>
             <meta charSet="UTF-8" />
             <meta httpEquiv="X-UA-Compatible" content="IE=edge" />

@@ -1,6 +1,8 @@
 import { useQuery } from 'react-query'
 import {
+  Collection,
   CurrentIdentity,
+  Documents,
   Get,
   Index,
   Lambda,
@@ -28,6 +30,9 @@ function ServersList() {
   const { data: servers } = useQuery(
     'servers',
     async () => {
+      const data = await client!.query(Paginate(Documents(Collection('users'))))
+      console.log(data)
+
       return []
       // const paginatedServers = await fauna!.query<Page<Server>>(
       //   Let(

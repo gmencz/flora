@@ -12,7 +12,6 @@ import {
   Merge,
   Now,
   Select,
-  ToString,
   Update,
   Var,
 } from 'faunadb'
@@ -23,7 +22,6 @@ import setCookie from '@/util/setCookie'
 
 interface FaunaAuthResult {
   accessToken: string
-  accessTokenExp: string
   refreshToken: string
 }
 
@@ -64,11 +62,7 @@ export default async function handle(
   }
 
   const { name, uid, picture, email } = user
-  const {
-    accessToken,
-    refreshToken,
-    accessTokenExp,
-  } = await client.query<FaunaAuthResult>(
+  const { accessToken, refreshToken } = await client.query<FaunaAuthResult>(
     Let(
       {
         match: Match(Index('users_by_uid'), uid),
@@ -108,7 +102,6 @@ export default async function handle(
             {
               refreshToken: Select(['refreshToken', 'secret'], Var('tokens')),
               accessToken: Select(['secret'], Var('accessToken')),
-              accessTokenExp: ToString(Select(['ttl'], Var('accessToken'))),
             },
           ),
         ),
@@ -127,6 +120,5 @@ export default async function handle(
 
   return res.json({
     accessToken,
-    accessTokenExp,
   })
 }
