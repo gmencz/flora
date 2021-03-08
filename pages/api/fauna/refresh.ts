@@ -1,47 +1,71 @@
+import {
+  clearRefreshTokenCookie,
+  REFRESH_TOKEN_REUSE_ERROR,
+  setRefreshTokenCookie,
+} from '@/lib/auth'
 import { createClient } from '@/lib/fauna'
 import catchHandler from '@/util/catchHandler'
-import { createAccessToken } from '@/lib/auth'
-import { CurrentToken, Get, Let, Select, Var } from 'faunadb'
+import {
+  Call,
+  ContainsPath,
+  Function,
+  If,
+  Let,
+  Select,
+  ToString,
+  Var,
+} from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
-
-export interface FaunaRefreshResult {
-  accessToken: string
-}
+import { FaunaAuthTokens } from './login'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const refreshToken = req.cookies.chatskeeFaunaToken
-  if (!refreshToken) {
-    return res.status(403).json({ message: 'Missing refresh token' })
-  }
+  const refreshToken = req.cookies.chatskeeFaunaRefresh
+  const fauna = createClient(refreshToken)
 
-  const client = createClient(refreshToken)
-
-  let refreshResult: FaunaRefreshResult
+  let refreshResult: FaunaAuthTokens | null
   try {
-    refreshResult = await client.query<FaunaRefreshResult>(
+    refreshResult = await fauna.query<FaunaAuthTokens | null>(
       Let(
         {
-          currentToken: CurrentToken(),
-          session: Select(
-            ['ref'],
-            Get(Select(['instance'], Get(Var('currentToken')))),
+          refreshResult: Call(Function('refresh')),
+        },
+        If(
+          ContainsPath(['code'], Var('refreshResult')),
+          null,
+          Let(
+            {
+              tokens: Select(['tokens'], Var('refreshResult')),
+            },
+            {
+              access: {
+                secret: Select(['access', 'secret'], Var('tokens')),
+                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
+              },
+              refresh: {
+                secret: Select(['refresh', 'secret'], Var('tokens')),
+              },
+            },
           ),
-          userRef: Select(['data', 'user'], Get(Var('session'))),
-          accessToken: createAccessToken(Var('userRef'), Var('currentToken')),
-        },
-        {
-          accessToken: Select(['secret'], Var('accessToken')),
-        },
+        ),
       ),
     )
   } catch (error) {
-    console.error(error)
+    console.error(`REFRESH ERROR - ${error}`)
     return res.status(error.requestResult?.statusCode ?? 500).json({
       message: error.message ?? 'Oops! Something went wrong',
     })
   }
 
-  return res.json(refreshResult)
+  if (!refreshResult) {
+    clearRefreshTokenCookie(res)
+    return res.status(401).json(REFRESH_TOKEN_REUSE_ERROR)
+  }
+
+  const { access, refresh } = refreshResult
+
+  setRefreshTokenCookie(res, refresh.secret)
+
+  return res.json({ access })
 }
 
 export default catchHandler(handler)

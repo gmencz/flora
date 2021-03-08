@@ -1,0 +1,49 @@
+Update(Function("refresh"), {
+  body: Query(Lambda([], Let([{
+    currentToken: CurrentToken()
+  }], If(And(Select(["data", "used"], Get(CurrentToken())), GTE(Let([{
+    timeUsed: Select(["data", "timeUsed"], Get(CurrentToken()))
+  }, {
+    ageInMS: TimeDiff(Var("timeUsed"), Now(), "milliseconds")
+  }], Var("ageInMS")), 20000)), Do(Create(Collection("anomalies"), {
+    data: {
+      error: {
+        code: "REFRESH_TOKEN_REUSE",
+        message: "The refresh token was used outside of the grace period which indicates that it was leaked"
+      },
+      token: Var("currentToken")
+    }
+  }), {
+    code: "REFRESH_TOKEN_REUSE",
+    message: "The refresh token was used outside of the grace period which indicates that it was leaked"
+  }), Do(Do(If(Exists(Match(Index("access_token_by_refresh_token"), Var("currentToken"))), Delete(Select(["ref"], Get(Match(Index("access_token_by_refresh_token"), Var("currentToken"))))), false), Update(Var("currentToken"), {
+    data: {
+      used: true,
+      timeUsed: Now()
+    }
+  })), Let([{
+    refresh: Create(Tokens(), {
+      instance: CurrentIdentity(),
+      data: {
+        type: "refresh",
+        used: false,
+        sessionId: If(And(HasCurrentToken(), Equals(Select(["data", "type"], Get(CurrentToken()), false), "refresh")), Select(["data", "sessionId"], Get(CurrentToken())), NewId())
+      },
+      ttl: TimeAdd(Now(), 28800, "seconds")
+    })
+  }, {
+    access: Create(Tokens(), {
+      instance: CurrentIdentity(),
+      data: {
+        type: "access",
+        refresh: Var("refresh")
+      },
+      ttl: TimeAdd(Now(), 600, "seconds")
+    })
+  }], {
+    refresh: Var("refresh"),
+    access: Var("access")
+  })))))),
+  role: "server",
+  data: null
+})

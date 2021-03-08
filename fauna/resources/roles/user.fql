@@ -1,8 +1,15 @@
 CreateRole({
   name: 'user',
-  membership: {
-    resource: Collection('users')
-  },
+  membership: [
+    {
+      resource: Collection('users'),
+      predicate: Query(
+        Lambda('ref',
+          Equals(Select(['data', 'type'], Get(CurrentToken()), false), 'access')
+        )
+      )
+    }
+  ],
   privileges: [
       { 
         resource: Collection('server_users'),

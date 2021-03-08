@@ -20,14 +20,13 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const { accessToken, setAccessToken } = useFauna()
 
-  useEffect(() => {
-    if (accessToken) {
-      const { next = '/app' } = router.query as RouterQuery
-      router.push(next)
-    }
-  }, [accessToken, router])
+  // useEffect(() => {
+  //   if (accessToken) {
+  //     const { next = '/app' } = router.query as RouterQuery
+  //     router.push(next)
+  //   }
+  // }, [accessToken, router])
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -36,14 +35,16 @@ function Login() {
       .then(async result => {
         if (result.user) {
           const idToken = await result.user.getIdToken()
-          const authorization = await fetch('/api/fauna/authorize', {
+          const authorization = await fetch('/api/fauna/login', {
             method: 'POST',
             headers: {
               authorization: `Bearer ${idToken}`,
             },
           }).then(res => res.json())
 
-          setAccessToken(authorization.accessToken)
+          console.log(authorization)
+
+          // setAccessToken(authorization.accessToken)
         }
       })
       .catch(error => {

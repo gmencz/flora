@@ -11,8 +11,7 @@ export default function setCookie(
     typeof value === 'object' ? 'j:' + JSON.stringify(value) : String(value)
 
   if (options.maxAge) {
-    options.expires = new Date(Date.now() + options.maxAge)
-    options.maxAge /= 1000
+    options.expires = new Date(Date.now() + options.maxAge * 1000)
   }
 
   res.setHeader('Set-Cookie', serialize(name, String(stringValue), options))

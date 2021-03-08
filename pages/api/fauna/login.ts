@@ -12,17 +12,30 @@ import {
   Merge,
   Now,
   Select,
+  ToString,
   Update,
   Var,
 } from 'faunadb'
 import { createClient } from '@/lib/fauna'
 import admin from '@/lib/firebase/server'
-import { createAccessAndRefreshTokens } from '@/lib/auth'
-import setCookie from '@/util/setCookie'
+import { CreateAccessAndRefreshToken, setRefreshTokenCookie } from '@/lib/auth'
 
-interface FaunaAuthResult {
+export interface Token {
+  secret: string
+}
+
+export interface TokenWithTtl extends Token {
+  exp: string
+}
+
+export interface FaunaAuthTokens {
+  access: TokenWithTtl
+  refresh: Token
+}
+
+export interface FaunaAuthPayload {
   accessToken: string
-  refreshToken: string
+  accessTokenExp: string
 }
 
 export default async function handle(
@@ -62,7 +75,7 @@ export default async function handle(
   }
 
   const { name, uid, picture, email } = user
-  const { accessToken, refreshToken } = await client.query<FaunaAuthResult>(
+  const { access, refresh } = await client.query<FaunaAuthTokens>(
     Let(
       {
         match: Match(Index('users_by_uid'), uid),
@@ -82,11 +95,16 @@ export default async function handle(
           }),
           Let(
             {
-              tokens: createAccessAndRefreshTokens(Var('userRef')),
+              tokens: CreateAccessAndRefreshToken(Var('userRef')),
             },
             {
-              accessToken: Select(['accessToken', 'secret'], Var('tokens')),
-              refreshToken: Select(['refreshToken', 'secret'], Var('tokens')),
+              access: {
+                secret: Select(['access', 'secret'], Var('tokens')),
+                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
+              },
+              refresh: {
+                secret: Select(['refresh', 'secret'], Var('tokens')),
+              },
             },
           ),
         ),
@@ -96,12 +114,16 @@ export default async function handle(
           }),
           Let(
             {
-              tokens: createAccessAndRefreshTokens(Var('userRef')),
-              accessToken: Select(['accessToken', 'secret'], Var('tokens')),
+              tokens: CreateAccessAndRefreshToken(Var('userRef')),
             },
             {
-              refreshToken: Select(['refreshToken', 'secret'], Var('tokens')),
-              accessToken: Select(['secret'], Var('accessToken')),
+              access: {
+                secret: Select(['access', 'secret'], Var('tokens')),
+                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
+              },
+              refresh: {
+                secret: Select(['refresh', 'secret'], Var('tokens')),
+              },
             },
           ),
         ),
@@ -109,16 +131,7 @@ export default async function handle(
     ),
   )
 
-  const tenYears = 315569520 * 1000
-  setCookie(res, 'chatskeeFaunaToken', refreshToken, {
-    maxAge: tenYears,
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-  })
+  setRefreshTokenCookie(res, refresh.secret)
 
-  return res.json({
-    accessToken,
-  })
+  return res.json({ access })
 }
