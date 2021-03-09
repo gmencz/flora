@@ -31,6 +31,7 @@ import {
   Var,
 } from 'faunadb'
 import { NextApiResponse } from 'next'
+import { FaunaAuthTokens } from 'pages/api/fauna/login'
 
 export const ACCESS_TOKEN_LIFETIME_SECONDS = 600 // 10 minutes
 export const RESET_TOKEN_LIFETIME_SECONDS = 1800 // 30 minutes
@@ -251,4 +252,20 @@ export function clearRefreshTokenCookie(res: NextApiResponse) {
     secure: process.env.NODE_ENV === 'production',
     path: '/',
   })
+}
+
+export async function silentRefresh() {
+  const response = await fetch('/api/fauna/refresh', {
+    method: 'POST',
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Received ${response.status} while silently refreshing access token`,
+    )
+  }
+
+  const access = (await response.json()) as FaunaAuthTokens['access']
+  return access
 }

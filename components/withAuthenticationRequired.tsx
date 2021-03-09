@@ -1,7 +1,11 @@
 import firebase from '@/lib/firebase/client'
-import { ComponentType } from 'react'
+import { ComponentType, useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
+import { useFauna } from '@/lib/fauna'
+import { silentRefresh } from '@/lib/auth'
+
+const auth = firebase.auth()
 
 const defaultOnRedirecting = () => <></>
 
@@ -23,16 +27,54 @@ const withAuthenticationRequired = <P extends object>(
   options: WithAuthenticationRequiredOptions = {},
 ) => {
   return function WithAuthenticationRequired(props: P) {
-    const [user, loading, error] = useAuthState(firebase.auth())
+    const [user, loading, error] = useAuthState(auth)
     const { onRedirecting = defaultOnRedirecting } = options
     const router = useRouter()
+    const { accessTokenRef, silentRefreshRef } = useFauna()
+    const [isRefreshing, setIsRefreshing] = useState(true)
 
-    if (!loading && (!user || error)) {
+    const redirectToLogin = useCallback(() => {
       const nextPath = router.asPath
       router.push(`/login?next=${encodeURIComponent(nextPath)}`)
+    }, [router])
+
+    useEffect(() => {
+      if (!silentRefreshRef.current) {
+        silentRefresh().then(({ secret, expInMs }) => {
+          accessTokenRef.current = secret
+
+          const thirtySeconds = 30 * 1000
+          const silentRefreshMs = expInMs - thirtySeconds
+
+          silentRefreshRef.current = setInterval(async () => {
+            try {
+              const refreshedAccessToken = await silentRefresh()
+              accessTokenRef.current = refreshedAccessToken.secret
+            } catch (error) {
+              console.error(error)
+              try {
+                await auth.signOut()
+              } catch (error) {
+              } finally {
+                redirectToLogin()
+              }
+            }
+          }, silentRefreshMs)
+
+          setIsRefreshing(false)
+        })
+      } else {
+        setIsRefreshing(false)
+      }
+    }, [accessTokenRef, redirectToLogin, silentRefreshRef])
+
+    const errorAuthenticating = !loading && (!user || error)
+    if (errorAuthenticating) {
+      redirectToLogin()
     }
 
-    return user ? <Component {...props} /> : onRedirecting()
+    const success = !!user && !isRefreshing
+    return success ? <Component {...props} /> : onRedirecting()
   }
 }
 

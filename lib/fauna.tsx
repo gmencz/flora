@@ -1,13 +1,10 @@
 import { Client as FaunaClient, ClientConfig } from 'faunadb'
 import {
   createContext,
-  Dispatch,
   MutableRefObject,
   ReactNode,
-  SetStateAction,
   useContext,
   useMemo,
-  useState,
 } from 'react'
 
 const baseConfig: Omit<ClientConfig, 'secret'> =
@@ -19,7 +16,7 @@ const baseConfig: Omit<ClientConfig, 'secret'> =
         port: 8443,
       }
 
-export function createClient(secret: string = process.env.FAUNADB_SERVER_KEY!) {
+export function createClient(secret: string) {
   const client = new FaunaClient({
     ...baseConfig,
     secret,
@@ -28,36 +25,46 @@ export function createClient(secret: string = process.env.FAUNADB_SERVER_KEY!) {
   return client
 }
 
-interface IFaunaContext {
-  accessToken: string | null
-  setAccessToken: Dispatch<SetStateAction<string | null>>
-  client: FaunaClient | undefined
+interface IFaunaClientContext {
+  client: FaunaClient
+  silentRefreshRef: MutableRefObject<NodeJS.Timeout | undefined>
+  accessTokenRef: MutableRefObject<string | undefined>
 }
 
-const FaunaContext = createContext<IFaunaContext | null>(null)
+const FaunaClientContext = createContext<IFaunaClientContext | null>(null)
 
-interface FaunaProviderProps {
+export interface FaunaAccess {
+  secret: string
+  interval: NodeJS.Timeout
+}
+
+interface FaunaClientProviderProps {
   children: ReactNode
-  clientRef: MutableRefObject<FaunaClient | undefined>
+  client: FaunaClient
+  silentRefreshRef: MutableRefObject<NodeJS.Timeout | undefined>
+  accessTokenRef: MutableRefObject<string | undefined>
 }
 
-export function FaunaProvider({ children, clientRef }: FaunaProviderProps) {
-  const [accessToken, setAccessToken] = useState<null | string>(null)
-
-  const memoizedValue = useMemo(
-    () => ({ accessToken, setAccessToken, client: clientRef.current }),
-    [accessToken, clientRef],
+export function FaunaClientProvider({
+  children,
+  client,
+  silentRefreshRef,
+  accessTokenRef,
+}: FaunaClientProviderProps) {
+  const memoized = useMemo<IFaunaClientContext>(
+    () => ({ client, silentRefreshRef, accessTokenRef }),
+    [client, silentRefreshRef, accessTokenRef],
   )
 
   return (
-    <FaunaContext.Provider value={memoizedValue}>
+    <FaunaClientContext.Provider value={memoized}>
       {children}
-    </FaunaContext.Provider>
+    </FaunaClientContext.Provider>
   )
 }
 
 export function useFauna() {
-  const context = useContext(FaunaContext)
+  const context = useContext(FaunaClientContext)
 
   if (!context) {
     throw new Error(`Can't use hook 'useFauna' outside of a FaunaProvider`)

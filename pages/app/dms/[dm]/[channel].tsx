@@ -1,20 +1,14 @@
 import DMsSidebar from '@/components/DMs/Sidebar'
 import ServersSidebar from '@/components/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
-import fetcher from '@/util/fetcher'
 import { useRouter } from 'next/router'
-import { DMDetails } from 'pages/api/dms/[dm]'
 import { useQuery } from 'react-query'
 
 function DM() {
   const router = useRouter()
   const { channel, dm } = router.query as Record<string, string>
 
-  const dmQuery = useQuery(
-    ['dm', dm],
-    () => fetcher<DMDetails>(`/api/dms/${dm}`),
-    { staleTime: Infinity },
-  )
+  const dmQuery = useQuery(['dm', dm], async () => {}, { staleTime: Infinity })
 
   return (
     <div className="flex">
@@ -39,9 +33,9 @@ function DM() {
                 d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
               />
             </svg>
-            <span className="text-sm font-semibold text-gray-900">
+            {/* <span className="text-sm font-semibold text-gray-900">
               {dmQuery.data?.withUser.name}
-            </span>
+            </span> */}
           </div>
         </header>
         <section className="px-6 py-4" style={{ minHeight: '200vh' }}>

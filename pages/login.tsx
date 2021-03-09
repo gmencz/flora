@@ -1,9 +1,10 @@
+import { silentRefresh } from '@/lib/auth'
 import { useFauna } from '@/lib/fauna'
 import firebase from '@/lib/firebase/client'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { useEffect } from 'react'
+import { FaunaAuthTokens } from './api/fauna/login'
 
 // Providers
 const googleProvider = new firebase.auth.GoogleAuthProvider()
@@ -20,13 +21,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-
-  // useEffect(() => {
-  //   if (accessToken) {
-  //     const { next = '/app' } = router.query as RouterQuery
-  //     router.push(next)
-  //   }
-  // }, [accessToken, router])
+  const { silentRefreshRef, accessTokenRef } = useFauna()
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -35,16 +30,34 @@ function Login() {
       .then(async result => {
         if (result.user) {
           const idToken = await result.user.getIdToken()
-          const authorization = await fetch('/api/fauna/login', {
+          const { secret, expInMs } = (await fetch('/api/fauna/login', {
             method: 'POST',
             headers: {
               authorization: `Bearer ${idToken}`,
             },
-          }).then(res => res.json())
+          }).then(res => res.json())) as FaunaAuthTokens['access']
 
-          console.log(authorization)
+          if (silentRefreshRef.current) {
+            clearInterval(silentRefreshRef.current)
+          }
 
-          // setAccessToken(authorization.accessToken)
+          accessTokenRef.current = secret
+
+          const thirtySeconds = 30 * 1000
+          const silentRefreshMs = expInMs - thirtySeconds
+
+          silentRefreshRef.current = setInterval(async () => {
+            try {
+              const refreshedAccessToken = await silentRefresh()
+              accessTokenRef.current = refreshedAccessToken.secret
+            } catch (error) {
+              console.error(error)
+              await auth.signOut()
+            }
+          }, silentRefreshMs)
+
+          const { next = '/app' } = router.query as RouterQuery
+          router.push(next)
         }
       })
       .catch(error => {
@@ -52,13 +65,8 @@ function Login() {
       })
   }
 
-  const signInWithGoogle = () => {
-    signIn(googleProvider)
-  }
-
-  const signInWithGithub = () => {
-    signIn(githubProvider)
-  }
+  const signInWithGoogle = () => signIn(googleProvider)
+  const signInWithGithub = () => signIn(githubProvider)
 
   return (
     <div className="min-h-screen flex items-center justify-center flex-col space-y-6">

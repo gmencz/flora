@@ -8,11 +8,14 @@ import catchHandler from '@/util/catchHandler'
 import {
   Call,
   ContainsPath,
+  CurrentToken,
   Function,
+  Get,
   If,
   Let,
+  Now,
   Select,
-  ToString,
+  TimeDiff,
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
@@ -27,26 +30,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     refreshResult = await fauna.query<FaunaAuthTokens | null>(
       Let(
         {
-          refreshResult: Call(Function('refresh')),
+          tokens: Call(Function('refresh')),
         },
-        If(
-          ContainsPath(['code'], Var('refreshResult')),
-          null,
-          Let(
-            {
-              tokens: Select(['tokens'], Var('refreshResult')),
-            },
-            {
-              access: {
-                secret: Select(['access', 'secret'], Var('tokens')),
-                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
-              },
-              refresh: {
-                secret: Select(['refresh', 'secret'], Var('tokens')),
-              },
-            },
-          ),
-        ),
+        If(ContainsPath(['code'], Var('tokens')), null, {
+          access: {
+            secret: Select(['access', 'secret'], Var('tokens')),
+            expInMs: TimeDiff(
+              Now(),
+              Select(['access', 'ttl'], Var('tokens')),
+              'milliseconds',
+            ),
+          },
+          refresh: {
+            secret: Select(['refresh', 'secret'], Var('tokens')),
+          },
+        }),
       ),
     )
   } catch (error) {
@@ -65,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   setRefreshTokenCookie(res, refresh.secret)
 
-  return res.json({ access })
+  return res.json(access)
 }
 
 export default catchHandler(handler)

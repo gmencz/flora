@@ -12,7 +12,7 @@ import {
   Merge,
   Now,
   Select,
-  ToString,
+  TimeDiff,
   Update,
   Var,
 } from 'faunadb'
@@ -25,7 +25,7 @@ export interface Token {
 }
 
 export interface TokenWithTtl extends Token {
-  exp: string
+  expInMs: number
 }
 
 export interface FaunaAuthTokens {
@@ -42,7 +42,7 @@ export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const client = createClient()
+  const client = createClient(process.env.FAUNADB_SERVER_KEY!)
 
   if (!req.headers.authorization) {
     return res.status(401).json({
@@ -100,7 +100,11 @@ export default async function handle(
             {
               access: {
                 secret: Select(['access', 'secret'], Var('tokens')),
-                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
+                expInMs: TimeDiff(
+                  Now(),
+                  Select(['access', 'ttl'], Var('tokens')),
+                  'milliseconds',
+                ),
               },
               refresh: {
                 secret: Select(['refresh', 'secret'], Var('tokens')),
@@ -119,7 +123,11 @@ export default async function handle(
             {
               access: {
                 secret: Select(['access', 'secret'], Var('tokens')),
-                exp: ToString(Select(['access', 'ttl'], Var('tokens'))),
+                expInMs: TimeDiff(
+                  Now(),
+                  Select(['access', 'ttl'], Var('tokens')),
+                  'milliseconds',
+                ),
               },
               refresh: {
                 secret: Select(['refresh', 'secret'], Var('tokens')),
@@ -133,5 +141,5 @@ export default async function handle(
 
   setRefreshTokenCookie(res, refresh.secret)
 
-  return res.json({ access })
+  return res.json(access)
 }
