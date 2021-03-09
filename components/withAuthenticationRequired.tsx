@@ -31,7 +31,7 @@ const withAuthenticationRequired = <P extends object>(
     const { onRedirecting = defaultOnRedirecting } = options
     const router = useRouter()
     const { accessTokenRef, silentRefreshRef } = useFauna()
-    const [isRefreshing, setIsRefreshing] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(!silentRefreshRef.current)
 
     const redirectToLogin = useCallback(() => {
       const nextPath = router.asPath
@@ -63,8 +63,6 @@ const withAuthenticationRequired = <P extends object>(
 
           setIsRefreshing(false)
         })
-      } else {
-        setIsRefreshing(false)
       }
     }, [accessTokenRef, redirectToLogin, silentRefreshRef])
 

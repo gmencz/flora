@@ -4,6 +4,8 @@ import firebase from '@/lib/firebase/client'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
+import { useState } from 'react'
+import { useQuery } from 'react-query'
 import { FaunaAuthTokens } from './api/fauna/login'
 
 // Providers

@@ -1,14 +1,27 @@
 import DMsSidebar from '@/components/DMs/Sidebar'
 import ServersSidebar from '@/components/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
+import getDmFql from 'fauna/queryManager/fql/dm'
+import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
 import { useRouter } from 'next/router'
-import { useQuery } from 'react-query'
+
+interface DMDetails {
+  withUser: {
+    id: string
+    name: string
+    photo: string
+  }
+}
 
 function DM() {
   const router = useRouter()
   const { channel, dm } = router.query as Record<string, string>
 
-  const dmQuery = useQuery(['dm', dm], async () => {}, { staleTime: Infinity })
+  const dmQuery = useFaunaQuery<Pick<DMDetails, 'withUser'>>({
+    queryKey: ['dm', dm],
+    fql: getDmFql(dm),
+    staleTime: Infinity,
+  })
 
   return (
     <div className="flex">
@@ -33,9 +46,9 @@ function DM() {
                 d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
               />
             </svg>
-            {/* <span className="text-sm font-semibold text-gray-900">
+            <span className="text-sm font-semibold text-gray-900">
               {dmQuery.data?.withUser.name}
-            </span> */}
+            </span>
           </div>
         </header>
         <section className="px-6 py-4" style={{ minHeight: '200vh' }}>

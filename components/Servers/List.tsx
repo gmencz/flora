@@ -1,23 +1,8 @@
-import { useQuery } from 'react-query'
-import {
-  Collection,
-  CurrentIdentity,
-  Documents,
-  Get,
-  Index,
-  Lambda,
-  Let,
-  Map,
-  Match,
-  Paginate,
-  Select,
-  Var,
-} from 'faunadb'
 import { Page } from '@/lib/types'
-import resolvePagination from '@/util/resolvePagination'
 import Tooltip from '../Tooltip'
 import Link from 'next/link'
-import { useFauna } from '@/lib/fauna'
+import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
+import serversFql from 'fauna/queryManager/fql/servers'
 
 interface Server {
   id: string
@@ -26,50 +11,15 @@ interface Server {
 }
 
 function ServersList() {
-  const { client } = useFauna()
-  const { data: servers } = useQuery(
-    'servers',
-    async () => {
-      // const data = await client!.query(Paginate(Documents(Collection('users'))))
-      // console.log(data)
-
-      return []
-      // const paginatedServers = await fauna!.query<Page<Server>>(
-      //   Let(
-      //     {
-      //       paginationResult: Map(
-      //         Paginate(Match(Index('server_users_by_user'), CurrentIdentity())),
-      //         Lambda(
-      //           'ref',
-      //           Let(
-      //             {
-      //               serverDoc: Get(
-      //                 Select(['data', 'serverRef'], Get(Var('ref'))),
-      //               ),
-      //             },
-      //             {
-      //               id: Select(['ref', 'id'], Var('serverDoc')),
-      //               name: Select(['data', 'name'], Var('serverDoc')),
-      //               photo: Select(['data', 'photo'], Var('serverDoc')),
-      //             },
-      //           ),
-      //         ),
-      //       ),
-      //     },
-      //     resolvePagination(Var('paginationResult')),
-      //   ),
-      // )
-
-      // return paginatedServers
-    },
-    {
-      staleTime: Infinity,
-    },
-  )
+  const { data: servers } = useFaunaQuery<Page<Server>>({
+    queryKey: 'servers',
+    fql: serversFql,
+    staleTime: Infinity,
+  })
 
   return (
     <>
-      {/* {servers?.data.map(server => (
+      {servers?.data.map(server => (
         <li key={server.id} className="relative">
           <Tooltip label={server.name}>
             <div>
@@ -85,7 +35,7 @@ function ServersList() {
             </div>
           </Tooltip>
         </li>
-      ))} */}
+      ))}
     </>
   )
 }
