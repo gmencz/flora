@@ -79,7 +79,6 @@ export default async function handle(
     Let(
       {
         match: Match(Index('users_by_uid'), uid),
-        userRef: Select(['ref'], Get(Var('match'))),
         baseUserData: {
           name,
           uid,
@@ -89,36 +88,42 @@ export default async function handle(
       },
       If(
         Exists(Var('match')),
-        Do(
-          Update(Var('userRef'), {
-            data: Var('baseUserData'),
-          }),
-          Let(
-            {
-              tokens: CreateAccessAndRefreshToken(Var('userRef')),
-            },
-            {
-              access: {
-                secret: Select(['access', 'secret'], Var('tokens')),
-                expInMs: TimeDiff(
-                  Now(),
-                  Select(['access', 'ttl'], Var('tokens')),
-                  'milliseconds',
-                ),
+        Let(
+          { userRef: Select(['ref'], Get(Var('match'))) },
+          Do(
+            Update(Var('userRef'), {
+              data: Var('baseUserData'),
+            }),
+            Let(
+              {
+                tokens: CreateAccessAndRefreshToken(Var('userRef')),
               },
-              refresh: {
-                secret: Select(['refresh', 'secret'], Var('tokens')),
+              {
+                access: {
+                  secret: Select(['access', 'secret'], Var('tokens')),
+                  expInMs: TimeDiff(
+                    Now(),
+                    Select(['access', 'ttl'], Var('tokens')),
+                    'milliseconds',
+                  ),
+                },
+                refresh: {
+                  secret: Select(['refresh', 'secret'], Var('tokens')),
+                },
               },
-            },
+            ),
           ),
         ),
+
         Do(
           Create(Collection('users'), {
             data: Merge(Var('baseUserData'), { created: Now() }),
           }),
           Let(
             {
-              tokens: CreateAccessAndRefreshToken(Var('userRef')),
+              tokens: CreateAccessAndRefreshToken(
+                Select(['ref'], Get(Var('match'))),
+              ),
             },
             {
               access: {

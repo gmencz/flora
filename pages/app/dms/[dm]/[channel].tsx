@@ -1,9 +1,12 @@
 import DMsSidebar from '@/components/DMs/Sidebar'
 import ServersSidebar from '@/components/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
+import { createClient, useFauna } from '@/lib/fauna'
 import getDmFql from 'fauna/queryManager/fql/dm'
 import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
+import { Collection, Documents, Get } from 'faunadb'
 import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 
 interface DMDetails {
   withUser: {
@@ -16,12 +19,43 @@ interface DMDetails {
 function DM() {
   const router = useRouter()
   const { channel, dm } = router.query as Record<string, string>
+  const { getAccessToken } = useFauna()
 
   const dmQuery = useFaunaQuery<Pick<DMDetails, 'withUser'>>({
     queryKey: ['dm', dm],
     fql: getDmFql(dm),
     staleTime: Infinity,
   })
+
+  useEffect(() => {
+    const subscriptionClient = createClient(getAccessToken())
+    const stream = subscriptionClient.stream(
+      Get(Documents(Collection('users'))),
+    )
+
+    const startStream = () => {
+      stream
+        .on('start', () => {
+          console.log('STREAM STARTED')
+        })
+        .on('version', (type, txn, event) => {
+          console.log('STREAM UPDATE')
+          console.log({ type, txn, event })
+        })
+        .on('error', error => {
+          console.log('STREAM ERROR', error)
+          stream.close()
+          setTimeout(startStream, 1000)
+        })
+        .start()
+    }
+
+    startStream()
+
+    return () => {
+      stream.close()
+    }
+  }, [getAccessToken])
 
   return (
     <div className="flex">
