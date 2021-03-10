@@ -78,7 +78,8 @@ CreateRole({
                 )
               )
             )
-          )
+          ),
+          write: true
         }
       },
       {
@@ -139,6 +140,19 @@ CreateRole({
               )
             )
           )
+        }
+      },
+      {
+        resource: Index('messages_by_channel'),
+        actions: {
+          read: true
+        }
+      },
+      {
+        resource: Collection('messages'),
+        actions: {
+          read: true,
+          create: true
         }
       },
     ]
