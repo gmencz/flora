@@ -34,7 +34,7 @@ function ServersSidebar() {
           <List />
 
           <li className="relative">
-            <Tooltip label="Add a Server (Coming Soon&trade;)">
+            <Tooltip label="Add a Server (Soon&trade;)">
               <div className="group">
                 {/* <Link href="/app/servers/new"> */}
                 <a className="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
