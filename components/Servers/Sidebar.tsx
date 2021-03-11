@@ -34,26 +34,26 @@ function ServersSidebar() {
           <List />
 
           <li className="relative">
-            <Tooltip label="Add a Server">
+            <Tooltip label="Add a Server (Coming Soon&trade;)">
               <div className="group">
-                <Link href="/app/servers/new">
-                  <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="w-full text-gray-800 group-hover:text-white"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                {/* <Link href="/app/servers/new"> */}
+                <a className="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="w-full text-gray-800 group-hover:text-white"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
 
-                    <span className="sr-only">Add a Server</span>
-                  </a>
-                </Link>
+                  <span className="sr-only">Add a Server</span>
+                </a>
+                {/* </Link> */}
               </div>
             </Tooltip>
           </li>

@@ -1,16 +1,23 @@
 import DMsSidebar from '@/components/DMs/Sidebar'
+import Message from '@/components/Message'
 import ServersSidebar from '@/components/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/withAuthenticationRequired'
 import { createClient, useFauna } from '@/lib/fauna'
 import { Page } from '@/lib/types'
-import formatMessageTimestamp from '@/util/formatMessageTimestamp'
 import getDmFql from 'fauna/queryManager/fql/dm'
 import { sendMessageToChannelFql } from 'fauna/queryManager/fql/message'
 import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
 import { Collection, Ref } from 'faunadb'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/router'
-import { FormEventHandler, KeyboardEvent, useEffect, useState } from 'react'
+import {
+  FormEventHandler,
+  KeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 
 interface DMUser {
@@ -19,16 +26,24 @@ interface DMUser {
   photo: string
 }
 
-interface DMMessage {
+export interface DMMessage {
   timestamp: string
   nonce: string
   content: string
+  status: MessageStatus
   user: DMUser
 }
 
 interface DMDetails {
+  currentUser: DMUser
   withUser: DMUser
   messages: Page<DMMessage>
+}
+
+export enum MessageStatus {
+  FAILED,
+  IN_QUEUE,
+  DELIVERED,
 }
 
 export type NewMessage = Pick<DMMessage, 'content' | 'nonce'>
@@ -38,11 +53,37 @@ function DM() {
   const { channel, dm } = router.query as Record<string, string>
   const { client, getAccessToken } = useFauna()
   const [message, setMessage] = useState('')
-  const mutation = useMutation<unknown, unknown, NewMessage>(newMessage => {
-    return client.query(sendMessageToChannelFql(newMessage, channel), {
-      secret: getAccessToken(),
-    })
-  })
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const mutation = useMutation<unknown, unknown, NewMessage>(
+    newMessage => {
+      return client.query(sendMessageToChannelFql(newMessage, channel), {
+        secret: getAccessToken(),
+      })
+    },
+    {
+      onError: (_error, failedMessage) => {
+        queryClient.setQueryData<DMDetails>(['dm', dm], existing => {
+          return {
+            ...existing!,
+            messages: {
+              data: existing!.messages.data.map(message => {
+                if (message.nonce === failedMessage.nonce) {
+                  return {
+                    ...message,
+                    status: MessageStatus.FAILED,
+                  }
+                }
+
+                return message
+              }),
+              before: existing!.messages.before,
+              after: existing!.messages.after,
+            },
+          }
+        })
+      },
+    },
+  )
 
   const queryClient = useQueryClient()
 
@@ -64,11 +105,24 @@ function DM() {
           const { document } = event as any
           const { data } = document as { data: { latestMessage: DMMessage } }
           queryClient.setQueryData<DMDetails>(['dm', dm], existing => {
+            const isMessageInQueue = existing!.messages.data.find(
+              message => message.nonce === data.latestMessage.nonce,
+            )
+
             return {
               ...existing!,
               messages: {
-                ...existing!.messages,
-                data: [...existing!.messages.data, data.latestMessage],
+                data: isMessageInQueue
+                  ? existing!.messages.data.map(message => {
+                      if (message.nonce === data.latestMessage.nonce) {
+                        return data.latestMessage
+                      }
+
+                      return message
+                    })
+                  : [...existing!.messages.data, data.latestMessage],
+                before: existing!.messages.before,
+                after: existing!.messages.after,
               },
             }
           })
@@ -96,11 +150,37 @@ function DM() {
   }
 
   const sendMessage = () => {
+    const nonce = nanoid()
+    queryClient.setQueryData<DMDetails>(['dm', dm], existing => {
+      return {
+        ...existing!,
+        messages: {
+          ...existing!.messages,
+          data: [
+            ...existing!.messages.data,
+            {
+              content: message,
+              nonce,
+              timestamp: new Date().toISOString(),
+              user: data!.currentUser,
+              status: MessageStatus.IN_QUEUE,
+            },
+          ],
+        },
+      }
+    })
+
     mutation.mutate({
       content: message,
-      nonce: nanoid(),
+      nonce,
     })
   }
+
+  useLayoutEffect(() => {
+    if (data && data.messages.data.length > 0) {
+      messagesEndRef.current?.scrollIntoView()
+    }
+  }, [data])
 
   const onSubmit: FormEventHandler<HTMLFormElement> = event => {
     event.preventDefault()
@@ -135,37 +215,19 @@ function DM() {
             </span>
           </div>
         </header>
-        <section className="px-6 py-4 space-y-4">
-          {data?.messages.data.map(message => (
-            <div key={message.nonce} className="flex items-center space-x-4">
-              <img
-                src={message.user.photo}
-                alt={message.user.name}
-                className="h-9 w-9 rounded-full"
+        <ul className="p-6">
+          {data?.messages.data.map((message, index, messages) => (
+            <li key={message.nonce}>
+              <Message
+                message={message}
+                previousMessage={messages[index - 1]}
               />
-
-              <div className="flex flex-col flex-1 space-y-0.5">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-semibold text-gray-900">
-                    {message.user.name}
-                  </span>
-                  <time
-                    className="text-xs text-gray-600"
-                    dateTime={message.timestamp}
-                  >
-                    {formatMessageTimestamp(message.timestamp)}
-                  </time>
-                </div>
-
-                <p className="text-sm text-gray-900 break-all">
-                  {message.content}
-                </p>
-              </div>
-            </div>
+            </li>
           ))}
-        </section>
+        </ul>
+        <div ref={messagesEndRef} />
 
-        <div className="p-4 mt-auto">
+        <div className="sticky bottom-0 p-4 mt-auto bg-gray-100">
           <form onSubmit={onSubmit}>
             <textarea
               value={message}

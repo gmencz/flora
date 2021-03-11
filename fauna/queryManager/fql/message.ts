@@ -11,7 +11,7 @@ import {
   Update,
   Var,
 } from 'faunadb'
-import { NewMessage } from 'pages/app/dms/[dm]/[channel]'
+import { MessageStatus, NewMessage } from 'pages/app/dms/[dm]/[channel]'
 
 export const sendMessageToChannelFql = (
   newMessage: NewMessage,
@@ -32,6 +32,7 @@ export const sendMessageToChannelFql = (
         timestamp: ToString(Select(['data', 'timestamp'], Var('newMessage'))),
         nonce: Select(['data', 'nonce'], Var('newMessage')),
         content: Select(['data', 'content'], Var('newMessage')),
+        status: MessageStatus.DELIVERED,
         user: Let(
           {
             userDoc: Get(Select(['data', 'userRef'], Var('newMessage'))),
