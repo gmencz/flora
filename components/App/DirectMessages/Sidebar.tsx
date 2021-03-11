@@ -57,7 +57,7 @@ export default function DMsSidebar() {
             </h2>
 
             <div className="relative">
-              <Tooltip label="Create DM" onTop>
+              <Tooltip label="Create DM" position="left">
                 <Link href="/app/dms/new">
                   <a>
                     <svg

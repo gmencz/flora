@@ -7,7 +7,7 @@ function ServersSidebar() {
     <aside className="flex sticky top-0 z-20 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
       <ul className="flex justify-center">
         <li className="relative">
-          <Tooltip label="Home">
+          <Tooltip label="Home" position="right">
             <Link href="/app">
               <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
                 <svg
@@ -34,7 +34,7 @@ function ServersSidebar() {
           <List />
 
           <li className="relative">
-            <Tooltip label="Add a Server (Soon&trade;)">
+            <Tooltip label="Add a Server (Soon&trade;)" position="right">
               <div className="group">
                 {/* <Link href="/app/servers/new"> */}
                 <a className="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">

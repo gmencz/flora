@@ -20,7 +20,7 @@ module.exports = {
         brand: colors.cyan,
       },
       transitionTimingFunction: {
-        'server-tooltip': 'cubic-bezier(0,.68,.52,.6)',
+        tooltip: 'cubic-bezier(0,.68,.52,.6)',
       },
     },
   },

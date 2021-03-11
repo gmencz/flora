@@ -21,7 +21,7 @@ function ServersList() {
     <>
       {servers?.data.map(server => (
         <li key={server.id} className="relative">
-          <Tooltip label={server.name}>
+          <Tooltip label={server.name} position="right">
             <div>
               <Link href={`/app/servers/${server.id}`}>
                 <a className="flex h-12 w-12 justify-center items-center">
