@@ -2,15 +2,14 @@ import {
   clearRefreshTokenCookie,
   REFRESH_TOKEN_REUSE_ERROR,
   setRefreshTokenCookie,
-} from '@/lib/auth'
-import { createClient } from '@/lib/fauna'
+} from '@/fauna/mutations/auth'
+import { createClient } from '@/lib/FaunaClient'
+import { FaunaAuthTokens } from '@/lib/types/auth'
 import catchHandler from '@/util/catchHandler'
 import {
   Call,
   ContainsPath,
-  CurrentToken,
   Function,
-  Get,
   If,
   Let,
   Now,
@@ -19,7 +18,6 @@ import {
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { FaunaAuthTokens } from './login'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const refreshToken = req.cookies.chatskeeFaunaRefresh

@@ -1,3 +1,4 @@
+import { FaunaAuthTokens } from '@/lib/types/auth'
 import setCookie from '@/util/setCookie'
 import {
   And,
@@ -31,7 +32,6 @@ import {
   Var,
 } from 'faunadb'
 import { NextApiResponse } from 'next'
-import { FaunaAuthTokens } from 'pages/api/fauna/login'
 
 export const ACCESS_TOKEN_LIFETIME_SECONDS = 600 // 10 minutes
 export const RESET_TOKEN_LIFETIME_SECONDS = 1800 // 30 minutes

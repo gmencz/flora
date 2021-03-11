@@ -4,7 +4,6 @@ import {
   MutableRefObject,
   ReactNode,
   useCallback,
-  useContext,
   useMemo,
 } from 'react'
 
@@ -33,12 +32,9 @@ interface IFaunaClientContext {
   getAccessToken: () => string
 }
 
-const FaunaClientContext = createContext<IFaunaClientContext | null>(null)
-
-export interface FaunaAccess {
-  secret: string
-  interval: NodeJS.Timeout
-}
+export const FaunaClientContext = createContext<IFaunaClientContext | null>(
+  null,
+)
 
 interface FaunaClientProviderProps {
   children: ReactNode
@@ -67,14 +63,4 @@ export function FaunaClientProvider({
       {children}
     </FaunaClientContext.Provider>
   )
-}
-
-export function useFauna() {
-  const context = useContext(FaunaClientContext)
-
-  if (!context) {
-    throw new Error(`Can't use hook 'useFauna' outside of a FaunaProvider`)
-  }
-
-  return context
 }

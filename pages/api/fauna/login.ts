@@ -16,32 +16,16 @@ import {
   Update,
   Var,
 } from 'faunadb'
-import { createClient } from '@/lib/fauna'
 import admin from '@/lib/firebase/server'
-import { CreateAccessAndRefreshToken, setRefreshTokenCookie } from '@/lib/auth'
+import catchHandler from '@/util/catchHandler'
+import { FaunaAuthTokens } from '@/lib/types/auth'
+import { createClient } from '@/lib/FaunaClient'
+import {
+  CreateAccessAndRefreshToken,
+  setRefreshTokenCookie,
+} from '@/fauna/mutations/auth'
 
-export interface Token {
-  secret: string
-}
-
-export interface TokenWithTtl extends Token {
-  expInMs: number
-}
-
-export interface FaunaAuthTokens {
-  access: TokenWithTtl
-  refresh: Token
-}
-
-export interface FaunaAuthPayload {
-  accessToken: string
-  accessTokenExp: string
-}
-
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = createClient(process.env.FAUNADB_SERVER_KEY!)
 
   if (!req.headers.authorization) {
@@ -148,3 +132,5 @@ export default async function handle(
 
   return res.json(access)
 }
+
+export default catchHandler(handler)

@@ -1,12 +1,12 @@
+import { DirectMessage, DirectMessageStatus } from '@/lib/types/messages'
 import formatMessageTimestamp from '@/util/formatMessageTimestamp'
 import clsx from 'clsx'
 import { parseISO, differenceInMinutes } from 'date-fns'
-import { DMMessage, MessageStatus } from 'pages/app/dms/[dm]/[channel]'
 import { useMemo } from 'react'
 
 interface MessageProps {
-  previousMessage: DMMessage | undefined
-  message: DMMessage
+  previousMessage: DirectMessage | undefined
+  message: DirectMessage
 }
 
 export default function Message({ message, previousMessage }: MessageProps) {
@@ -38,9 +38,9 @@ export default function Message({ message, previousMessage }: MessageProps) {
             className={clsx(
               'text-sm break-all transition-colors',
 
-              message.status === MessageStatus.IN_QUEUE
+              message.status === DirectMessageStatus.IN_QUEUE
                 ? 'text-gray-400'
-                : message.status === MessageStatus.DELIVERED
+                : message.status === DirectMessageStatus.DELIVERED
                 ? 'text-gray-900'
                 : 'text-red-600',
             )}
@@ -78,9 +78,9 @@ export default function Message({ message, previousMessage }: MessageProps) {
               className={clsx(
                 'text-sm break-all transition-colors',
 
-                message.status === MessageStatus.IN_QUEUE
+                message.status === DirectMessageStatus.IN_QUEUE
                   ? 'text-gray-400'
-                  : message.status === MessageStatus.DELIVERED
+                  : message.status === DirectMessageStatus.DELIVERED
                   ? 'text-gray-900'
                   : 'text-red-600',
               )}

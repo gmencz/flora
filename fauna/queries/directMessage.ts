@@ -1,3 +1,4 @@
+import { DirectMessageStatus } from '@/lib/types/messages'
 import resolvePagination from '@/util/resolvePagination'
 import {
   Collection,
@@ -17,9 +18,8 @@ import {
   ToString,
   Var,
 } from 'faunadb'
-import { MessageStatus } from 'pages/app/dms/[dm]/[channel]'
 
-const getDmFql = (dm: string, channel: string) =>
+const getDirectMessageFql = (dm: string, channel: string) =>
   Let(
     {
       dmDoc: Get(Ref(Collection('dms'), dm)),
@@ -60,7 +60,7 @@ const getDmFql = (dm: string, channel: string) =>
                 timestamp: ToString(Select([0], Var('message'))),
                 nonce: Select([1], Var('message')),
                 content: Select([2], Var('message')),
-                status: MessageStatus.DELIVERED,
+                status: DirectMessageStatus.DELIVERED,
                 user: Let(
                   {
                     userDoc: Get(Select([3], Var('message'))),
@@ -80,4 +80,4 @@ const getDmFql = (dm: string, channel: string) =>
     },
   )
 
-export default getDmFql
+export default getDirectMessageFql

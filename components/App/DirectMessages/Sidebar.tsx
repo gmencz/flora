@@ -1,11 +1,11 @@
-import { Page } from '@/lib/types'
+import directMessagesFql from '@/fauna/queries/directMessages'
+import { Page } from '@/lib/types/common'
+import useFaunaQuery from '@/lib/useFaunaQuery'
 import useUser from '@/lib/useUser'
 import clsx from 'clsx'
-import dmsFql from 'fauna/queryManager/fql/dms'
-import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import Tooltip from '../Tooltip'
+import Tooltip from '../../ui/Tooltip'
 
 interface User {
   id: string
@@ -25,7 +25,7 @@ export default function DMsSidebar() {
   const { displayName, photoURL, email } = useUser()
   const { data: dms } = useFaunaQuery<Page<DM>>({
     queryKey: 'dms',
-    fql: dmsFql,
+    fql: directMessagesFql,
     staleTime: Infinity,
   })
 

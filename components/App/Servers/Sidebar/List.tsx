@@ -1,8 +1,8 @@
-import { Page } from '@/lib/types'
-import Tooltip from '../Tooltip'
 import Link from 'next/link'
-import useFaunaQuery from 'fauna/queryManager/useFaunaQuery'
-import serversFql from 'fauna/queryManager/fql/servers'
+import { Page } from '@/lib/types/common'
+import Tooltip from '@/components/ui/Tooltip'
+import useFaunaQuery from '@/lib/useFaunaQuery'
+import serversFql from '@/fauna/queries/servers'
 
 interface Server {
   id: string

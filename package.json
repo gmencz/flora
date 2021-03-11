@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc",
-    "firebase": "firebase emulators:start --import=./firebase --export-on-exit",
+    "firebase": "firebase emulators:start --import=./.firebase --export-on-exit",
     "fauna-shell": "fauna shell chatskee --endpoint=localhost",
     "fauna-migrate": "dotenv -e .env.local fauna-schema-migrate run"
   },

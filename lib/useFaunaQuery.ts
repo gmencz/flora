@@ -1,6 +1,6 @@
-import { useFauna } from '@/lib/fauna'
 import { Expr } from 'faunadb'
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query'
+import { useFauna } from './useFauna'
 
 interface UseFaunaQueryOptions<TQueryFnData, TError, TData>
   extends Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryFn'> {

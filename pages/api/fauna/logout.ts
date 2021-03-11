@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/fauna'
 import { Call, Function } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { clearRefreshTokenCookie } from '@/lib/auth'
+import catchHandler from '@/util/catchHandler'
+import { createClient } from '@/lib/FaunaClient'
+import { clearRefreshTokenCookie } from '@/fauna/mutations/auth'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const refreshToken = req.cookies.chatskeeFaunaRefresh
@@ -21,4 +22,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   })
 }
 
-export default handler
+export default catchHandler(handler)

@@ -1,6 +1,6 @@
+import Tooltip from '@/components/ui/Tooltip'
 import Link from 'next/link'
 import List from './List'
-import Tooltip from '../Tooltip'
 
 function ServersSidebar() {
   return (

@@ -22,7 +22,8 @@
       "@/lib/*": ["lib/*"],
       "@/util/*": ["util/*"],
       "@/components/*": ["components/*"],
-      "@/styles/*": ["styles/*"]
+      "@/styles/*": ["styles/*"],
+      "@/fauna/*": ["fauna/*"]
     }
   },
   "exclude": ["node_modules"],

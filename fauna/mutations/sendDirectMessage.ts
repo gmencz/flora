@@ -1,3 +1,4 @@
+import { DirectMessageStatus, NewMessage } from '@/lib/types/messages'
 import {
   Collection,
   Create,
@@ -11,12 +12,8 @@ import {
   Update,
   Var,
 } from 'faunadb'
-import { MessageStatus, NewMessage } from 'pages/app/dms/[dm]/[channel]'
 
-export const sendMessageToChannelFql = (
-  newMessage: NewMessage,
-  channel: string,
-) =>
+const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
   Let(
     {
       newMessage: Create(Collection('messages'), {
@@ -32,7 +29,7 @@ export const sendMessageToChannelFql = (
         timestamp: ToString(Select(['data', 'timestamp'], Var('newMessage'))),
         nonce: Select(['data', 'nonce'], Var('newMessage')),
         content: Select(['data', 'content'], Var('newMessage')),
-        status: MessageStatus.DELIVERED,
+        status: DirectMessageStatus.DELIVERED,
         user: Let(
           {
             userDoc: Get(Select(['data', 'userRef'], Var('newMessage'))),
@@ -51,3 +48,5 @@ export const sendMessageToChannelFql = (
       },
     }),
   )
+
+export default sendDirectMessageFql

@@ -15,7 +15,7 @@ import {
   Var,
 } from 'faunadb'
 
-const dmsFql = Let(
+const directMessagesFql = Let(
   {
     paginationResult: Map(
       Paginate(
@@ -56,4 +56,4 @@ const dmsFql = Let(
   resolvePagination(Var('paginationResult')),
 )
 
-export default dmsFql
+export default directMessagesFql

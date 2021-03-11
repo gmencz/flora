@@ -6,7 +6,7 @@ import { Hydrate } from 'react-query/hydration'
 import { Client as FaunaClient } from 'faunadb'
 import Head from 'next/head'
 import '../styles/globals.css'
-import { createClient, FaunaClientProvider } from '@/lib/fauna'
+import { createClient, FaunaClientProvider } from '@/lib/FaunaClient'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
