@@ -1,5 +1,5 @@
 import { CreateFunction, Lambda, Query } from 'faunadb'
-import { RefreshToken } from '../../../lib/auth'
+import { RefreshToken } from '../../../fauna/mutations/auth'
 
 export default CreateFunction({
   name: 'refresh',

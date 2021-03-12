@@ -238,5 +238,17 @@ CreateRole({
         ),
       }
     },
+    {
+      resource: Collection('user_friends'),
+      actions: {
+        read: true
+      }
+    },
+    {
+      resource: Index('friends_by_user'),
+      actions: {
+        read: true
+      }
+    }
   ]
 })

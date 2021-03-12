@@ -1,4 +1,4 @@
-import DMsSidebar from '@/components/App/DirectMessages/Sidebar'
+import DirectMessagesSidebar from '@/components/App/DirectMessages/Sidebar'
 import ServersSidebar from '@/components/App/Servers/Sidebar'
 import withAuthenticationRequired from '@/components/Auth/withAuthenticationRequired'
 import ChannelMessages from './Messages'
@@ -20,7 +20,7 @@ function Channel() {
     <div tw="flex">
       <ServersSidebar />
 
-      <DMsSidebar />
+      <DirectMessagesSidebar />
 
       <div tw="flex-1 flex flex-col">
         <ChannelHeader channel={channel} dm={dm} />

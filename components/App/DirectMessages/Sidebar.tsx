@@ -20,7 +20,7 @@ interface DM {
   withUser: User
 }
 
-export default function DMsSidebar() {
+export default function DirectMesssagesSidebar() {
   const router = useRouter()
   const { dm: activeDm } = router.query as Record<string, string | undefined>
   const { displayName, photoURL, email } = useUser()
@@ -36,7 +36,14 @@ export default function DMsSidebar() {
       <div tw="p-3">
         <div>
           <Link passHref href="/app/friends">
-            <a tw="text-gray-600 flex space-x-3 px-2 py-2 items-center hover:bg-gray-300 rounded hover:text-gray-700">
+            <a
+              css={[
+                tw`text-gray-600 flex space-x-3 px-2 py-2.5 items-center rounded`,
+                router.asPath.startsWith('/app/friends')
+                  ? tw`text-gray-900 bg-gray-400 bg-opacity-50`
+                  : tw`hover:bg-gray-300 hover:text-gray-700`,
+              ]}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -58,7 +65,7 @@ export default function DMsSidebar() {
             </h2>
 
             <div tw="relative">
-              <Tooltip label="Create DM" position="left">
+              <Tooltip label="Create DM" position="top">
                 <Link passHref href="/app/dms/new">
                   <a>
                     <svg

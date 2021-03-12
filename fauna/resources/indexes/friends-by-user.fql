@@ -1,0 +1,7 @@
+CreateIndex({
+  name: "friends_by_user",
+  source: [Collection("user_friends")],
+  terms: [
+    { field: ["data", "userRef"] },
+  ],
+})

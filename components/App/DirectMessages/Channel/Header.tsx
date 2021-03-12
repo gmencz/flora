@@ -12,7 +12,7 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   })
 
   return (
-    <header tw="py-4 sticky top-0 px-6 bg-gray-100 shadow-sm">
+    <header tw="p-4 sticky top-0 px-6 bg-gray-100 shadow-sm">
       <div tw="flex space-x-2.5 items-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
