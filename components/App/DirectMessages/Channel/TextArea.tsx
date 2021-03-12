@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid'
 import { FormEventHandler, KeyboardEvent, useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
+import 'twin.macro'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const [message, setMessage] = useState('')
@@ -94,13 +95,13 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   }
 
   return (
-    <div className="sticky bottom-0 p-4 mt-auto bg-gray-100">
+    <div tw="sticky bottom-0 p-4 mt-auto bg-gray-100">
       <form onSubmit={onSubmit}>
         <textarea
           value={message}
           onChange={event => setMessage(event.target.value)}
           onKeyPress={submitOnEnter}
-          className="w-full"
+          tw="w-full"
         />
       </form>
     </div>

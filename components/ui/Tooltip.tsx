@@ -1,5 +1,5 @@
-import clsx from 'clsx'
 import { cloneElement, CSSProperties, ReactElement } from 'react'
+import tw from 'twin.macro'
 
 type TooltipPosition = 'top' | 'right' | 'bottom' | 'left'
 
@@ -36,42 +36,45 @@ const borders: Record<TooltipPosition, CSSProperties> = {
 }
 
 function Tooltip({ children, label, position }: TooltipProps) {
-  const containerClassname = clsx(
-    `transition-all rounded-md ease-tooltip pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto absolute inline-flex bg-white shadow-lg py-2 px-3 text-sm font-semibold text-gray-800`,
-
-    label.length <= 25 ? 'whitespace-nowrap' : 'w-48',
-
-    position === 'top' &&
-      '-top-10 right-1/2 transform group-hover:-translate-y-1 translate-x-1/2',
-
-    position === 'right' &&
-      'top-1/2 -translate-y-1/2 left-16 transform group-hover:translate-x-2',
-
-    position === 'bottom' &&
-      '-bottom-10 right-1/2 transform group-hover:translate-y-1 translate-x-1/2',
-
-    position === 'left' &&
-      'top-1/2 -translate-y-1/2 right-16 transform group-hover:translate-x-2',
-  )
-
-  const innerClassname = clsx(
-    position === 'top' &&
-      'w-0 h-0 absolute left-1/2 -bottom-1.5 transform -translate-x-1/2',
-
-    position === 'right' && 'w-0 h-0 absolute -left-1.5 top-1/2',
-
-    position === 'bottom' &&
-      'w-0 h-0 absolute left-1/2 -top-1.5 transform -translate-x-1/2',
-
-    position === 'left' && 'w-0 h-0 absolute -right-1.5 top-1/2',
-  )
-
   return (
     <div className="group rounded-2xl">
       {cloneElement(children)}
 
-      <div className={containerClassname}>
-        <div className={innerClassname} style={borders[position]} />
+      <div
+        css={[
+          tw`transition-all transform rounded-md ease-tooltip pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto absolute inline-flex bg-white shadow-lg py-2 px-3 text-sm font-semibold text-gray-800`,
+
+          label.length <= 25 ? tw`whitespace-nowrap` : tw`w-48`,
+
+          position === 'top' &&
+            tw`-top-10 right-1/2 group-hover:-translate-y-1 translate-x-1/2`,
+
+          position === 'right' &&
+            tw`top-1/2 -translate-y-1/2 left-16 group-hover:translate-x-2`,
+
+          position === 'bottom' &&
+            tw`-bottom-10 right-1/2 group-hover:translate-y-1 translate-x-1/2`,
+
+          position === 'left' &&
+            tw`top-1/2 -translate-y-1/2 right-16 group-hover:translate-x-2`,
+        ]}
+      >
+        <div
+          css={[
+            'transform',
+
+            position === 'top' &&
+              tw`w-0 h-0 absolute left-1/2 -bottom-1.5 -translate-x-1/2`,
+
+            position === 'right' && tw`w-0 h-0 absolute -left-1.5 top-1/2`,
+
+            position === 'bottom' &&
+              tw`w-0 h-0 absolute left-1/2 -top-1.5 -translate-x-1/2`,
+
+            position === 'left' && tw`w-0 h-0 absolute -right-1.5 top-1/2`,
+          ]}
+          style={borders[position]}
+        />
         <span>{label}</span>
       </div>
     </div>

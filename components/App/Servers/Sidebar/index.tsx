@@ -1,24 +1,45 @@
 import Tooltip from '@/components/ui/Tooltip'
 import Link from 'next/link'
 import List from './List'
+import 'twin.macro'
+import { useRouter } from 'next/router'
+import tw from 'twin.macro'
+
+const homePaths = ['dms', 'friends']
 
 function ServersSidebar() {
+  const router = useRouter()
+
+  const homePathMatches = homePaths.some(
+    path =>
+      router.asPath.startsWith(`/app/${path}`) || router.asPath === '/app',
+  )
+
   return (
-    <aside className="flex sticky top-0 z-20 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
-      <ul className="flex justify-center">
-        <li className="relative">
+    <aside tw="flex sticky top-0 z-20 flex-col py-4 w-servers-sidebar bg-gray-400 min-h-screen max-h-screen space-y-3">
+      <ul tw="flex justify-center">
+        <li tw="relative">
           <Tooltip label="Home" position="right">
-            <Link href="/app">
-              <a className="flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
+            <Link passHref href="/app">
+              <a
+                css={[
+                  tw`flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors`,
+
+                  homePathMatches && tw`bg-brand-500 text-white`,
+                ]}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="w-full text-gray-800 group-hover:text-white"
+                  css={[
+                    tw`w-full text-gray-800 group-hover:text-white`,
+                    homePathMatches && tw`text-white`,
+                  ]}
                 >
                   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
-                <span className="sr-only">Home</span>
+                <span tw="sr-only">Home</span>
               </a>
             </Link>
           </Tooltip>
@@ -26,23 +47,23 @@ function ServersSidebar() {
       </ul>
 
       {/* Divider */}
-      <div className="h-0.5 w-1/3 bg-gray-300 self-center" />
+      <div tw="h-0.5 w-1/3 bg-gray-300 self-center" />
 
       <nav>
         {/* Servers list */}
-        <ul className="flex flex-col items-center space-y-2">
+        <ul tw="flex flex-col items-center space-y-2">
           <List />
 
-          <li className="relative">
+          <li tw="relative">
             <Tooltip label="Add a Server (Soon&trade;)" position="right">
               <div className="group">
                 {/* <Link href="/app/servers/new"> */}
-                <a className="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
+                <a tw="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="w-full text-gray-800 group-hover:text-white"
+                    tw="w-full text-gray-800 group-hover:text-white"
                   >
                     <path
                       fillRule="evenodd"
@@ -51,7 +72,7 @@ function ServersSidebar() {
                     />
                   </svg>
 
-                  <span className="sr-only">Add a Server</span>
+                  <span tw="sr-only">Add a Server</span>
                 </a>
                 {/* </Link> */}
               </div>

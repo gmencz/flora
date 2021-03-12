@@ -1,8 +1,9 @@
 import { DirectMessage, DirectMessageStatus } from '@/lib/types/messages'
 import formatMessageTimestamp from '@/util/formatMessageTimestamp'
-import clsx from 'clsx'
 import { parseISO, differenceInMinutes } from 'date-fns'
 import { useMemo } from 'react'
+import 'twin.macro'
+import tw from 'twin.macro'
 
 interface MessageProps {
   previousMessage: DirectMessage | undefined
@@ -31,59 +32,58 @@ export default function Message({ message, previousMessage }: MessageProps) {
   return (
     <>
       {isRelatedMessage ? (
-        <div className="flex items-center space-x-4 mt-0.5">
+        <div tw="flex items-center space-x-4 mt-0.5">
           {/* Just a dummy div for creating the same spacing that unrelated messages create */}
-          <div className="w-9" />
+          <div tw="w-9" />
           <p
-            className={clsx(
-              'text-sm break-all transition-colors',
+            css={[
+              tw`text-sm break-all transition-colors`,
 
-              message.status === DirectMessageStatus.IN_QUEUE
-                ? 'text-gray-400'
-                : message.status === DirectMessageStatus.DELIVERED
-                ? 'text-gray-900'
-                : 'text-red-600',
-            )}
+              message.status === DirectMessageStatus.IN_QUEUE &&
+                tw`text-gray-400`,
+
+              message.status === DirectMessageStatus.DELIVERED &&
+                tw`text-gray-900`,
+
+              message.status === DirectMessageStatus.FAILED && tw`text-red-600`,
+            ]}
           >
             {message.content}
           </p>
         </div>
       ) : (
         <div
-          className={clsx(
-            'flex items-center space-x-4',
-            !!previousMessage && 'mt-5',
-          )}
+          css={[tw`flex items-start space-x-4`, !!previousMessage && tw`mt-5`]}
         >
           <img
             src={message.user.photo}
             alt={message.user.name}
-            className="h-9 w-9 rounded-full"
+            tw="h-9 w-9 rounded-full"
           />
 
-          <div className="flex flex-col flex-1 space-y-0.5">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-semibold text-gray-900">
+          <div tw="flex flex-col flex-1 space-y-0.5">
+            <div tw="flex items-center space-x-4">
+              <span tw="text-sm font-semibold text-gray-900">
                 {message.user.name}
               </span>
-              <time
-                className="text-xs text-gray-600"
-                dateTime={message.timestamp}
-              >
+              <time tw="text-xs text-gray-600" dateTime={message.timestamp}>
                 {formatMessageTimestamp(message.timestamp)}
               </time>
             </div>
 
             <p
-              className={clsx(
-                'text-sm break-all transition-colors',
+              css={[
+                tw`text-sm break-all transition-colors`,
 
-                message.status === DirectMessageStatus.IN_QUEUE
-                  ? 'text-gray-400'
-                  : message.status === DirectMessageStatus.DELIVERED
-                  ? 'text-gray-900'
-                  : 'text-red-600',
-              )}
+                message.status === DirectMessageStatus.IN_QUEUE &&
+                  tw`text-gray-400`,
+
+                message.status === DirectMessageStatus.DELIVERED &&
+                  tw`text-gray-900`,
+
+                message.status === DirectMessageStatus.FAILED &&
+                  tw`text-red-600`,
+              ]}
             >
               {message.content}
             </p>

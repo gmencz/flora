@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import Message from './Message'
+import 'twin.macro'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -81,7 +82,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
 
   return (
     <>
-      <ul className="p-6">
+      <ul tw="p-6">
         {data?.messages.data.map((message, index, messages) => (
           <li key={message.nonce}>
             <Message message={message} previousMessage={messages[index - 1]} />

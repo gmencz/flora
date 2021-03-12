@@ -7,6 +7,8 @@ import { Client as FaunaClient } from 'faunadb'
 import Head from 'next/head'
 import '../styles/globals.css'
 import { createClient, FaunaClientProvider } from '@/lib/FaunaClient'
+import GlobalStyles from '@/components/ui/GlobalStyles'
+import 'twin.macro'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
@@ -40,7 +42,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
               />
               <title>Chatskee</title>
             </Head>
-            <div className="bg-gray-100">
+            <GlobalStyles />
+            <div tw="bg-gray-100">
               <Component {...pageProps} />
             </div>
           </>

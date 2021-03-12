@@ -3,6 +3,7 @@ import { Page } from '@/lib/types/common'
 import Tooltip from '@/components/ui/Tooltip'
 import useFaunaQuery from '@/lib/useFaunaQuery'
 import serversFql from '@/fauna/queries/servers'
+import 'twin.macro'
 
 interface Server {
   id: string
@@ -20,16 +21,12 @@ function ServersList() {
   return (
     <>
       {servers?.data.map(server => (
-        <li key={server.id} className="relative">
+        <li key={server.id} tw="relative">
           <Tooltip label={server.name} position="right">
             <div>
-              <Link href={`/app/servers/${server.id}`}>
-                <a className="flex h-12 w-12 justify-center items-center">
-                  <img
-                    className="rounded-2xl"
-                    src={server.photo}
-                    alt={server.name}
-                  />
+              <Link passHref href={`/app/servers/${server.id}`}>
+                <a tw="flex h-12 w-12 justify-center items-center">
+                  <img tw="rounded-2xl" src={server.photo} alt={server.name} />
                 </a>
               </Link>
             </div>

@@ -5,6 +5,7 @@ import ChannelMessages from './Messages'
 import ChannelHeader from './Header'
 import ChannelTextArea from './TextArea'
 import { useRouter } from 'next/router'
+import 'twin.macro'
 
 export interface ChannelComponentProps {
   channel: string
@@ -16,12 +17,12 @@ function Channel() {
   const { channel, dm } = router.query as Record<string, string>
 
   return (
-    <div className="flex">
+    <div tw="flex">
       <ServersSidebar />
 
       <DMsSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div tw="flex-1 flex flex-col">
         <ChannelHeader channel={channel} dm={dm} />
 
         <ChannelMessages channel={channel} dm={dm} />

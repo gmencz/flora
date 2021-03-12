@@ -2,7 +2,6 @@ const colors = require('tailwindcss/colors')
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-  purge: ['./pages/**/*.tsx', './components/**/*.tsx'],
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
@@ -31,5 +30,5 @@ module.exports = {
       translate: ['group-hover'],
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [],
 }
