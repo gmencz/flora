@@ -13,6 +13,7 @@ import {
   Match,
   Now,
   Select,
+  Union,
   Var,
 } from 'faunadb'
 
@@ -61,10 +62,16 @@ const addFriendMutation = (email: string) =>
               // 4
               Let(
                 {
-                  existingFriend: Match(Index('friends_by_user_and_friend'), [
-                    CurrentIdentity(),
-                    Var('friendRef'),
-                  ]),
+                  existingFriend: Union(
+                    Match(Index('friends_by_user1_and_user2'), [
+                      CurrentIdentity(),
+                      Var('friendRef'),
+                    ]),
+                    Match(Index('friends_by_user1_and_user2'), [
+                      Var('friendRef'),
+                      CurrentIdentity(),
+                    ]),
+                  ),
                 },
                 If(
                   Exists(Var('existingFriend')),

@@ -389,18 +389,18 @@ CreateRole({
       }
     },
     {
-      resource: Index('friends_by_user_and_friend'),
+      resource: Index('friends_by_user1_and_user2'),
       actions: {
         read: Query(
           terms =>
           Let(
             {
-              user: Select([0], terms),
-              friend: Select([1], terms)
+              user1: Select([0], terms),
+              user2: Select([1], terms)
             },
             Or(
-              Equals(CurrentIdentity(), Var('user')),
-              Equals(CurrentIdentity(), Var('friend'))
+              Equals(CurrentIdentity(), Var('user1')),
+              Equals(CurrentIdentity(), Var('user2'))
             )
           )
         )
