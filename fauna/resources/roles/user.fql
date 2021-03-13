@@ -310,17 +310,17 @@ CreateRole({
               friendRequest: Match(
                 Index('friend_requests_by_friend'),
                 Select([0], terms)
-              )
+              ),
             },
             If(
               Exists(Var('friendRequest')),
               Let(
                 {
-                  friendRequestUser: Select(['data', 'userRef'], Get(Var('friendRequest')))
+                  user: Select(['data', 'friendRef'], Get(Var('friendRequest')))
                 },
                 Equals(
                   CurrentIdentity(),
-                  Var('friendRequestUser')
+                  Var('user')
                 )
               ),
               true
