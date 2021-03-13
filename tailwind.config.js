@@ -25,7 +25,7 @@ module.exports = {
   },
   variants: {
     extend: {
-      opacity: ['group-hover'],
+      opacity: ['group-hover', 'disabled'],
       pointerEvents: ['group-hover'],
       translate: ['group-hover'],
     },

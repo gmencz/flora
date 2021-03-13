@@ -1,26 +1,26 @@
-import Link from 'next/link'
-import { Page } from '@/lib/types/common'
-import Tooltip from '@/components/ui/Tooltip'
-import useFaunaQuery from '@/lib/useFaunaQuery'
-import serversFql from '@/fauna/queries/servers'
+// import Link from 'next/link'
+// import { Page } from '@/lib/types/common'
+// import Tooltip from '@/components/ui/Tooltip'
+// import useFaunaQuery from '@/lib/useFaunaQuery'
+// import serversFql from '@/fauna/queries/servers'
 import 'twin.macro'
 
-interface Server {
-  id: string
-  name: string
-  photo: string
-}
+// interface Server {
+//   id: string
+//   name: string
+//   photo: string
+// }
 
 function ServersList() {
-  const { data: servers } = useFaunaQuery<Page<Server>>({
-    queryKey: 'servers',
-    fql: serversFql,
-    staleTime: Infinity,
-  })
+  // const { data: servers } = useFaunaQuery<Page<Server>>({
+  //   queryKey: 'servers',
+  //   fql: serversFql,
+  //   staleTime: Infinity,
+  // })
 
   return (
     <>
-      {servers?.data.map(server => (
+      {/* {servers?.data.map(server => (
         <li key={server.id} tw="relative">
           <Tooltip label={server.name} position="right">
             <div>
@@ -32,7 +32,7 @@ function ServersList() {
             </div>
           </Tooltip>
         </li>
-      ))}
+      ))} */}
     </>
   )
 }

@@ -241,13 +241,121 @@ CreateRole({
     {
       resource: Collection('user_friends'),
       actions: {
-        read: true
+        read: Query(
+          ref =>
+          Equals(
+            CurrentIdentity(),
+            Select(['data', 'userRef'], Get(ref))
+          )
+        )
       }
     },
     {
       resource: Index('friends_by_user'),
       actions: {
+        read: Query(
+          terms =>
+          Equals(
+            CurrentIdentity(),
+            Select([0], terms)
+          )
+        )
+      }
+    },
+    {
+      resource: Index('users_by_email'),
+      actions: {
         read: true
+      }
+    },
+    {
+      resource: Collection('user_friend_requests'),
+      actions: {
+        read: Query(
+          friendRequestRef =>
+          Let(
+            {
+              friendRequestDoc: Get(friendRequestRef),
+              user: Select(['data', 'userRef'], Var('friendRequestDoc')),
+              friend: Select(['data', 'friendRef'], Var('friendRequestDoc')),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user')),
+              Equals(CurrentIdentity(), Var('friend')),
+            )
+          )
+        ),
+        create: Query(
+          newFriendRequest =>
+          Let(
+            {
+              user: Select(['data', 'userRef'], newFriendRequest),
+              friend: Select(['data', 'friendRef'], newFriendRequest),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user')),
+              Equals(CurrentIdentity(), Var('friend')),
+            )
+          )
+        )
+      }
+    },
+    {
+      resource: Index('friend_requests_by_friend'),
+      actions: {
+        read: Query(
+          terms =>
+          Let(
+            {
+              friendRequest: Match(
+                Index('friend_requests_by_friend'),
+                Select([0], terms)
+              )
+            },
+            If(
+              Exists(Var('friendRequest')),
+              Let(
+                {
+                  friendRequestUser: Select(['data', 'userRef'], Get(Var('friendRequest')))
+                },
+                Equals(
+                  CurrentIdentity(),
+                  Var('friendRequestUser')
+                )
+              ),
+              true
+            )
+          )
+        )
+      }
+    },
+    {
+      resource: Index('friend_requests_by_user'),
+      actions: {
+        read: Query(
+          terms =>
+          Equals(
+            CurrentIdentity(),
+            Select([0], terms)
+          )
+        )
+      }
+    },
+    {
+      resource: Index('friends_by_user_and_friend'),
+      actions: {
+        read: Query(
+          terms =>
+          Let(
+            {
+              user: Select([0], terms)
+            },
+            Equals(
+              CurrentIdentity(),
+              Var('user')
+            )
+          )
+        )
       }
     }
   ]

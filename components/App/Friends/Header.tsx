@@ -38,9 +38,31 @@ function FriendsHeader() {
           </li>
 
           <li>
-            <button tw="text-sm font-semibold text-white bg-brand-500 px-2 py-1 rounded">
-              Add friend
-            </button>
+            <Link passHref href="/app/friends/pending">
+              <a
+                css={[
+                  tw`text-sm font-semibold rounded text-gray-600 px-2 py-1`,
+                  router.asPath === '/app/friends/pending'
+                    ? tw`bg-gray-200 text-gray-800`
+                    : tw`hover:bg-gray-200 hover:text-gray-700`,
+                ]}
+              >
+                Pending
+              </a>
+            </Link>
+          </li>
+
+          <li>
+            <Link passHref href="/app/friends/add">
+              <a
+                css={[
+                  tw`text-sm font-semibold text-white bg-brand-500 px-2 py-1 rounded`,
+                  router.asPath === '/app/friends/add' && tw`text-brand-100`,
+                ]}
+              >
+                Add friend
+              </a>
+            </Link>
           </li>
         </ul>
       </nav>
