@@ -24,9 +24,9 @@ function AddFriend() {
     resolver: zodResolver(schema),
   })
 
-  const mutation = useMutation<Inputs, Error, Inputs>(
+  const mutation = useMutation<Inputs & { added: boolean }, Error, Inputs>(
     async variables => {
-      const res = await client.query<Inputs | string>(
+      const res = await client.query<(Inputs & { added: boolean }) | string>(
         addFriendMutation(variables.email),
         { secret: getAccessToken() },
       )
@@ -90,7 +90,9 @@ function AddFriend() {
 
           {mutation.isSuccess && (
             <p tw="mt-4 text-sm text-green-600">
-              Your friend request was sent to {mutation.data?.email}!
+              {mutation.data?.added
+                ? `Added ${mutation.data.email} as a friend!`
+                : `Your friend request was sent to ${mutation.data?.email}!`}
             </p>
           )}
 

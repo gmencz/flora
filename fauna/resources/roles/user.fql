@@ -243,15 +243,47 @@ CreateRole({
       actions: {
         read: Query(
           ref =>
-          Equals(
-            CurrentIdentity(),
-            Select(['data', 'userRef'], Get(ref))
+          Let(
+            {
+              doc: Get(ref),
+              user1Ref: Select(['data', 'user1Ref'], Var('doc')),
+              user2Ref: Select(['data', 'user2Ref'], Var('doc')),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user1Ref')),
+              Equals(CurrentIdentity(), Var('user2Ref'))
+            )
+          )
+        ),
+        create: Query(
+          newFriend =>
+          Let(
+            {
+              user1Ref: Select(['data', 'user1Ref'], newFriend),
+              user2Ref: Select(['data', 'user2Ref'], newFriend),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user1Ref')),
+              Equals(CurrentIdentity(), Var('user2Ref')),
+            )
           )
         )
       }
     },
     {
-      resource: Index('friends_by_user'),
+      resource: Index('friends_by_user1'),
+      actions: {
+        read: Query(
+          terms =>
+          Equals(
+            CurrentIdentity(),
+            Select([0], terms)
+          )
+        )
+      }
+    },
+    {
+      resource: Index('friends_by_user2'),
       actions: {
         read: Query(
           terms =>
@@ -297,7 +329,21 @@ CreateRole({
               Equals(CurrentIdentity(), Var('friend')),
             )
           )
-        )
+        ),
+        delete: Query(
+          friendRequestRef =>
+          Let(
+            {
+              friendRequestDoc: Get(friendRequestRef),
+              user: Select(['data', 'userRef'], Var('friendRequestDoc')),
+              friend: Select(['data', 'friendRef'], Var('friendRequestDoc')),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user')),
+              Equals(CurrentIdentity(), Var('friend')),
+            )
+          )
+        ),
       }
     },
     {
@@ -310,18 +356,19 @@ CreateRole({
               friendRequest: Match(
                 Index('friend_requests_by_friend'),
                 Select([0], terms)
-              ),
+              )
             },
             If(
               Exists(Var('friendRequest')),
               Let(
                 {
-                  user: Select(['data', 'friendRef'], Get(Var('friendRequest')))
+                  friendRequestDoc: Get(Var('friendRequest')),
+                  friendRef: Select(['data', 'friendRef'], Var('friendRequestDoc')),
                 },
                 Equals(
                   CurrentIdentity(),
-                  Var('user')
-                )
+                  Var('friendRef')
+                ),
               ),
               true
             )
@@ -348,15 +395,34 @@ CreateRole({
           terms =>
           Let(
             {
-              user: Select([0], terms)
+              user: Select([0], terms),
+              friend: Select([1], terms)
             },
-            Equals(
-              CurrentIdentity(),
-              Var('user')
+            Or(
+              Equals(CurrentIdentity(), Var('user')),
+              Equals(CurrentIdentity(), Var('friend'))
             )
           )
         )
       }
-    }
+    },
+    {
+      resource: Index('friend_requests_by_friend_and_user'),
+      actions: {
+        read: Query(
+          terms =>
+          Let(
+            {
+              friend: Select([0], terms),
+              user: Select([1], terms)
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('friend')),
+              Equals(CurrentIdentity(), Var('user'))
+            )
+          )
+        )
+      }
+    },
   ]
 })

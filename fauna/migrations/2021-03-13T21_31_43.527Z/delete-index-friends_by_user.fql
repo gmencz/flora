@@ -1,0 +1,1 @@
+Delete(Index("friends_by_user"))

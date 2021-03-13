@@ -1,4 +1,5 @@
 import {
+  Count,
   CurrentIdentity,
   Get,
   Index,
@@ -20,13 +21,13 @@ interface FriendRequestUser {
   photo: string
 }
 
-interface ReceivedFriendRequest {
+export interface ReceivedFriendRequest {
   id: string
   fromUser: FriendRequestUser
   receivedAt: string
 }
 
-interface SentFriendRequest {
+export interface SentFriendRequest {
   id: string
   toUser: FriendRequestUser
   sentAt: string
@@ -34,13 +35,16 @@ interface SentFriendRequest {
 
 export interface PendingFriendRequestsQuery {
   received: Page<ReceivedFriendRequest>
+  totalReceived: number
   sent: Page<SentFriendRequest>
+  totalSent: number
 }
 
 const pendingFriendRequestsQuery = Let(
   {
+    receivedMatch: Match(Index('friend_requests_by_friend'), CurrentIdentity()),
     receivedPaginationResult: Map(
-      Paginate(Match(Index('friend_requests_by_friend'), CurrentIdentity())),
+      Paginate(Var('receivedMatch')),
       Lambda(
         'friendRequestRef',
         Let(
@@ -62,8 +66,9 @@ const pendingFriendRequestsQuery = Let(
         ),
       ),
     ),
+    sentMatch: Match(Index('friend_requests_by_user'), CurrentIdentity()),
     sentPaginationResult: Map(
-      Paginate(Match(Index('friend_requests_by_user'), CurrentIdentity())),
+      Paginate(Var('sentMatch')),
       Lambda(
         'friendRequestRef',
         Let(
@@ -86,7 +91,9 @@ const pendingFriendRequestsQuery = Let(
   },
   {
     received: resolvePagination(Var('receivedPaginationResult')),
+    totalReceived: Count(Var('receivedMatch')),
     sent: resolvePagination(Var('sentPaginationResult')),
+    totalSent: Count(Var('sentMatch')),
   },
 )
 

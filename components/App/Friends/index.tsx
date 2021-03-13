@@ -14,7 +14,6 @@ function Friends() {
   const friendsQuery = useFaunaQuery<Page<Friend>>({
     queryKey: 'friends',
     fql: friendsFql,
-    staleTime: Infinity,
   })
 
   const hasFriends = (friendsQuery.data?.data.length ?? 0) > 0
