@@ -1,0 +1,27 @@
+Update(Role("user"), {
+  membership: {
+    resource: Collection("users")
+  },
+  privileges: [{
+    resource: Collection("server_users"),
+    actions: {
+      read: Query(Lambda("ref", Equals(CurrentIdentity(), Select(["data", "userRef"], Var("ref")))))
+    }
+  }, {
+    resource: Collection("servers"),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Collection("users"),
+    actions: {
+      read: Query(Lambda("userRef", Equals(CurrentIdentity(), Var("userRef"))))
+    }
+  }, {
+    resource: Index("server_users_by_userRef"),
+    actions: {
+      read: Query(Lambda("userAndServerRefs", Equals(CurrentIdentity(), Select([0], Var("userAndServerRefs")))))
+    }
+  }],
+  data: null
+})

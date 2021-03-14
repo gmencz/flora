@@ -1,0 +1,32 @@
+Update(Role("user"), {
+  membership: {
+    resource: Collection("users")
+  },
+  privileges: [{
+    resource: Collection("server_users"),
+    actions: {
+      read: Query(Lambda("ref", Equals(Select(["data", "userRef"], Get(Var("ref"))), CurrentIdentity())))
+    }
+  }, {
+    resource: Collection("servers"),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Collection("users"),
+    actions: {
+      read: Query(Lambda("userRef", Equals(CurrentIdentity(), Var("userRef"))))
+    }
+  }, {
+    resource: Index("dms_by_initiator"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Var("dmRef"))))
+    }
+  }, {
+    resource: Index("server_users_by_user"),
+    actions: {
+      read: Query(Lambda("userAndServerRefs", Equals(CurrentIdentity(), Select([0], Var("userAndServerRefs")))))
+    }
+  }],
+  data: null
+})

@@ -1,0 +1,12 @@
+CreateRole({
+  name: "user_session",
+  membership: {
+    resource: Collection("users_sessions")
+  },
+  privileges: [{
+    resource: Collection("users_sessions"),
+    actions: {
+      read: true
+    }
+  }]
+})

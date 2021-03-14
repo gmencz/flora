@@ -1,0 +1,7 @@
+CreateIndex({
+  name: "dms_by_initiator",
+  source: [Collection("dms")],
+  terms: [{
+    field: ["data", "initiatorRef"]
+  }]
+})

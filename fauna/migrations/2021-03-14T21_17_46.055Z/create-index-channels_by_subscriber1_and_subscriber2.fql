@@ -1,0 +1,9 @@
+CreateIndex({
+  name: "channels_by_subscriber1_and_subscriber2",
+  source: [Collection("channels")],
+  terms: [{
+    field: ["data", "subscriber1"]
+  }, {
+    field: ["data", "subscriber2"]
+  }]
+})

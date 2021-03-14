@@ -1,0 +1,7 @@
+CreateIndex({
+  name: "dm_by_id",
+  source: [Collection("dms")],
+  terms: [{
+    field: ["ref", "id"]
+  }]
+})

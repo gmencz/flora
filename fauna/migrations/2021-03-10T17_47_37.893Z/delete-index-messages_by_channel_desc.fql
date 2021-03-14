@@ -1,0 +1,1 @@
+Delete(Index("messages_by_channel_desc"))

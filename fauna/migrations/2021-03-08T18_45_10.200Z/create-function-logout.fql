@@ -1,0 +1,13 @@
+CreateFunction({
+  name: "logout",
+  body: Query(Lambda(["all"], If(Var("all"), Let([{
+    refreshTokens: Paginate(Match(Index("tokens_by_instance_type_and_used"), [CurrentIdentity(), "refresh", false]), {
+      size: 100000
+    })
+  }], Map(Var("refreshTokens"), Lambda(["token"], Do(If(Exists(Match(Index("access_token_by_refresh_token"), Var("token"))), Delete(Select(["ref"], Get(Match(Index("access_token_by_refresh_token"), Var("token"))))), false), Delete(Var("token")))))), Let([{
+    refreshTokens: Paginate(Match(Index("tokens_by_instance_sessionid_type_and_used"), [CurrentIdentity(), Select(["data", "sessionId"], Get(CurrentToken())), "refresh", false]), {
+      size: 100000
+    })
+  }], Map(Var("refreshTokens"), Lambda(["token"], Do(If(Exists(Match(Index("access_token_by_refresh_token"), Var("token"))), Delete(Select(["ref"], Get(Match(Index("access_token_by_refresh_token"), Var("token"))))), false), Delete(Var("token"))))))))),
+  role: "server"
+})

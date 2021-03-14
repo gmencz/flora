@@ -1,0 +1,22 @@
+Update(Role("user"), {
+  membership: {
+    resource: Collection("users")
+  },
+  privileges: [{
+    resource: Collection("servers"),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Collection("users"),
+    actions: {
+      read: Query(Lambda("ref", Equals(CurrentIdentity(), Var("ref"))))
+    }
+  }, {
+    resource: Index("server_users_by_user"),
+    actions: {
+      unrestricted_read: true
+    }
+  }],
+  data: null
+})

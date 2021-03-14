@@ -1,0 +1,17 @@
+CreateIndex({
+  name: "messages_by_channel",
+  source: [Collection("messages")],
+  terms: [{
+    field: ["data", "channelRef"]
+  }],
+  values: [{
+    field: ["data", "timestamp"],
+    reverse: true
+  }, {
+    field: ["data", "nonce"]
+  }, {
+    field: ["data", "content"]
+  }, {
+    field: ["data", "userRef"]
+  }]
+})

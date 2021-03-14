@@ -1,8 +1,0 @@
-- name: Clear messages
-  webhook: '{{ACTION_BASE_URL}}/api/messages/clear'
-  schedule: 0 0 * * *
-  include_in_metadata: true
-  payload: {}
-  headers:
-  - value: "true"
-    name: x-is-hasura-cron-trigger

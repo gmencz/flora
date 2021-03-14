@@ -1,0 +1,5 @@
+Update(Function("findChannelByUser"), {
+  body: Query(Lambda(["user"], Intersection(Match(Index("channels_by_subscribers"), CurrentIdentity()), Match(Index("channels_by_subscribers"), Var("user"))))),
+  role: Role("user"),
+  data: null
+})

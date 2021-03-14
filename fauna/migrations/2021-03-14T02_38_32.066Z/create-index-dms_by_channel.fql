@@ -1,0 +1,7 @@
+CreateIndex({
+  name: "dms_by_channel",
+  source: [Collection("dms")],
+  terms: [{
+    field: ["data", "channel"]
+  }]
+})

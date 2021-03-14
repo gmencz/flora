@@ -1,0 +1,13 @@
+Update(Function("findChannelByUser"), {
+  body: Query(Lambda(["user"], Let([{
+    existingChannel: Intersection(Match(Index("channels_by_subscribers"), CurrentIdentity()), Match(Index("channels_by_subscribers"), Var("user")))
+  }], If(Exists(Var("existingChannel")), {
+    exists: true,
+    channel: Get(Var("existingChannel"))
+  }, {
+    exists: false,
+    channel: null
+  })))),
+  role: Role("user"),
+  data: null
+})

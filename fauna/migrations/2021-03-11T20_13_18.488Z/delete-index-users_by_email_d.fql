@@ -1,0 +1,1 @@
+Delete(Index("users_by_email_d"))
