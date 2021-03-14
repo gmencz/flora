@@ -40,29 +40,38 @@ const withAuthenticationRequired = <P extends object>(
 
     useEffect(() => {
       if (!silentRefreshRef.current) {
-        silentRefresh().then(({ secret, expInMs }) => {
-          accessTokenRef.current = secret
+        silentRefresh()
+          .then(({ secret, expInMs }) => {
+            accessTokenRef.current = secret
 
-          const thirtySeconds = 30 * 1000
-          const silentRefreshMs = expInMs - thirtySeconds
+            const thirtySeconds = 30 * 1000
+            const silentRefreshMs = expInMs - thirtySeconds
 
-          silentRefreshRef.current = setInterval(async () => {
-            try {
-              const refreshedAccessToken = await silentRefresh()
-              accessTokenRef.current = refreshedAccessToken.secret
-            } catch (error) {
-              console.error(error)
+            silentRefreshRef.current = setInterval(async () => {
               try {
-                await auth.signOut()
+                const refreshedAccessToken = await silentRefresh()
+                accessTokenRef.current = refreshedAccessToken.secret
               } catch (error) {
-              } finally {
-                redirectToLogin()
+                console.error(error)
+                try {
+                  await auth.signOut()
+                } catch (error) {
+                } finally {
+                  redirectToLogin()
+                }
               }
-            }
-          }, silentRefreshMs)
+            }, silentRefreshMs)
 
-          setIsRefreshing(false)
-        })
+            setIsRefreshing(false)
+          })
+          .catch(async () => {
+            try {
+              await auth.signOut()
+            } catch (error) {
+            } finally {
+              redirectToLogin()
+            }
+          })
       }
     }, [accessTokenRef, redirectToLogin, silentRefreshRef])
 
