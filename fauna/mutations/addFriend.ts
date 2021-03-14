@@ -43,7 +43,7 @@ const addFriendMutation = (email: string) =>
         If(
           Equals(CurrentIdentity(), Var('friendRef')),
 
-          `You can't send a friend request to yourself`,
+          `You can't send a friend request to yourself.`,
 
           // 3
           Let(

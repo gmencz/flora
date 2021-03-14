@@ -6,7 +6,6 @@ type TooltipPosition = 'top' | 'right' | 'bottom' | 'left'
 interface TooltipProps {
   label: string
   children: ReactElement
-  className?: string
   position: TooltipPosition
 }
 
@@ -42,12 +41,12 @@ const TooltipTopOverlay = styled.div<Pick<TooltipProps, 'label'>>(
   ],
 )
 
-const TooltipRightOverlay = styled.div<Pick<TooltipProps, 'label'>>(
-  ({ label }) => [
-    tw`transform top-1/2 -translate-y-1/2 left-16 group-hover:translate-x-1 transition-all rounded-md ease-tooltip pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto absolute inline-flex bg-white shadow-lg py-2 px-3 text-sm font-semibold text-gray-800`,
-    label.length <= 25 ? tw`whitespace-nowrap` : tw`w-48`,
-  ],
-)
+const TooltipRightOverlay = styled.div<
+  Pick<TooltipProps, 'label' | 'className'>
+>(({ label }) => [
+  tw`transform top-1/2 -translate-y-1/2 left-16 group-hover:translate-x-1 transition-all rounded-md ease-tooltip pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto absolute inline-flex bg-white shadow-lg py-2 px-3 text-sm font-semibold text-gray-800`,
+  label.length <= 25 ? tw`whitespace-nowrap` : tw`w-48`,
+])
 
 const TooltipBottomOverlay = styled.div<Pick<TooltipProps, 'label'>>(
   ({ label }) => [

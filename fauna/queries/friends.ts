@@ -1,5 +1,6 @@
 import resolvePagination from '@/util/resolvePagination'
 import {
+  Count,
   CurrentIdentity,
   Equals,
   Get,
@@ -18,13 +19,12 @@ import {
 
 const friendsFql = Let(
   {
+    match: Union(
+      Match(Index('friends_by_user1'), CurrentIdentity()),
+      Match(Index('friends_by_user2'), CurrentIdentity()),
+    ),
     paginationResult: Map(
-      Paginate(
-        Union(
-          Match(Index('friends_by_user1'), CurrentIdentity()),
-          Match(Index('friends_by_user2'), CurrentIdentity()),
-        ),
-      ),
+      Paginate(Var('match')),
       Lambda(
         'ref',
         Let(
@@ -48,7 +48,10 @@ const friendsFql = Let(
       ),
     ),
   },
-  resolvePagination(Var('paginationResult')),
+  {
+    friends: resolvePagination(Var('paginationResult')),
+    friendsCount: Count(Var('match')),
+  },
 )
 
 export default friendsFql

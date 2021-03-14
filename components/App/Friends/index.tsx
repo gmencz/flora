@@ -10,13 +10,16 @@ import ServersSidebar from '../Servers/Sidebar'
 import FriendsHeader from './Header'
 import 'twin.macro'
 
+interface FriendsQuery {
+  friends: Page<Friend>
+  friendsCount: number
+}
+
 function Friends() {
-  const friendsQuery = useFaunaQuery<Page<Friend>>({
+  const friendsQuery = useFaunaQuery<FriendsQuery>({
     queryKey: 'friends',
     fql: friendsFql,
   })
-
-  const hasFriends = (friendsQuery.data?.data.length ?? 0) > 0
 
   return (
     <div tw="flex">
@@ -28,13 +31,13 @@ function Friends() {
         <FriendsHeader />
 
         <div tw="flex-1 p-6 flex flex-col divide-y">
-          {hasFriends && (
+          {friendsQuery.isSuccess && friendsQuery.data.friendsCount > 0 && (
             <>
               <h2 tw="uppercase pb-2 text-tiny font-semibold text-gray-900">
-                All friends
+                All friends — {friendsQuery.data.friendsCount}
               </h2>
               <ol tw="divide-y">
-                {friendsQuery.data?.data.map(friend => (
+                {friendsQuery.data?.friends.data.map(friend => (
                   <li key={friend.id} tw="py-4 flex items-center space-x-4">
                     <img
                       src={friend.photo}
@@ -57,7 +60,7 @@ function Friends() {
             </>
           )}
 
-          {friendsQuery.isSuccess && !hasFriends && (
+          {friendsQuery.isSuccess && friendsQuery.data.friendsCount === 0 && (
             <div tw="flex-1 flex flex-col items-center justify-center text-center">
               <img alt="Wumpus" tw="w-60 h-60" src="/wumpus.png" />
               <p tw="text-gray-500 font-medium">
