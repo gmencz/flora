@@ -23,11 +23,11 @@ function FriendsHeader() {
 
         <ul tw="flex space-x-8 items-center">
           <li>
-            <Link passHref href="/app/friends">
+            <Link passHref href="/app">
               <a
                 css={[
                   tw`text-sm font-semibold rounded text-gray-600 px-2 py-1`,
-                  router.asPath === '/app/friends'
+                  router.asPath === '/app'
                     ? tw`bg-gray-200 text-gray-800`
                     : tw`hover:bg-gray-200 hover:text-gray-700`,
                 ]}

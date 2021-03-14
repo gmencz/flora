@@ -5,7 +5,6 @@ import useUser from '@/lib/useUser'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Tooltip from '../../ui/Tooltip'
-import 'twin.macro'
 import tw from 'twin.macro'
 
 interface User {
@@ -35,11 +34,13 @@ export default function DirectMesssagesSidebar() {
       {/* Direct messages */}
       <div tw="p-3">
         <div>
-          <Link passHref href="/app/friends">
+          <Link passHref href="/app">
             <a
               css={[
                 tw`text-gray-600 flex space-x-3 px-2 py-2.5 items-center rounded`,
-                router.asPath.startsWith('/app/friends')
+                router.asPath === '/app' ||
+                router.asPath === '/app/friends/pending' ||
+                router.asPath === '/app/friends/add'
                   ? tw`text-gray-900 bg-gray-400 bg-opacity-50`
                   : tw`hover:bg-gray-300 hover:text-gray-700`,
               ]}

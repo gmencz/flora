@@ -12,22 +12,11 @@ import 'twin.macro'
 import Tooltip from '@/components/ui/Tooltip'
 import { useMutation, useQueryClient } from 'react-query'
 import { useFauna } from '@/lib/useFauna'
-import {
-  Collection,
-  Create,
-  CurrentIdentity,
-  Exists,
-  Get,
-  If,
-  Index,
-  Intersection,
-  Let,
-  Match,
-  Ref,
-  Select,
-  Var,
-} from 'faunadb'
 import { useRouter } from 'next/router'
+import {
+  getOrCreateDirectMessageMutation,
+  MessageMutation,
+} from '@/fauna/mutations/getOrCreateDirectMessage'
 
 interface FriendsQuery {
   friends: Page<Friend>
@@ -36,12 +25,6 @@ interface FriendsQuery {
 
 interface MessageVariables {
   friendId: string
-}
-
-interface MessageMutation {
-  directMessageId: string
-  channelId: string
-  isNewChannel: boolean
 }
 
 function Friends() {
@@ -60,56 +43,7 @@ function Friends() {
   >(
     variables => {
       return client.query(
-        Let(
-          {
-            friendRef: Ref(Collection('users'), variables.friendId),
-            existingChannel: Intersection(
-              Match(Index('channels_by_subscribers'), CurrentIdentity()),
-              Match(Index('channels_by_subscribers'), Var('friendRef')),
-            ),
-          },
-          If(
-            Exists(Var('existingChannel')),
-            Let(
-              {
-                channel: Get(Var('existingChannel')),
-                directMessage: Get(
-                  Match(
-                    Index('dms_by_channel'),
-                    Select(['ref'], Var('channel')),
-                  ),
-                ),
-              },
-              {
-                directMessageId: Select(['ref', 'id'], Var('directMessage')),
-                channelId: Select(['ref', 'id'], Var('channel')),
-                isNewChannel: false,
-              },
-            ),
-            Let(
-              {
-                channel: Create(Collection('channels'), {
-                  data: {
-                    subscribers: [CurrentIdentity(), Var('friendRef')],
-                  },
-                }),
-                directMessage: Create(Collection('dms'), {
-                  data: {
-                    user1Ref: CurrentIdentity(),
-                    user2Ref: Var('friendRef'),
-                    channel: Select(['ref'], Var('channel')),
-                  },
-                }),
-              },
-              {
-                directMessageId: Select(['ref', 'id'], Var('directMessage')),
-                channelId: Select(['ref', 'id'], Var('channel')),
-                isNewChannel: true,
-              },
-            ),
-          ),
-        ),
-
+        getOrCreateDirectMessageMutation(variables.friendId),
         { secret: getAccessToken() },
       )
     },

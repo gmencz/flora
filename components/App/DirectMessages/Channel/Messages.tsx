@@ -14,7 +14,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { getAccessToken } = useFauna()
   const queryClient = useQueryClient()
-  const { data } = useFaunaQuery<DirectMessageDetails>({
+  const { data, isSuccess } = useFaunaQuery<DirectMessageDetails>({
     queryKey: ['dm', dm],
     fql: getDirectMessageFql(dm, channel),
     staleTime: Infinity,
@@ -83,6 +83,12 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   return (
     <>
       <ul tw="p-6">
+        {isSuccess && data?.messages.data.length === 0 && (
+          <p tw="text-sm text-gray-900">
+            Go ahead and say something to {data.withUser.name}!
+          </p>
+        )}
+
         {data?.messages.data.map((message, index, messages) => (
           <li key={message.nonce}>
             <Message message={message} previousMessage={messages[index - 1]} />

@@ -1,1 +1,1 @@
-export { default } from '@/components/App/Home'
+export { default } from '@/components/App/Friends'

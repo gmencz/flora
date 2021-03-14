@@ -1,7 +1,0 @@
-CreateIndex({
-  name: "channels_by_subscribers",
-  source: [Collection("channels")],
-  terms: [
-    { field: ["data", "subscribers"] },
-  ],
-})
