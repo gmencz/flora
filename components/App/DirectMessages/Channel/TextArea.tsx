@@ -101,7 +101,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
           value={message}
           onChange={event => setMessage(event.target.value)}
           onKeyPress={submitOnEnter}
-          tw="w-full"
+          tw="w-full p-4"
         />
       </form>
     </div>

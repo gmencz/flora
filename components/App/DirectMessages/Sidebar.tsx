@@ -31,7 +31,6 @@ export default function DirectMesssagesSidebar() {
 
   return (
     <div tw="flex sticky z-10 top-0 flex-col w-sidebar min-h-screen max-h-screen bg-gray-200">
-      {/* Direct messages */}
       <div tw="p-3">
         <div>
           <Link passHref href="/app">
@@ -67,7 +66,7 @@ export default function DirectMesssagesSidebar() {
 
             <div tw="relative">
               <Tooltip label="Create DM" position="top">
-                <Link passHref href="/app/dms/new">
+                <Link passHref href="/app">
                   <a>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
