@@ -73,8 +73,11 @@ function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
 
         <div tw="ml-auto flex items-center space-x-4">
           <div className="group" tw="relative rounded-full">
-            <Tooltip label="Accept" position="top">
-              <button onClick={onAccept} tw="rounded-full bg-gray-200 p-1.5">
+            <Tooltip label="Accept" position="left">
+              <button
+                onClick={onAccept}
+                tw="rounded-full bg-gray-200 group-hover:bg-gray-300 p-1.5"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
@@ -93,8 +96,11 @@ function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
           </div>
 
           <div className="group" tw="relative rounded-full">
-            <Tooltip label="Reject" position="top">
-              <button onClick={onReject} tw="rounded-full bg-gray-200 p-1.5">
+            <Tooltip label="Reject" position="left">
+              <button
+                onClick={onReject}
+                tw="rounded-full bg-gray-200 group-hover:bg-gray-300 p-1.5"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"

@@ -64,10 +64,10 @@ function SentFriendRequest({ friendRequest }: SentFriendRequestProps) {
 
         <div tw="ml-auto flex items-center">
           <div className="group" tw="relative rounded-full">
-            <Tooltip label="Cancel" position="top">
+            <Tooltip label="Cancel" position="left">
               <button
                 onClick={onClickCancel}
-                tw="rounded-full bg-gray-200 p-1.5"
+                tw="rounded-full bg-gray-200 group-hover:bg-gray-300 p-1.5"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

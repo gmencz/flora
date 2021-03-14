@@ -97,6 +97,22 @@ CreateRole({
               )
             )
           )
+        ),
+        create: Query(
+          newChannel =>
+          Let(
+            {
+              subscribers: Select(['data', 'subscribers'], newChannel),
+              isCurrentUserSubscribed: Any(
+                Map(
+                  Var('subscribers'),
+                  Lambda('subscriber', Equals(CurrentIdentity(), Var('subscriber')))
+                )
+              ),
+              areAllSubscribersFriends: true
+            },
+            And(Var('isCurrentUserSubscribed'), Var('areAllSubscribersFriends'))
+          )
         )
       }
     },
@@ -142,6 +158,25 @@ CreateRole({
                 Equals(CurrentIdentity(), Var('user2')),
               )
             )
+          )
+        ),
+        create: Query(
+          newDm =>
+          Let(
+            {
+              dmUser: Select(['data', 'user2Ref'], newDm),
+              isDmUserAFriend: Exists(Union(
+                Match(Index('friends_by_user1_and_user2'), [
+                  CurrentIdentity(),
+                  Var('dmUser'),
+                ]),
+                Match(Index('friends_by_user1_and_user2'), [
+                  Var('dmUser'),
+                  CurrentIdentity(),
+                ]),
+              ))
+            },
+            Var('isDmUserAFriend')
           )
         )
       }
@@ -422,6 +457,18 @@ CreateRole({
             )
           )
         )
+      }
+    },
+    {
+      resource: Index('channels_by_subscribers'),
+      actions: {
+        read: true
+      }
+    },
+    {
+      resource: Index('dms_by_channel'),
+      actions: {
+        read: true
       }
     },
   ]
