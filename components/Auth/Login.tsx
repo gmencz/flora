@@ -34,27 +34,25 @@ function Login() {
             },
           }).then(res => res.json())) as FaunaAuthTokens['access']
 
-          if (silentRefreshRef.current) {
-            clearInterval(silentRefreshRef.current)
+          if (secret && expInMs) {
+            accessTokenRef.current = secret
+
+            const thirtySeconds = 30 * 1000
+            const silentRefreshMs = expInMs - thirtySeconds
+
+            silentRefreshRef.current = setInterval(async () => {
+              try {
+                const refreshedAccessToken = await silentRefresh()
+                accessTokenRef.current = refreshedAccessToken.secret
+              } catch (error) {
+                console.error(error)
+                await auth.signOut()
+              }
+            }, silentRefreshMs)
+
+            const { next = '/app' } = router.query as RouterQuery
+            router.push(next)
           }
-
-          accessTokenRef.current = secret
-
-          const thirtySeconds = 30 * 1000
-          const silentRefreshMs = expInMs - thirtySeconds
-
-          silentRefreshRef.current = setInterval(async () => {
-            try {
-              const refreshedAccessToken = await silentRefresh()
-              accessTokenRef.current = refreshedAccessToken.secret
-            } catch (error) {
-              console.error(error)
-              await auth.signOut()
-            }
-          }, silentRefreshMs)
-
-          const { next = '/app' } = router.query as RouterQuery
-          router.push(next)
         }
       })
       .catch(error => {
