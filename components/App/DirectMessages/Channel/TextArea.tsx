@@ -21,7 +21,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const { client, accessToken } = useFauna()
   const queryClient = useQueryClient()
   const lastMessageSentAt = useRef<Date>()
-  const [isSpamDialogOpen, setIsSpamDialogOpen] = useState(true)
+  const [isSpamDialogOpen, setIsSpamDialogOpen] = useState(false)
   const { data } = useFaunaQuery<DirectMessageDetails>({
     queryKey: ['dm', dm],
     fql: getDirectMessageFql(dm, channel),

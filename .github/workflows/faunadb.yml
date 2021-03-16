@@ -25,4 +25,4 @@ jobs:
 
       - name: Apply migrations
         shell: 'script -q -e -c "bash {0}"'
-        run: npx fauna-schema-migrate apply
+        run: npx fauna-schema-migrate apply all
