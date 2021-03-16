@@ -85,6 +85,7 @@ export default CreateRole({
       resource: Collection('users'),
       actions: {
         read: true,
+        write: true, // TODO: Only modify current user
       },
     },
     {

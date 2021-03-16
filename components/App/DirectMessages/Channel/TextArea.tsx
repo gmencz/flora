@@ -24,10 +24,19 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   })
 
   const mutation = useMutation<unknown, unknown, NewMessage>(
-    newMessage => {
-      return client.query(sendDirectMessageFql(newMessage, channel), {
-        secret: accessToken,
-      })
+    async newMessage => {
+      const res = await client.query<string | Record<string, unknown>>(
+        sendDirectMessageFql(newMessage, channel),
+        {
+          secret: accessToken,
+        },
+      )
+
+      if (typeof res === 'string') {
+        throw new Error(res)
+      }
+
+      return res
     },
     {
       onError: (_error, failedMessage) => {
@@ -58,6 +67,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
     if (event.key === 'Enter' && event.shiftKey === false) {
       event.preventDefault()
       sendMessage()
+      setMessage('')
     }
   }
 
