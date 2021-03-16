@@ -14,12 +14,12 @@ function useFaunaQuery<
 >(
   options: UseFaunaQueryOptions<TQueryFnData, TError, TData>,
 ): UseQueryResult<TData, TError> {
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const query = useQuery<TQueryFnData, TError, TData>({
     ...options,
     queryFn: async () => {
       const faunaResult = await client.query(options.fql, {
-        secret: getAccessToken(),
+        secret: accessToken,
       })
 
       return (faunaResult as unknown) as TQueryFnData

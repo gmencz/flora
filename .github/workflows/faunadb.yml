@@ -1,0 +1,24 @@
+name: Migrate FaunaDB
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      FAUNA_ADMIN_KEY: ${{ secrets.FAUNA_ADMIN_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+
+      - name: Apply migrations
+        run: npx fauna-schema-migrate apply

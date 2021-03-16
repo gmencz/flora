@@ -56,7 +56,7 @@ function FriendsHeader() {
             <Link passHref href="/app/friends/add">
               <a
                 css={[
-                  tw`text-sm font-semibold text-white bg-brand-500 px-2 py-1 rounded`,
+                  tw`text-sm font-semibold text-white bg-brand-600 px-2 py-1 rounded`,
                   router.asPath === '/app/friends/add' && tw`text-brand-100`,
                 ]}
               >

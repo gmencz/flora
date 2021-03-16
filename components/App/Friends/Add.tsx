@@ -19,7 +19,7 @@ const schema = z.object({
 })
 
 function AddFriend() {
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const { register, handleSubmit, errors, watch, reset } = useForm<Inputs>({
     resolver: zodResolver(schema),
   })
@@ -28,7 +28,7 @@ function AddFriend() {
     async variables => {
       const res = await client.query<(Inputs & { added: boolean }) | string>(
         addFriendMutation(variables.email),
-        { secret: getAccessToken() },
+        { secret: accessToken },
       )
 
       if (typeof res === 'string') {
@@ -80,7 +80,7 @@ function AddFriend() {
 
             <button
               disabled={!email || mutation.isLoading}
-              tw="py-2 px-4 text-white bg-brand-500 rounded text-sm ml-auto disabled:opacity-40"
+              tw="py-2 px-4 text-white bg-brand-600 rounded text-sm ml-auto disabled:opacity-40"
               type="submit"
             >
               Send Friend Request

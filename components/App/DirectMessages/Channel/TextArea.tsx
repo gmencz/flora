@@ -8,15 +8,20 @@ import {
 import { useFauna } from '@/lib/useFauna'
 import useFaunaQuery from '@/lib/useFaunaQuery'
 import { nanoid } from 'nanoid'
-import { FormEventHandler, KeyboardEvent, useState } from 'react'
+import { FormEventHandler, KeyboardEvent, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import 'twin.macro'
+import { differenceInSeconds } from 'date-fns'
+import Dialog, { DialogContent, DialogOverlay } from '@reach/dialog'
+import '@reach/dialog/styles.css'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const [message, setMessage] = useState('')
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const queryClient = useQueryClient()
+  const lastMessageSentAt = useRef<Date>()
+  const [isSpamDialogOpen, setIsSpamDialogOpen] = useState(true)
   const { data } = useFaunaQuery<DirectMessageDetails>({
     queryKey: ['dm', dm],
     fql: getDirectMessageFql(dm, channel),
@@ -24,12 +29,24 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   })
 
   const mutation = useMutation<unknown, unknown, NewMessage>(
-    newMessage => {
-      return client.query(sendDirectMessageFql(newMessage, channel), {
-        secret: getAccessToken(),
-      })
+    async newMessage => {
+      const res = await client.query<string | Record<string, unknown>>(
+        sendDirectMessageFql(newMessage, channel),
+        {
+          secret: accessToken,
+        },
+      )
+
+      if (typeof res === 'string') {
+        throw new Error(res)
+      }
+
+      return res
     },
     {
+      onSuccess: () => {
+        lastMessageSentAt.current = new Date()
+      },
       onError: (_error, failedMessage) => {
         queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
           return {
@@ -62,6 +79,18 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   }
 
   const sendMessage = () => {
+    if (lastMessageSentAt.current) {
+      const secondsSinceLastMessage = differenceInSeconds(
+        new Date(),
+        lastMessageSentAt.current,
+      )
+
+      if (secondsSinceLastMessage < 1) {
+        setIsSpamDialogOpen(true)
+        return
+      }
+    }
+
     const nonce = nanoid()
 
     queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
@@ -87,6 +116,8 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
       content: message,
       nonce,
     })
+
+    setMessage('')
   }
 
   const onSubmit: FormEventHandler<HTMLFormElement> = event => {
@@ -95,16 +126,39 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   }
 
   return (
-    <div tw="sticky bottom-0 p-4 mt-auto bg-gray-100">
-      <form onSubmit={onSubmit}>
-        <textarea
-          value={message}
-          onChange={event => setMessage(event.target.value)}
-          onKeyPress={submitOnEnter}
-          tw="w-full p-4"
-        />
-      </form>
-    </div>
+    <>
+      <div tw="sticky bottom-0 p-4 mt-auto bg-gray-100">
+        <form onSubmit={onSubmit}>
+          <textarea
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+            onKeyPress={submitOnEnter}
+            tw="w-full p-4"
+          />
+        </form>
+      </div>
+
+      <DialogOverlay
+        tw="z-50"
+        isOpen={isSpamDialogOpen}
+        onDismiss={() => setIsSpamDialogOpen(false)}
+      >
+        <DialogContent
+          aria-label="Sending messages too fast"
+          tw="bg-gray-200 w-full max-w-lg rounded-md text-center space-y-4 flex flex-col"
+        >
+          <p tw="font-semibold text-gray-800">
+            You can't send more than 1 message every second!
+          </p>
+          <button
+            tw="p-4 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-600 font-semibold text-white rounded-md bg-brand-600 hover:bg-brand-700"
+            onClick={() => setIsSpamDialogOpen(false)}
+          >
+            Got it
+          </button>
+        </DialogContent>
+      </DialogOverlay>
+    </>
   )
 }
 

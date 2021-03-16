@@ -35,7 +35,7 @@ function Friends() {
 
   const queryClient = useQueryClient()
   const router = useRouter()
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const messageMutation = useMutation<
     MessageMutation,
     unknown,
@@ -44,7 +44,7 @@ function Friends() {
     variables => {
       return client.query(
         getOrCreateDirectMessageMutation(variables.friendId),
-        { secret: getAccessToken() },
+        { secret: accessToken },
       )
     },
     {

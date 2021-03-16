@@ -23,9 +23,9 @@ function ServersSidebar() {
             <Link passHref href="/app">
               <a
                 css={[
-                  tw`flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors`,
+                  tw`flex h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-600 transition-colors`,
 
-                  homePathMatches && tw`bg-brand-500 text-white`,
+                  homePathMatches && tw`bg-brand-600 text-white`,
                 ]}
               >
                 <svg
@@ -58,7 +58,7 @@ function ServersSidebar() {
             <Tooltip label="Add a Server (Soon&trade;)" position="right">
               <div className="group">
                 {/* <Link href="/app/servers/new"> */}
-                <a tw="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-500 transition-colors">
+                <a tw="flex cursor-not-allowed h-12 w-12 justify-center items-center bg-white p-2 rounded-2xl group-hover:bg-brand-600 transition-colors">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"

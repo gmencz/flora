@@ -1,19 +1,26 @@
 import { DirectMessageStatus, NewMessage } from '@/lib/types/messages'
 import {
+  Abort,
   Collection,
   Create,
   CurrentIdentity,
+  Do,
+  Expr,
   Get,
+  If,
+  IsNull,
   Let,
+  LT,
   Now,
   Ref,
   Select,
+  TimeDiff,
   ToString,
   Update,
   Var,
 } from 'faunadb'
 
-const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
+const CreateAndUpdateMessage = (newMessage: NewMessage, channel: string) =>
   Let(
     {
       newMessage: Create(Collection('messages'), {
@@ -47,6 +54,46 @@ const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
         latestMessage: Var('newMessageData'),
       },
     }),
+  )
+
+const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
+  Let(
+    {
+      lastMessageSentAt: Select(
+        ['data', 'lastMessageSentAt'],
+        Get(CurrentIdentity()),
+        (null as unknown) as Expr,
+      ),
+    },
+    If(
+      IsNull(Var('lastMessageSentAt')),
+
+      Do(
+        CreateAndUpdateMessage(newMessage, channel),
+
+        Update(CurrentIdentity(), {
+          data: {
+            lastMessageSentAt: Now(),
+          },
+        }),
+      ),
+
+      If(
+        LT(TimeDiff(Var('lastMessageSentAt'), Now(), 'milliseconds'), 1000),
+
+        Abort("You can't send more than 1 message every second"),
+
+        Do(
+          CreateAndUpdateMessage(newMessage, channel),
+
+          Update(CurrentIdentity(), {
+            data: {
+              lastMessageSentAt: Now(),
+            },
+          }),
+        ),
+      ),
+    ),
   )
 
 export default sendDirectMessageFql
