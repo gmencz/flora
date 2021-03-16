@@ -64,6 +64,7 @@ const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
         Get(CurrentIdentity()),
         (null as unknown) as Expr,
       ),
+      rateLimitTimestamp: Now(),
     },
     If(
       IsNull(Var('lastMessageSentAt')),
@@ -73,9 +74,13 @@ const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
 
         Update(CurrentIdentity(), {
           data: {
-            lastMessageSentAt: Now(),
+            lastMessageSentAt: Var('rateLimitTimestamp'),
           },
         }),
+
+        {
+          rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
+        },
       ),
 
       If(
@@ -88,9 +93,13 @@ const sendDirectMessageFql = (newMessage: NewMessage, channel: string) =>
 
           Update(CurrentIdentity(), {
             data: {
-              lastMessageSentAt: Now(),
+              lastMessageSentAt: Var('rateLimitTimestamp'),
             },
           }),
+
+          {
+            rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
+          },
         ),
       ),
     ),
