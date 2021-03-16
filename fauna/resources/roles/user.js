@@ -18,6 +18,7 @@ import {
   Or,
   Paginate,
   Query,
+  Ref,
   Select,
   Union,
   Var,
@@ -85,7 +86,12 @@ export default CreateRole({
       resource: Collection('users'),
       actions: {
         read: true,
-        write: true, // TODO: Only modify current user
+        write: Query(
+          Lambda(
+            ['oldData', 'newData', 'ref'],
+            Equals(CurrentIdentity(), Var('ref')),
+          ),
+        ),
       },
     },
     {

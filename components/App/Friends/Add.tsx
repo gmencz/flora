@@ -80,7 +80,7 @@ function AddFriend() {
 
             <button
               disabled={!email || mutation.isLoading}
-              tw="py-2 px-4 text-white bg-brand-500 rounded text-sm ml-auto disabled:opacity-40"
+              tw="py-2 px-4 text-white bg-brand-600 rounded text-sm ml-auto disabled:opacity-40"
               type="submit"
             >
               Send Friend Request
