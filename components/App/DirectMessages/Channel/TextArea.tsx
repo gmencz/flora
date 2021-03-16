@@ -13,7 +13,7 @@ import { useMutation, useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import 'twin.macro'
 import { differenceInSeconds } from 'date-fns'
-import Dialog, { DialogContent, DialogOverlay } from '@reach/dialog'
+import { DialogContent, DialogOverlay } from '@reach/dialog'
 import '@reach/dialog/styles.css'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
