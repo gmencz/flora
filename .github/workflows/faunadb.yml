@@ -20,5 +20,8 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Install deps
+        uses: bahmutov/npm-install@v1
+
       - name: Apply migrations
         run: npx fauna-schema-migrate apply
