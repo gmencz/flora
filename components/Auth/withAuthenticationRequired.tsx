@@ -30,7 +30,7 @@ const withAuthenticationRequired = <P extends object>(
     const [user, loading, error] = useAuthState(auth)
     const { onRedirecting = defaultOnRedirecting } = options
     const router = useRouter()
-    const { accessTokenRef, silentRefreshRef } = useFauna()
+    const { setAccessToken, silentRefreshRef } = useFauna()
     const [isRefreshing, setIsRefreshing] = useState(!silentRefreshRef.current)
 
     const redirectToLogin = useCallback(() => {
@@ -42,7 +42,7 @@ const withAuthenticationRequired = <P extends object>(
       if (!silentRefreshRef.current) {
         silentRefresh()
           .then(({ secret, expInMs }) => {
-            accessTokenRef.current = secret
+            setAccessToken(secret)
 
             const thirtySeconds = 30 * 1000
             const silentRefreshMs = expInMs - thirtySeconds
@@ -50,7 +50,7 @@ const withAuthenticationRequired = <P extends object>(
             silentRefreshRef.current = setInterval(async () => {
               try {
                 const refreshedAccessToken = await silentRefresh()
-                accessTokenRef.current = refreshedAccessToken.secret
+                setAccessToken(refreshedAccessToken.secret)
               } catch (error) {
                 console.error(error)
                 try {
@@ -73,7 +73,7 @@ const withAuthenticationRequired = <P extends object>(
             }
           })
       }
-    }, [accessTokenRef, redirectToLogin, silentRefreshRef])
+    }, [redirectToLogin, setAccessToken, silentRefreshRef])
 
     const errorAuthenticating = !loading && (!user || error)
     if (errorAuthenticating) {

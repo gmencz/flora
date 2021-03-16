@@ -15,7 +15,7 @@ import 'twin.macro'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const [message, setMessage] = useState('')
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const queryClient = useQueryClient()
   const { data } = useFaunaQuery<DirectMessageDetails>({
     queryKey: ['dm', dm],
@@ -26,7 +26,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const mutation = useMutation<unknown, unknown, NewMessage>(
     newMessage => {
       return client.query(sendDirectMessageFql(newMessage, channel), {
-        secret: getAccessToken(),
+        secret: accessToken,
       })
     },
     {

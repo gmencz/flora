@@ -1,9 +1,10 @@
 import { Client as FaunaClient, ClientConfig } from 'faunadb'
 import {
   createContext,
+  Dispatch,
   MutableRefObject,
   ReactNode,
-  useCallback,
+  SetStateAction,
   useMemo,
 } from 'react'
 
@@ -28,8 +29,8 @@ export function createClient(secret: string) {
 interface IFaunaClientContext {
   client: FaunaClient
   silentRefreshRef: MutableRefObject<NodeJS.Timeout | undefined>
-  accessTokenRef: MutableRefObject<string | undefined>
-  getAccessToken: () => string
+  accessToken: string
+  setAccessToken: Dispatch<SetStateAction<string>>
 }
 
 export const FaunaClientContext = createContext<IFaunaClientContext | null>(
@@ -40,22 +41,20 @@ interface FaunaClientProviderProps {
   children: ReactNode
   client: FaunaClient
   silentRefreshRef: MutableRefObject<NodeJS.Timeout | undefined>
-  accessTokenRef: MutableRefObject<string | undefined>
+  accessToken: string
+  setAccessToken: Dispatch<SetStateAction<string>>
 }
 
 export function FaunaClientProvider({
   children,
   client,
   silentRefreshRef,
-  accessTokenRef,
+  accessToken,
+  setAccessToken,
 }: FaunaClientProviderProps) {
-  const getAccessToken = useCallback(() => accessTokenRef.current!, [
-    accessTokenRef,
-  ])
-
   const memoized = useMemo<IFaunaClientContext>(
-    () => ({ client, silentRefreshRef, accessTokenRef, getAccessToken }),
-    [client, silentRefreshRef, accessTokenRef, getAccessToken],
+    () => ({ client, silentRefreshRef, accessToken, setAccessToken }),
+    [client, silentRefreshRef, accessToken, setAccessToken],
   )
 
   return (

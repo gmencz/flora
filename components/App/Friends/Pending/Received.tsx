@@ -4,6 +4,7 @@ import { ReceivedFriendRequest as IReceivedFriendRequest } from '@/fauna/queries
 import { useFauna } from '@/lib/useFauna'
 import formatMessageTimestamp from '@/util/formatMessageTimestamp'
 import { Collection, Delete, Ref } from 'faunadb'
+import { useRouter } from 'next/router'
 import { useMutation, useQueryClient } from 'react-query'
 import 'twin.macro'
 
@@ -12,18 +13,20 @@ interface ReceivedFriendRequestProps {
 }
 
 function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   const acceptMutation = useMutation(
     () => {
       return client.query(acceptFriendRequestMutation(friendRequest.id), {
-        secret: getAccessToken(),
+        secret: accessToken,
       })
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries('pendingFriendRequests')
+        router.push('/app')
       },
     },
   )
@@ -32,7 +35,7 @@ function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
     () => {
       return client.query(
         Delete(Ref(Collection('user_friend_requests'), friendRequest.id)),
-        { secret: getAccessToken() },
+        { secret: accessToken },
       )
     },
     {

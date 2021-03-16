@@ -1,5 +1,5 @@
 import { AppProps } from 'next/dist/next-server/lib/router/router'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
@@ -14,7 +14,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
   const faunaClientRef = useRef<FaunaClient>()
   const silentRefreshRef = useRef<NodeJS.Timeout>()
-  const accessTokenRef = useRef<string>()
+  const [accessToken, setAccessToken] = useState<string>('')
 
   if (!queryClientRef.current) {
     queryClientRef.current = new QueryClient()
@@ -28,7 +28,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <QueryClientProvider client={queryClientRef.current}>
       <Hydrate state={pageProps.dehydratedState}>
         <FaunaClientProvider
-          accessTokenRef={accessTokenRef}
+          accessToken={accessToken}
+          setAccessToken={setAccessToken}
           silentRefreshRef={silentRefreshRef}
           client={faunaClientRef.current}
         >

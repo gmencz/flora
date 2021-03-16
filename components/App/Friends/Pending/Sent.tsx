@@ -15,7 +15,7 @@ interface CancelFriendRequestVariables {
 }
 
 function SentFriendRequest({ friendRequest }: SentFriendRequestProps) {
-  const { client, getAccessToken } = useFauna()
+  const { client, accessToken } = useFauna()
   const queryClient = useQueryClient()
   const cancelFriendRequest = useMutation<
     unknown,
@@ -27,7 +27,7 @@ function SentFriendRequest({ friendRequest }: SentFriendRequestProps) {
         Delete(
           Ref(Collection('user_friend_requests'), variables.friendRequestId),
         ),
-        { secret: getAccessToken() },
+        { secret: accessToken },
       )
     },
     {

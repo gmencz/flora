@@ -18,7 +18,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const { silentRefreshRef, accessTokenRef } = useFauna()
+  const { silentRefreshRef, setAccessToken } = useFauna()
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -35,7 +35,7 @@ function Login() {
           }).then(res => res.json())) as FaunaAuthTokens['access']
 
           if (secret && expInMs) {
-            accessTokenRef.current = secret
+            setAccessToken(secret)
 
             const thirtySeconds = 30 * 1000
             const silentRefreshMs = expInMs - thirtySeconds
@@ -43,7 +43,7 @@ function Login() {
             silentRefreshRef.current = setInterval(async () => {
               try {
                 const refreshedAccessToken = await silentRefresh()
-                accessTokenRef.current = refreshedAccessToken.secret
+                setAccessToken(refreshedAccessToken.secret)
               } catch (error) {
                 console.error(error)
                 await auth.signOut()

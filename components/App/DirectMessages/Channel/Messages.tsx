@@ -12,7 +12,7 @@ import 'twin.macro'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { getAccessToken } = useFauna()
+  const { accessToken } = useFauna()
   const queryClient = useQueryClient()
   const { data, isSuccess } = useFaunaQuery<DirectMessageDetails>({
     queryKey: ['dm', dm],
@@ -21,10 +21,8 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   })
 
   useEffect(() => {
-    const subscriptionClient = createClient(getAccessToken())
-    const stream = subscriptionClient.stream(
-      Ref(Collection('channels'), channel),
-    )
+    const streamClient = createClient(accessToken)
+    const stream = streamClient.stream(Ref(Collection('channels'), channel))
 
     const startStream = () => {
       stream
@@ -72,7 +70,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
     return () => {
       stream.close()
     }
-  }, [channel, dm, getAccessToken, queryClient])
+  }, [accessToken, channel, dm, queryClient])
 
   useLayoutEffect(() => {
     if (data && data.messages.data.length > 0) {
