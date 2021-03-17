@@ -80,7 +80,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
 
   return (
     <>
-      <ul tw="p-6">
+      <ul tw="py-6">
         {isSuccess && data?.messages.data.length === 0 && (
           <p tw="text-sm text-gray-900">
             Go ahead and say something to {data.withUser.name}!
@@ -89,7 +89,11 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
 
         {data?.messages.data.map((message, index, messages) => (
           <li key={message.nonce}>
-            <Message message={message} previousMessage={messages[index - 1]} />
+            <Message
+              dm={dm}
+              message={message}
+              previousMessage={messages[index - 1]}
+            />
           </li>
         ))}
       </ul>

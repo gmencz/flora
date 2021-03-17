@@ -24,6 +24,7 @@ export enum DirectMessageStatus {
   FAILED,
   IN_QUEUE,
   DELIVERED,
+  INFO,
 }
 
 export type NewMessage = Pick<DirectMessage, 'content' | 'nonce'>

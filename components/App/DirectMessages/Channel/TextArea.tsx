@@ -64,6 +64,31 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
             },
           }
         })
+
+        queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
+          return {
+            ...existing!,
+            messages: {
+              data: [
+                ...existing!.messages.data,
+                {
+                  content:
+                    "Your message could not be delivered. This is usually because the recipient isn't your friend or Chatskee is having internal issues.",
+                  nonce: nanoid(),
+                  status: DirectMessageStatus.INFO,
+                  timestamp: new Date().toISOString(),
+                  user: {
+                    id: nanoid(),
+                    name: 'Bonnie',
+                    photo: '/bonnie.png',
+                  },
+                },
+              ],
+              before: existing!.messages.before,
+              after: existing!.messages.after,
+            },
+          }
+        })
       },
     },
   )

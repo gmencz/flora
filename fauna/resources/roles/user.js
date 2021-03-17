@@ -278,10 +278,29 @@ export default CreateRole({
                   ['data', 'subscriber2'],
                   Var('channel'),
                 ),
+                otherSubscriber: If(
+                  Equals(CurrentIdentity(), Var('channelSubscriber1')),
+                  Var('channelSubscriber2'),
+                  Var('channelSubscriber1'),
+                ),
               },
-              Or(
-                Equals(CurrentIdentity(), Var('channelSubscriber1')),
-                Equals(CurrentIdentity(), Var('channelSubscriber2')),
+              And(
+                Or(
+                  Equals(CurrentIdentity(), Var('channelSubscriber1')),
+                  Equals(CurrentIdentity(), Var('channelSubscriber2')),
+                ),
+                Exists(
+                  Union(
+                    Match(Index('friends_by_user1_and_user2'), [
+                      Var('channelSubscriber1'),
+                      Var('channelSubscriber2'),
+                    ]),
+                    Match(Index('friends_by_user1_and_user2'), [
+                      Var('channelSubscriber2'),
+                      Var('channelSubscriber1'),
+                    ]),
+                  ),
+                ),
               ),
             ),
           ),
