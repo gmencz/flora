@@ -316,6 +316,19 @@ export default CreateRole({
             ),
           ),
         ),
+        delete: Query(ref =>
+          Let(
+            {
+              doc: Get(ref),
+              user1Ref: Select(['data', 'user1Ref'], Var('doc')),
+              user2Ref: Select(['data', 'user2Ref'], Var('doc')),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user1Ref')),
+              Equals(CurrentIdentity(), Var('user2Ref')),
+            ),
+          ),
+        ),
       },
     },
     {

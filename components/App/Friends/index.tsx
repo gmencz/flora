@@ -8,7 +8,6 @@ import { formatDistanceToNow } from 'date-fns'
 import DirectMessagesSidebar from '../DirectMessages/Sidebar'
 import ServersSidebar from '../Servers/Sidebar'
 import FriendsHeader from './Header'
-import 'twin.macro'
 import Tooltip from '@/components/ui/Tooltip'
 import { useMutation, useQueryClient } from 'react-query'
 import { useFauna } from '@/lib/useFauna'
@@ -17,6 +16,22 @@ import {
   getOrCreateDirectMessageMutation,
   MessageMutation,
 } from '@/fauna/mutations/getOrCreateDirectMessage'
+import { Menu, MenuButton, MenuItem, MenuList } from '@reach/menu-button'
+import '@reach/menu-button/styles.css'
+import tw, { styled } from 'twin.macro'
+import {
+  Collection,
+  CurrentIdentity,
+  Delete,
+  Get,
+  Index,
+  Let,
+  Match,
+  Ref,
+  Select,
+  Union,
+  Var,
+} from 'faunadb'
 
 interface FriendsQuery {
   friends: Page<Friend>
@@ -26,6 +41,18 @@ interface FriendsQuery {
 interface MessageVariables {
   friendId: string
 }
+
+interface UnfriendVariables {
+  friendId: string
+}
+
+const FriendOptions = styled(MenuList)`
+  ${tw`border-0 rounded-md shadow-lg bg-white ring-opacity-5 divide-y divide-gray-100 py-2 px-0 text-sm font-semibold text-gray-800`}
+
+  > [data-reach-menu-item][data-selected] {
+    ${tw`bg-gray-100 text-gray-900`}
+  }
+`
 
 function Friends() {
   const friendsQuery = useFaunaQuery<FriendsQuery>({
@@ -58,8 +85,47 @@ function Friends() {
     },
   )
 
+  const unfriendMutation = useMutation<unknown, unknown, UnfriendVariables>(
+    variables => {
+      return client.query(
+        Let(
+          {
+            friendRequest: Select(
+              ['ref'],
+              Get(
+                Union(
+                  Match(Index('friends_by_user1_and_user2'), [
+                    CurrentIdentity(),
+                    Ref(Collection('users'), variables.friendId),
+                  ]),
+                  Match(Index('friends_by_user1_and_user2'), [
+                    Ref(Collection('users'), variables.friendId),
+                    CurrentIdentity(),
+                  ]),
+                ),
+              ),
+            ),
+          },
+          Delete(Var('friendRequest')),
+        ),
+        {
+          secret: accessToken,
+        },
+      )
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('friends')
+      },
+    },
+  )
+
   const onMessage = (friendId: string) => {
     messageMutation.mutate({ friendId })
+  }
+
+  const onUnfriend = (friendId: string) => {
+    unfriendMutation.mutate({ friendId })
   }
 
   return (
@@ -120,6 +186,45 @@ function Friends() {
                             </button>
                           </Tooltip>
                         </div>
+
+                        <Menu>
+                          <MenuButton
+                            className="group"
+                            tw="relative rounded-full"
+                          >
+                            <div tw="rounded-full bg-gray-200 group-hover:bg-gray-300 p-1.5">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                tw="h-5 w-5 text-gray-700 group-hover:text-gray-900"
+                              >
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                              </svg>
+
+                              <span tw="sr-only">Options</span>
+                            </div>
+                          </MenuButton>
+
+                          {/* @ts-ignore */}
+                          <FriendOptions>
+                            <MenuItem
+                              onSelect={() => onUnfriend(friend.id)}
+                              tw="flex space-x-3"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                tw="h-5 w-5"
+                              >
+                                <path d="M11 6a3 3 0 11-6 0 3 3 0 016 0zM14 17a6 6 0 00-12 0h12zM13 8a1 1 0 100 2h4a1 1 0 100-2h-4z" />
+                              </svg>
+
+                              <span>Unfriend</span>
+                            </MenuItem>
+                          </FriendOptions>
+                        </Menu>
                       </div>
                     </div>
                   </li>
