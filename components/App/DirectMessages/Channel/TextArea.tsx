@@ -28,13 +28,9 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
     staleTime: Infinity,
   })
 
-  const mutation = useMutation<
-    { rateLimitTimestamp: string },
-    unknown,
-    NewMessage
-  >(
+  const mutation = useMutation<unknown, unknown, NewMessage>(
     async newMessage => {
-      const res = await client.query<string | { rateLimitTimestamp: string }>(
+      const res = await client.query<string | unknown>(
         sendDirectMessageFql(newMessage, channel),
         {
           secret: accessToken,
@@ -48,10 +44,6 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
       return res
     },
     {
-      onSuccess: data => {
-        console.log(data)
-        lastMessageSentAt.current = new Date(data.rateLimitTimestamp)
-      },
       onError: (_error, failedMessage) => {
         queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
           return {
@@ -122,6 +114,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
       nonce,
     })
 
+    lastMessageSentAt.current = new Date()
     setMessage('')
   }
 
