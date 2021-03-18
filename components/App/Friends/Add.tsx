@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from 'react-query'
 import { useFauna } from '@/lib/useFauna'
 import addFriendMutation from '@/fauna/mutations/addFriend'
+import { errors } from 'faunadb'
 
 interface Inputs {
   email: string
@@ -24,18 +25,16 @@ function AddFriend() {
     resolver: zodResolver(schema),
   })
 
-  const mutation = useMutation<Inputs & { added: boolean }, Error, Inputs>(
-    async variables => {
-      const res = await client.query<(Inputs & { added: boolean }) | string>(
+  const mutation = useMutation<
+    Inputs & { added: boolean },
+    errors.FaunaError,
+    Inputs
+  >(
+    variables => {
+      return client.query<Inputs & { added: boolean }>(
         addFriendMutation(variables.email),
         { secret: accessToken },
       )
-
-      if (typeof res === 'string') {
-        throw new Error(res)
-      }
-
-      return res
     },
     {
       onSuccess: () => {
@@ -97,7 +96,7 @@ function AddFriend() {
           )}
 
           {mutation.isError && (
-            <p tw="mt-4 text-red-600 text-sm">{mutation.error?.message}</p>
+            <p tw="mt-4 text-red-600 text-sm">{mutation.error?.description}</p>
           )}
         </div>
       </div>

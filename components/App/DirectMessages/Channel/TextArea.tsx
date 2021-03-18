@@ -30,18 +30,12 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
 
   const mutation = useMutation<unknown, unknown, NewMessage>(
     async newMessage => {
-      const res = await client.query<string | unknown>(
+      return client.query<string | unknown>(
         sendDirectMessageFql(newMessage, channel),
         {
           secret: accessToken,
         },
       )
-
-      if (typeof res === 'string') {
-        throw new Error(res)
-      }
-
-      return res
     },
     {
       onError: (_error, failedMessage) => {
@@ -49,28 +43,17 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
           return {
             ...existing!,
             messages: {
-              data: existing!.messages.data.map(message => {
-                if (message.nonce === failedMessage.nonce) {
-                  return {
-                    ...message,
-                    status: DirectMessageStatus.FAILED,
-                  }
-                }
-
-                return message
-              }),
-              before: existing!.messages.before,
-              after: existing!.messages.after,
-            },
-          }
-        })
-
-        queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
-          return {
-            ...existing!,
-            messages: {
               data: [
-                ...existing!.messages.data,
+                ...existing!.messages.data.map(message => {
+                  if (message.nonce === failedMessage.nonce) {
+                    return {
+                      ...message,
+                      status: DirectMessageStatus.FAILED,
+                    }
+                  }
+
+                  return message
+                }),
                 {
                   content:
                     "Your message could not be delivered. This is usually because the recipient isn't your friend or Chatskee is having internal issues.",
