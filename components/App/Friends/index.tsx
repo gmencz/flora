@@ -47,7 +47,7 @@ interface UnfriendVariables {
 }
 
 const FriendOptions = styled(MenuList)`
-  ${tw`border-0 rounded-md shadow-lg bg-white ring-opacity-5 divide-y divide-gray-100 py-2 px-0 text-sm font-semibold text-gray-800`}
+  ${tw`border-0 rounded-md shadow-lg bg-white ring-opacity-5 space-y-1.5 py-2 px-0 text-sm font-semibold text-gray-800`}
 
   > [data-reach-menu-item][data-selected] {
     ${tw`bg-gray-100 text-gray-900`}

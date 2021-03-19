@@ -37,7 +37,7 @@ const borders: Record<TooltipPosition, CSSProperties> = {
 const TooltipTopOverlay = styled.div<Pick<TooltipProps, 'label'>>(
   ({ label }) => [
     tw`transform -top-10 right-1/2 translate-x-1/2 group-hover:-translate-y-1 transition-all rounded-md ease-tooltip pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto absolute inline-flex bg-white shadow-lg py-2 px-3 text-sm font-semibold text-gray-800`,
-    label.length <= 25 ? tw`whitespace-nowrap` : tw`w-48`,
+    label.length <= 50 ? tw`whitespace-nowrap` : tw`w-48`,
   ],
 )
 

@@ -8,6 +8,6 @@ export default function formatMessageTimestamp(timestamp: string) {
   } else if (isYesterday(date)) {
     return format(date, "'Yesterday at 'h:mm' 'aa")
   } else {
-    return format(date, 'dd/MM/yyyy')
+    return format(date, "dd/MM/yyyy' at 'h:mm' 'aa")
   }
 }
