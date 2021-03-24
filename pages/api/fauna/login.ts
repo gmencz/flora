@@ -3,12 +3,8 @@ import {
   Collection,
   Create,
   Do,
-  Exists,
-  Get,
   If,
-  Index,
   Let,
-  Match,
   Merge,
   Now,
   Select,
@@ -20,10 +16,9 @@ import admin from '@/lib/firebase/server'
 import catchHandler from '@/util/catchHandler'
 import { FaunaAuthTokens } from '@/lib/types/auth'
 import { createClient } from '@/lib/FaunaClient'
-import {
-  CreateAccessAndRefreshToken,
-  setRefreshTokenCookie,
-} from '@/fauna/mutations/auth'
+import { CheckIfUserExists, CreateTokensForUser } from '@/fauna/auth/login'
+import setCookie from '@/util/setCookie'
+import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const client = createClient(process.env.FAUNADB_SERVER_KEY!)
@@ -59,43 +54,44 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const { name, uid, picture, email } = user
+  const baseUserData = {
+    name,
+    uid,
+    photoURL: picture,
+    email,
+  }
+
   const { access, refresh } = await client.query<FaunaAuthTokens>(
     Let(
       {
-        match: Match(Index('users_by_uid'), uid),
-        baseUserData: {
-          name,
-          uid,
-          photoURL: picture,
-          email,
-        },
+        baseUserData,
+        login: CreateTokensForUser(uid),
       },
       If(
-        Exists(Var('match')),
-        Let(
-          { userRef: Select(['ref'], Get(Var('match'))) },
-          Do(
-            Update(Var('userRef'), {
-              data: Var('baseUserData'),
-            }),
-            Let(
-              {
-                tokens: CreateAccessAndRefreshToken(Var('userRef')),
+        CheckIfUserExists(uid),
+
+        Do(
+          Update(Select(['ref'], Select(['user'], Var('login'))), {
+            data: Var('baseUserData'),
+          }),
+
+          Let(
+            {
+              tokens: Select(['tokens'], Var('login')),
+            },
+            {
+              access: {
+                secret: Select(['access', 'secret'], Var('tokens')),
+                expInMs: TimeDiff(
+                  Now(),
+                  Select(['access', 'ttl'], Var('tokens')),
+                  'milliseconds',
+                ),
               },
-              {
-                access: {
-                  secret: Select(['access', 'secret'], Var('tokens')),
-                  expInMs: TimeDiff(
-                    Now(),
-                    Select(['access', 'ttl'], Var('tokens')),
-                    'milliseconds',
-                  ),
-                },
-                refresh: {
-                  secret: Select(['refresh', 'secret'], Var('tokens')),
-                },
+              refresh: {
+                secret: Select(['refresh', 'secret'], Var('tokens')),
               },
-            ),
+            },
           ),
         ),
 
@@ -105,9 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           }),
           Let(
             {
-              tokens: CreateAccessAndRefreshToken(
-                Select(['ref'], Get(Var('match'))),
-              ),
+              tokens: Select(['tokens'], Var('login')),
             },
             {
               access: {
@@ -128,7 +122,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     ),
   )
 
-  setRefreshTokenCookie(res, refresh.secret)
+  setCookie(res, 'chatskeeFaunaRefresh', refresh.secret, {
+    maxAge: REFRESH_TOKEN_LIFETIME_SECONDS,
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  })
 
   return res.json(access)
 }

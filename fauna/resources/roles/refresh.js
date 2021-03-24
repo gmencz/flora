@@ -1,34 +1,12 @@
-import {
-  And,
-  Collection,
-  CreateRole,
-  CurrentToken,
-  Equals,
-  Function,
-  Get,
-  HasCurrentToken,
-  Lambda,
-  Query,
-  Select,
-} from 'faunadb'
+import { Collection, CreateRole, Function, Lambda, Query } from 'faunadb'
+import { IsCalledWithRefreshToken } from '../../auth/tokens'
 
 export default CreateRole({
   name: 'refresh',
   membership: [
     {
       resource: Collection('users'),
-      predicate: Query(
-        Lambda(
-          'ref',
-          And(
-            HasCurrentToken(),
-            Equals(
-              Select(['data', 'type'], Get(CurrentToken()), false),
-              'refresh',
-            ),
-          ),
-        ),
-      ),
+      predicate: Query(Lambda(_ref => IsCalledWithRefreshToken())),
     },
   ],
   privileges: [

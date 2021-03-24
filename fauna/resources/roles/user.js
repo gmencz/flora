@@ -23,65 +23,17 @@ import {
   Union,
   Var,
 } from 'faunadb'
+import { IsCalledWithAccessToken } from '../../auth/tokens'
 
 export default CreateRole({
   name: 'user',
   membership: [
     {
       resource: Collection('users'),
-      predicate: Query(
-        Lambda(
-          'ref',
-          Equals(
-            Select(['data', 'type'], Get(CurrentToken()), false),
-            'access',
-          ),
-        ),
-      ),
+      predicate: Query(Lambda(_ref => IsCalledWithAccessToken())),
     },
   ],
   privileges: [
-    {
-      resource: Collection('server_users'),
-      actions: {
-        read: Query(
-          Lambda(
-            'ref',
-            Equals(
-              Select(['data', 'userRef'], Get(Var('ref'))),
-              CurrentIdentity(),
-            ),
-          ),
-        ),
-      },
-    },
-    {
-      resource: Collection('servers'),
-      actions: {
-        read: Query(
-          Lambda(
-            'serverRef',
-            Any(
-              Select(
-                ['data'],
-                Map(
-                  Paginate(
-                    Match(Index('server_users_by_user'), CurrentIdentity()),
-                  ),
-                  Lambda(
-                    'ref',
-                    Equals(
-                      Var('serverRef'),
-                      Select(['data', 'serverRef'], Get(Var('ref'))),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      },
-    },
     {
       resource: Collection('users'),
       actions: {
@@ -196,17 +148,6 @@ export default CreateRole({
               ),
             },
             Var('isDmUserAFriend'),
-          ),
-        ),
-      },
-    },
-    {
-      resource: Index('server_users_by_user'),
-      actions: {
-        read: Query(
-          Lambda(
-            'userAndServerRefs',
-            Equals(CurrentIdentity(), Select([0], Var('userAndServerRefs'))),
           ),
         ),
       },

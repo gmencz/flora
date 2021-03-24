@@ -1,6 +1,5 @@
 import withAuthenticationRequired from '@/components/Auth/withAuthenticationRequired'
 import DirectMesssagesSidebar from '../../DirectMessages/Sidebar'
-import ServersSidebar from '../../Servers/Sidebar'
 import FriendsHeader from '../Header'
 import 'twin.macro'
 import useFaunaQuery from '@/lib/useFaunaQuery'
@@ -18,8 +17,6 @@ function PendingFriendRequests() {
 
   return (
     <div tw="flex">
-      <ServersSidebar />
-
       <DirectMesssagesSidebar />
 
       <div tw="flex-1 flex flex-col">

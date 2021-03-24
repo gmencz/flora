@@ -9,7 +9,6 @@ module.exports = {
         tiny: '.7rem',
       },
       width: {
-        'servers-sidebar': '72px',
         sidebar: '240px',
       },
       fontFamily: {

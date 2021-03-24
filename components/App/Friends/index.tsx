@@ -6,7 +6,6 @@ import useFaunaQuery from '@/lib/useFaunaQuery'
 import { parseISO } from 'date-fns'
 import { formatDistanceToNow } from 'date-fns'
 import DirectMessagesSidebar from '../DirectMessages/Sidebar'
-import ServersSidebar from '../Servers/Sidebar'
 import FriendsHeader from './Header'
 import Tooltip from '@/components/ui/Tooltip'
 import { useMutation, useQueryClient } from 'react-query'
@@ -130,8 +129,6 @@ function Friends() {
 
   return (
     <div tw="flex">
-      <ServersSidebar />
-
       <DirectMessagesSidebar />
 
       <div tw="flex-1 flex flex-col">

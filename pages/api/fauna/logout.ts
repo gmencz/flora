@@ -2,7 +2,7 @@ import { Call, Function } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
 import catchHandler from '@/util/catchHandler'
 import { createClient } from '@/lib/FaunaClient'
-import { clearRefreshTokenCookie } from '@/fauna/mutations/auth'
+import setCookie from '@/util/setCookie'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const refreshToken = req.cookies.chatskeeFaunaRefresh
@@ -16,7 +16,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     console.error(error)
   }
 
-  clearRefreshTokenCookie(res)
+  setCookie(res, 'chatskeeFaunaRefresh', '', {
+    maxAge: -1,
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  })
+
   return res.status(200).json({
     ok: true,
   })

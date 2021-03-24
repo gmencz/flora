@@ -1,6 +1,5 @@
 import withAuthenticationRequired from '@/components/Auth/withAuthenticationRequired'
 import DirectMesssagesSidebar from '../DirectMessages/Sidebar'
-import ServersSidebar from '../Servers/Sidebar'
 import FriendsHeader from './Header'
 import 'twin.macro'
 import { useForm } from 'react-hook-form'
@@ -53,8 +52,6 @@ function AddFriend() {
 
   return (
     <div tw="flex">
-      <ServersSidebar />
-
       <DirectMesssagesSidebar />
 
       <div tw="flex-1 flex flex-col">

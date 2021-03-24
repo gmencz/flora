@@ -1,5 +1,5 @@
 import { CreateFunction, Lambda, Query, Var } from 'faunadb'
-import { Logout } from '../../../fauna/mutations/auth'
+import { Logout } from '../../auth/logout'
 
 export default CreateFunction({
   name: 'logout',
