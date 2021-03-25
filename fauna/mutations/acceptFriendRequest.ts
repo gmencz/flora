@@ -13,6 +13,7 @@ import {
   Select,
   Var,
 } from 'faunadb'
+import { getOrCreateDirectMessageMutation } from './getOrCreateDirectMessage'
 
 const acceptFriendRequestMutation = (friendRequestId: string) =>
   Let(
@@ -32,13 +33,20 @@ const acceptFriendRequestMutation = (friendRequestId: string) =>
     },
     Do(
       Delete(Var('friendRequestRef')),
-      Create(Collection('user_friends'), {
-        data: {
-          user1Ref: CurrentIdentity(),
-          user2Ref: Var('userToAddRef'),
-          friendedAt: Now(),
+
+      Let(
+        {
+          friend: Create(Collection('user_friends'), {
+            data: {
+              user1Ref: CurrentIdentity(),
+              user2Ref: Var('userToAddRef'),
+              friendedAt: Now(),
+            },
+          }),
+          friendId: Select(['data', 'user2Ref', 'id'], Var('friend')),
         },
-      }),
+        getOrCreateDirectMessageMutation(Var('friendId') as string),
+      ),
     ),
   )
 

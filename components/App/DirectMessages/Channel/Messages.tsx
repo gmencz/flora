@@ -41,6 +41,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
               return {
                 ...existing!,
                 messages: {
+                  ...existing!.messages,
                   data: isMessageInQueue
                     ? existing!.messages.data.map(message => {
                         if (message.nonce === data.latestMessage.nonce) {
@@ -50,8 +51,6 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
                         return message
                       })
                     : [...existing!.messages.data, data.latestMessage],
-                  before: existing!.messages.before,
-                  after: existing!.messages.after,
                 },
               }
             },
@@ -82,8 +81,8 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
     <>
       <ul tw="py-6">
         {isSuccess && data?.messages.data.length === 0 && (
-          <p tw="text-sm text-gray-900">
-            Go ahead and say something to {data.withUser.name}!
+          <p tw="px-6 text-sm text-gray-900">
+            Be the one to start the conversation!
           </p>
         )}
 

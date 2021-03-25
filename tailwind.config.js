@@ -27,6 +27,7 @@ module.exports = {
       opacity: ['group-hover', 'disabled'],
       pointerEvents: ['group-hover'],
       translate: ['group-hover'],
+      width: ['group-hover'],
     },
   },
   plugins: [],

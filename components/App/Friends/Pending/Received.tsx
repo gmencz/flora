@@ -1,5 +1,6 @@
 import Tooltip from '@/components/ui/Tooltip'
 import acceptFriendRequestMutation from '@/fauna/mutations/acceptFriendRequest'
+import { MessageMutation } from '@/fauna/mutations/getOrCreateDirectMessage'
 import { ReceivedFriendRequest as IReceivedFriendRequest } from '@/fauna/queries/pendingFriendRequests'
 import { useFauna } from '@/lib/useFauna'
 import formatMessageTimestamp from '@/util/formatMessageTimestamp'
@@ -17,16 +18,18 @@ function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const acceptMutation = useMutation(
+  const acceptMutation = useMutation<MessageMutation>(
     () => {
       return client.query(acceptFriendRequestMutation(friendRequest.id), {
         secret: accessToken,
       })
     },
     {
-      onSuccess: () => {
+      onSuccess: data => {
         queryClient.invalidateQueries('pendingFriendRequests')
-        router.push('/app')
+        queryClient.invalidateQueries('dms').then(() => {
+          router.push(`/app/dms/${data.directMessageId}/${data.channelId}`)
+        })
       },
     },
   )
