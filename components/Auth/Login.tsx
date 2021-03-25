@@ -1,7 +1,7 @@
-import { silentRefresh } from '@/fauna/mutations/auth'
 import firebase from '@/lib/firebase/client'
 import { AuthProvider, FaunaAuthTokens } from '@/lib/types/auth'
 import { useFauna } from '@/lib/useFauna'
+import { silentRefresh } from '@/util/silentRefresh'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'node:querystring'

@@ -9,7 +9,6 @@ module.exports = {
         tiny: '.7rem',
       },
       width: {
-        'servers-sidebar': '72px',
         sidebar: '240px',
       },
       fontFamily: {
@@ -28,6 +27,7 @@ module.exports = {
       opacity: ['group-hover', 'disabled'],
       pointerEvents: ['group-hover'],
       translate: ['group-hover'],
+      width: ['group-hover'],
     },
   },
   plugins: [],

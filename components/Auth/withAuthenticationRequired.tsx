@@ -3,7 +3,7 @@ import { ComponentType, useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useFauna } from '@/lib/useFauna'
-import { silentRefresh } from '@/fauna/mutations/auth'
+import { silentRefresh } from '@/util/silentRefresh'
 
 const auth = firebase.auth()
 

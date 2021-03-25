@@ -23,65 +23,17 @@ import {
   Union,
   Var,
 } from 'faunadb'
+import { IsCalledWithAccessToken } from '../../auth/tokens'
 
 export default CreateRole({
   name: 'user',
   membership: [
     {
       resource: Collection('users'),
-      predicate: Query(
-        Lambda(
-          'ref',
-          Equals(
-            Select(['data', 'type'], Get(CurrentToken()), false),
-            'access',
-          ),
-        ),
-      ),
+      predicate: Query(Lambda(_ref => IsCalledWithAccessToken())),
     },
   ],
   privileges: [
-    {
-      resource: Collection('server_users'),
-      actions: {
-        read: Query(
-          Lambda(
-            'ref',
-            Equals(
-              Select(['data', 'userRef'], Get(Var('ref'))),
-              CurrentIdentity(),
-            ),
-          ),
-        ),
-      },
-    },
-    {
-      resource: Collection('servers'),
-      actions: {
-        read: Query(
-          Lambda(
-            'serverRef',
-            Any(
-              Select(
-                ['data'],
-                Map(
-                  Paginate(
-                    Match(Index('server_users_by_user'), CurrentIdentity()),
-                  ),
-                  Lambda(
-                    'ref',
-                    Equals(
-                      Var('serverRef'),
-                      Select(['data', 'serverRef'], Get(Var('ref'))),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      },
-    },
     {
       resource: Collection('users'),
       actions: {
@@ -201,17 +153,6 @@ export default CreateRole({
       },
     },
     {
-      resource: Index('server_users_by_user'),
-      actions: {
-        read: Query(
-          Lambda(
-            'userAndServerRefs',
-            Equals(CurrentIdentity(), Select([0], Var('userAndServerRefs'))),
-          ),
-        ),
-      },
-    },
-    {
       resource: Index('messages_by_channel'),
       actions: {
         read: Query(
@@ -278,10 +219,29 @@ export default CreateRole({
                   ['data', 'subscriber2'],
                   Var('channel'),
                 ),
+                otherSubscriber: If(
+                  Equals(CurrentIdentity(), Var('channelSubscriber1')),
+                  Var('channelSubscriber2'),
+                  Var('channelSubscriber1'),
+                ),
               },
-              Or(
-                Equals(CurrentIdentity(), Var('channelSubscriber1')),
-                Equals(CurrentIdentity(), Var('channelSubscriber2')),
+              And(
+                Or(
+                  Equals(CurrentIdentity(), Var('channelSubscriber1')),
+                  Equals(CurrentIdentity(), Var('channelSubscriber2')),
+                ),
+                Exists(
+                  Union(
+                    Match(Index('friends_by_user1_and_user2'), [
+                      Var('channelSubscriber1'),
+                      Var('channelSubscriber2'),
+                    ]),
+                    Match(Index('friends_by_user1_and_user2'), [
+                      Var('channelSubscriber2'),
+                      Var('channelSubscriber1'),
+                    ]),
+                  ),
+                ),
               ),
             ),
           ),
@@ -309,6 +269,19 @@ export default CreateRole({
             {
               user1Ref: Select(['data', 'user1Ref'], newFriend),
               user2Ref: Select(['data', 'user2Ref'], newFriend),
+            },
+            Or(
+              Equals(CurrentIdentity(), Var('user1Ref')),
+              Equals(CurrentIdentity(), Var('user2Ref')),
+            ),
+          ),
+        ),
+        delete: Query(ref =>
+          Let(
+            {
+              doc: Get(ref),
+              user1Ref: Select(['data', 'user1Ref'], Var('doc')),
+              user2Ref: Select(['data', 'user2Ref'], Var('doc')),
             },
             Or(
               Equals(CurrentIdentity(), Var('user1Ref')),

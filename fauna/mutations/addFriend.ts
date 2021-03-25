@@ -1,4 +1,5 @@
 import {
+  Abort,
   Collection,
   Create,
   CurrentIdentity,
@@ -43,7 +44,7 @@ const addFriendMutation = (email: string) =>
         If(
           Equals(CurrentIdentity(), Var('friendRef')),
 
-          `You can't send a friend request to yourself.`,
+          Abort(`You can't send a friend request to yourself.`),
 
           // 3
           Let(
@@ -57,7 +58,7 @@ const addFriendMutation = (email: string) =>
             If(
               Exists(Var('existingFriendRequest')),
 
-              `You already sent a friend request to this user.`,
+              Abort(`You already sent a friend request to this user.`),
 
               // 4
               Let(
@@ -76,7 +77,7 @@ const addFriendMutation = (email: string) =>
                 If(
                   Exists(Var('existingFriend')),
 
-                  `This user is already your friend.`,
+                  Abort(`This user is already your friend.`),
 
                   // 5
                   Let(
@@ -137,7 +138,9 @@ const addFriendMutation = (email: string) =>
         ),
       ),
 
-      `We looked everywhere but we couldn't find anyone with that email.`,
+      Abort(
+        `We looked everywhere but we couldn't find anyone with that email.`,
+      ),
     ),
   )
 
