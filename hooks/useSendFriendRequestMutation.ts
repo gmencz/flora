@@ -1,3 +1,4 @@
+import { AddRateLimiting } from '@/fauna/auth/rateLimiting'
 import { errors, query as q } from 'faunadb'
 import { useMutation, UseMutationOptions } from 'react-query'
 import { useFauna } from './useFauna'
@@ -21,104 +22,106 @@ interface SendFriendRequestMutation extends SendFriendRequestVariables {
 */
 
 const addFriend = (variables: SendFriendRequestVariables) =>
-  // 1
-  q.Let(
-    {
-      friend: q.Match(q.Index('users_by_email'), variables.email),
-    },
-    q.If(
-      q.Exists(q.Var('friend')),
-      // 2
-      q.Let(
-        {
-          friendRef: q.Select(['ref'], q.Get(q.Var('friend'))),
-        },
-        q.If(
-          q.Equals(q.CurrentIdentity(), q.Var('friendRef')),
+  AddRateLimiting(
+    // 1
+    q.Let(
+      {
+        friend: q.Match(q.Index('users_by_email'), variables.email),
+      },
+      q.If(
+        q.Exists(q.Var('friend')),
+        // 2
+        q.Let(
+          {
+            friendRef: q.Select(['ref'], q.Get(q.Var('friend'))),
+          },
+          q.If(
+            q.Equals(q.CurrentIdentity(), q.Var('friendRef')),
 
-          q.Abort(`You can't send a friend request to yourself.`),
+            q.Abort(`You can't send a friend request to yourself.`),
 
-          // 3
-          q.Let(
-            {
-              friendRef: q.Select(['ref'], q.Get(q.Var('friend'))),
-              existingFriendRequest: q.Match(
-                q.Index('friend_requests_by_friend_and_user'),
-                [q.Var('friendRef'), q.CurrentIdentity()],
-              ),
-            },
-            q.If(
-              q.Exists(q.Var('existingFriendRequest')),
+            // 3
+            q.Let(
+              {
+                friendRef: q.Select(['ref'], q.Get(q.Var('friend'))),
+                existingFriendRequest: q.Match(
+                  q.Index('friend_requests_by_friend_and_user'),
+                  [q.Var('friendRef'), q.CurrentIdentity()],
+                ),
+              },
+              q.If(
+                q.Exists(q.Var('existingFriendRequest')),
 
-              q.Abort(`You already sent a friend request to this user.`),
+                q.Abort(`You already sent a friend request to this user.`),
 
-              // 4
-              q.Let(
-                {
-                  existingFriend: q.Union(
-                    q.Match(q.Index('friends_by_user1_and_user2'), [
-                      q.CurrentIdentity(),
-                      q.Var('friendRef'),
-                    ]),
-                    q.Match(q.Index('friends_by_user1_and_user2'), [
-                      q.Var('friendRef'),
-                      q.CurrentIdentity(),
-                    ]),
-                  ),
-                },
-                q.If(
-                  q.Exists(q.Var('existingFriend')),
+                // 4
+                q.Let(
+                  {
+                    existingFriend: q.Union(
+                      q.Match(q.Index('friends_by_user1_and_user2'), [
+                        q.CurrentIdentity(),
+                        q.Var('friendRef'),
+                      ]),
+                      q.Match(q.Index('friends_by_user1_and_user2'), [
+                        q.Var('friendRef'),
+                        q.CurrentIdentity(),
+                      ]),
+                    ),
+                  },
+                  q.If(
+                    q.Exists(q.Var('existingFriend')),
 
-                  q.Abort(`This user is already your friend.`),
+                    q.Abort(`This user is already your friend.`),
 
-                  // 5
-                  q.Let(
-                    {
-                      existingFriendRequestFromFriend: q.Match(
-                        q.Index('friend_requests_by_friend_and_user'),
-                        [q.CurrentIdentity(), q.Var('friendRef')],
-                      ),
-                    },
-                    q.If(
-                      q.Exists(q.Var('existingFriendRequestFromFriend')),
+                    // 5
+                    q.Let(
+                      {
+                        existingFriendRequestFromFriend: q.Match(
+                          q.Index('friend_requests_by_friend_and_user'),
+                          [q.CurrentIdentity(), q.Var('friendRef')],
+                        ),
+                      },
+                      q.If(
+                        q.Exists(q.Var('existingFriendRequestFromFriend')),
 
-                      q.Do(
-                        q.Delete(
-                          q.Select(
-                            ['ref'],
-                            q.Get(q.Var('existq.ingFriendRequestFromFriend')),
+                        q.Do(
+                          q.Delete(
+                            q.Select(
+                              ['ref'],
+                              q.Get(q.Var('existq.ingFriendRequestFromFriend')),
+                            ),
+                          ),
+                          q.Create(q.Collection('user_friends'), {
+                            data: {
+                              user1Ref: q.CurrentIdentity(),
+                              user2Ref: q.Var('friendRef'),
+                              friendedAt: q.Now(),
+                            },
+                          }),
+                          q.Let(
+                            {},
+                            {
+                              email: variables.email,
+                              added: true,
+                            },
                           ),
                         ),
-                        q.Create(q.Collection('user_friends'), {
-                          data: {
-                            user1Ref: q.CurrentIdentity(),
-                            user2Ref: q.Var('friendRef'),
-                            friendedAt: q.Now(),
-                          },
-                        }),
-                        q.Let(
-                          {},
-                          {
-                            email: variables.email,
-                            added: true,
-                          },
-                        ),
-                      ),
 
-                      q.Do(
-                        q.Create(q.Collection('user_friend_requests'), {
-                          data: {
-                            userRef: q.CurrentIdentity(),
-                            friendRef: q.Var('friendRef'),
-                            sentAt: q.Now(),
-                          },
-                        }),
-                        q.Let(
-                          {},
-                          {
-                            email: variables.email,
-                            added: false,
-                          },
+                        q.Do(
+                          q.Create(q.Collection('user_friend_requests'), {
+                            data: {
+                              userRef: q.CurrentIdentity(),
+                              friendRef: q.Var('friendRef'),
+                              sentAt: q.Now(),
+                            },
+                          }),
+                          q.Let(
+                            {},
+                            {
+                              email: variables.email,
+                              added: false,
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -128,10 +131,10 @@ const addFriend = (variables: SendFriendRequestVariables) =>
             ),
           ),
         ),
-      ),
 
-      q.Abort(
-        `We looked everywhere but we couldn't find anyone with that email.`,
+        q.Abort(
+          `We looked everywhere but we couldn't find anyone with that email.`,
+        ),
       ),
     ),
   )

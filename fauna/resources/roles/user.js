@@ -35,6 +35,26 @@ export default CreateRole({
   ],
   privileges: [
     {
+      resource: Collection('rate_limiting'),
+      actions: {
+        read: Query(ref =>
+          Equals(CurrentIdentity(), Select(['data', 'identity'], Get(ref))),
+        ),
+        write: Query((_oldData, newData) =>
+          Equals(CurrentIdentity(), Select(['data', 'identity'], newData)),
+        ),
+        create: Query(newData =>
+          Equals(CurrentIdentity(), Select(['data', 'identity'], newData)),
+        ),
+      },
+    },
+    {
+      resource: Index('rate_limiting_by_action_and_identity'),
+      actions: {
+        read: Query(terms => Equals(CurrentIdentity(), Select([1], terms))),
+      },
+    },
+    {
       resource: Collection('users'),
       actions: {
         read: true,

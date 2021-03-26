@@ -1,1 +1,1 @@
-CreateCollection({ name: 'rate_limiting' })
+CreateCollection({ name: 'rate_limiting', ttl_days: 1 })

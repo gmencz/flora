@@ -1,4 +1,5 @@
 import { REFRESH_TOKEN_REUSE_ERROR } from '@/fauna/auth/anomalies'
+import { AddRateLimiting } from '@/fauna/auth/rateLimiting'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
 import { createClient } from '@/lib/FaunaClient'
 import { FaunaAuthTokens } from '@/lib/types'
@@ -24,23 +25,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   let refreshResult: FaunaAuthTokens | null
   try {
     refreshResult = await fauna.query<FaunaAuthTokens | null>(
-      Let(
-        {
-          tokens: Call(Function('refresh')),
-        },
-        If(ContainsPath(['code'], Var('tokens')), null, {
-          access: {
-            secret: Select(['tokens', 'access', 'secret'], Var('tokens')),
-            expInMs: TimeDiff(
-              Now(),
-              Select(['tokens', 'access', 'ttl'], Var('tokens')),
-              'milliseconds',
-            ),
+      AddRateLimiting(
+        Let(
+          {
+            tokens: Call(Function('refresh')),
           },
-          refresh: {
-            secret: Select(['tokens', 'refresh', 'secret'], Var('tokens')),
-          },
-        }),
+          If(ContainsPath(['code'], Var('tokens')), null, {
+            access: {
+              secret: Select(['tokens', 'access', 'secret'], Var('tokens')),
+              expInMs: TimeDiff(
+                Now(),
+                Select(['tokens', 'access', 'ttl'], Var('tokens')),
+                'milliseconds',
+              ),
+            },
+            refresh: {
+              secret: Select(['tokens', 'refresh', 'secret'], Var('tokens')),
+            },
+          }),
+        ),
       ),
     )
   } catch (error) {

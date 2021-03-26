@@ -10,7 +10,7 @@ import {
   DirectMessageStatus,
   useDirectMessageQuery,
 } from '@/hooks/useDirectMessageQuery'
-import { useSendDirectMessageMutation } from '@/hooks/useSendDIrectMessageMutation'
+import { useSendDirectMessageMutation } from '@/hooks/useSendDirectMessageMutation'
 import 'twin.macro'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
