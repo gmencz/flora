@@ -1,7 +1,7 @@
 import { REFRESH_TOKEN_REUSE_ERROR } from '@/fauna/auth/anomalies'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
 import { createClient } from '@/lib/FaunaClient'
-import { FaunaAuthTokens } from '@/lib/types/auth'
+import { FaunaAuthTokens } from '@/lib/types'
 import catchHandler from '@/util/catchHandler'
 import setCookie from '@/util/setCookie'
 import {

@@ -26,3 +26,9 @@ export interface FaunaAccess {
   secret: string
   interval: NodeJS.Timeout
 }
+
+export interface Page<TData> {
+  data: TData[]
+  before: string | null
+  after: string | null
+}

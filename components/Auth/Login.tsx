@@ -1,5 +1,5 @@
 import firebase from '@/lib/firebase/client'
-import { AuthProvider, FaunaAuthTokens } from '@/lib/types/auth'
+import { AuthProvider, FaunaAuthTokens } from '@/lib/types'
 import { useFauna } from '@/hooks/useFauna'
 import { silentRefresh } from '@/util/silentRefresh'
 import Image from 'next/image'

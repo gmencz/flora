@@ -1,4 +1,3 @@
-import { DirectMessageDetails, DirectMessageStatus } from '@/lib/types/messages'
 import { nanoid } from 'nanoid'
 import { FormEventHandler, KeyboardEvent, useRef, useState } from 'react'
 import { useQueryClient } from 'react-query'
@@ -6,7 +5,11 @@ import { ChannelComponentProps } from '.'
 import { differenceInSeconds } from 'date-fns'
 import { DialogContent, DialogOverlay } from '@reach/dialog'
 import '@reach/dialog/styles.css'
-import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
+import {
+  DirectMessageDetails,
+  DirectMessageStatus,
+  useDirectMessageQuery,
+} from '@/hooks/useDirectMessageQuery'
 import { useSendDirectMessageMutation } from '@/hooks/useSendDIrectMessageMutation'
 import 'twin.macro'
 

@@ -14,7 +14,7 @@ import {
 } from 'faunadb'
 import admin from '@/lib/firebase/server'
 import catchHandler from '@/util/catchHandler'
-import { FaunaAuthTokens } from '@/lib/types/auth'
+import { FaunaAuthTokens } from '@/lib/types'
 import { createClient } from '@/lib/FaunaClient'
 import { CheckIfUserExists, CreateTokensForUser } from '@/fauna/auth/login'
 import setCookie from '@/util/setCookie'

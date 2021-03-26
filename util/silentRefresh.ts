@@ -1,4 +1,4 @@
-import { FaunaAuthTokens } from '@/lib/types/auth'
+import { FaunaAuthTokens } from '@/lib/types'
 
 export async function silentRefresh() {
   const response = await fetch('/api/fauna/refresh', {

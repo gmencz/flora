@@ -3,7 +3,7 @@ import {
   DirectMessage,
   DirectMessageDetails,
   DirectMessageStatus,
-} from '@/lib/types/messages'
+} from '@/hooks/useDirectMessageQuery'
 import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import { parseISO, differenceInMinutes, format } from 'date-fns'
 import { useMemo } from 'react'

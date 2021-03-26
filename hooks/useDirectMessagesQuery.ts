@@ -1,4 +1,4 @@
-import { Page } from '@/lib/types/common'
+import { Page } from '@/lib/types'
 import useFaunaQuery from './useFaunaQuery'
 import { query as q } from 'faunadb'
 import resolvePagination from '@/util/resolvePagination'

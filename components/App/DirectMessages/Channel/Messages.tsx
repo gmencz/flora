@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/FaunaClient'
-import { DirectMessage, DirectMessageDetails } from '@/lib/types/messages'
 import { useFauna } from '@/hooks/useFauna'
 import { Collection, Ref } from 'faunadb'
 import { useEffect, useLayoutEffect, useRef } from 'react'
@@ -7,7 +6,11 @@ import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import Message from './Message'
 import 'twin.macro'
-import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
+import {
+  DirectMessage,
+  DirectMessageDetails,
+  useDirectMessageQuery,
+} from '@/hooks/useDirectMessageQuery'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
