@@ -1,0 +1,15 @@
+CreateIndex({
+  name: 'rate_limiting_by_action_and_identity',
+  source: Collection('rate_limiting'),
+  terms: [
+    {
+      field: ['data', 'action']
+    },
+    {
+      field: ['data', 'identity']
+    }
+  ],
+  values: [],
+  unique: false,
+  serialized: true
+})
