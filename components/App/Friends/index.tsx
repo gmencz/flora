@@ -1,49 +1,15 @@
 import withAuthenticationRequired from '@/components/Auth/withAuthenticationRequired'
-import friendsFql from '@/fauna/queries/friends'
-import { Page } from '@/lib/types/common'
-import { Friend } from '@/lib/types/friends'
-import useFaunaQuery from '@/lib/useFaunaQuery'
 import { parseISO } from 'date-fns'
 import { formatDistanceToNow } from 'date-fns'
 import DirectMessagesSidebar from '../DirectMessages/Sidebar'
 import FriendsHeader from './Header'
-import Tooltip from '@/components/ui/Tooltip'
-import { useMutation, useQueryClient } from 'react-query'
-import { useFauna } from '@/lib/useFauna'
-import { useRouter } from 'next/router'
-import {
-  getOrCreateDirectMessageMutation,
-  MessageMutation,
-} from '@/fauna/mutations/getOrCreateDirectMessage'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { Menu, MenuButton, MenuItem, MenuList } from '@reach/menu-button'
 import '@reach/menu-button/styles.css'
 import tw, { styled } from 'twin.macro'
-import {
-  Collection,
-  CurrentIdentity,
-  Delete,
-  Get,
-  Index,
-  Let,
-  Match,
-  Ref,
-  Select,
-  Union,
-  Var,
-} from 'faunadb'
-
-interface FriendsQuery {
-  friends: Page<Friend>
-  friendsCount: number
-}
-
-interface MessageVariables {
-  friendId: string
-}
-
-interface UnfriendVariables {
-  friendId: string
-}
+import { useFriendsQuery } from '@/hooks/useFriendsQuery'
+import { useDirectMessageMutation } from '@/hooks/useDirectMessageMutation'
+import { useUnfriendMutation } from '@/hooks/useUnfriendMutation'
 
 const FriendOptions = styled(MenuList)`
   ${tw`border-0 rounded-md shadow-lg bg-white ring-opacity-5 space-y-1.5 py-2 px-0 text-sm font-semibold text-gray-800`}
@@ -54,73 +20,13 @@ const FriendOptions = styled(MenuList)`
 `
 
 function Friends() {
-  const friendsQuery = useFaunaQuery<FriendsQuery>({
-    queryKey: 'friends',
-    fql: friendsFql,
-  })
+  const friendsQuery = useFriendsQuery()
 
-  const queryClient = useQueryClient()
-  const router = useRouter()
-  const { client, accessToken } = useFauna()
-  const messageMutation = useMutation<
-    MessageMutation,
-    unknown,
-    MessageVariables
-  >(
-    variables => {
-      return client.query(
-        getOrCreateDirectMessageMutation(variables.friendId),
-        { secret: accessToken },
-      )
-    },
-    {
-      onSuccess: data => {
-        if (data.isNewChannel) {
-          queryClient.invalidateQueries('dms')
-        }
-
-        router.push(`/app/dms/${data.directMessageId}/${data.channelId}`)
-      },
-    },
-  )
-
-  const unfriendMutation = useMutation<unknown, unknown, UnfriendVariables>(
-    variables => {
-      return client.query(
-        Let(
-          {
-            friendRequest: Select(
-              ['ref'],
-              Get(
-                Union(
-                  Match(Index('friends_by_user1_and_user2'), [
-                    CurrentIdentity(),
-                    Ref(Collection('users'), variables.friendId),
-                  ]),
-                  Match(Index('friends_by_user1_and_user2'), [
-                    Ref(Collection('users'), variables.friendId),
-                    CurrentIdentity(),
-                  ]),
-                ),
-              ),
-            ),
-          },
-          Delete(Var('friendRequest')),
-        ),
-        {
-          secret: accessToken,
-        },
-      )
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('friends')
-      },
-    },
-  )
+  const directMessageMutation = useDirectMessageMutation()
+  const unfriendMutation = useUnfriendMutation()
 
   const onMessage = (friendId: string) => {
-    messageMutation.mutate({ friendId })
+    directMessageMutation.mutate({ friendId })
   }
 
   const onUnfriend = (friendId: string) => {

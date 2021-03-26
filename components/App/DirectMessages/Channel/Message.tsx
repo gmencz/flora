@@ -1,10 +1,10 @@
-import Tooltip from '@/components/ui/Tooltip'
+import { Tooltip } from '@/components/ui/Tooltip'
 import {
   DirectMessage,
   DirectMessageDetails,
   DirectMessageStatus,
 } from '@/lib/types/messages'
-import formatMessageTimestamp from '@/util/formatMessageTimestamp'
+import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import { parseISO, differenceInMinutes, format } from 'date-fns'
 import { useMemo } from 'react'
 import { useQueryClient } from 'react-query'

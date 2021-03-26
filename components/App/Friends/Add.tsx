@@ -5,46 +5,35 @@ import 'twin.macro'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from 'react-query'
-import { useFauna } from '@/lib/useFauna'
-import addFriendMutation from '@/fauna/mutations/addFriend'
-import { errors } from 'faunadb'
-
-interface Inputs {
-  email: string
-}
+import {
+  useSendFriendRequestMutation,
+  SendFriendRequestVariables,
+} from '@/hooks/useSendFriendRequestMutation'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email.'),
 })
 
 function AddFriend() {
-  const { client, accessToken } = useFauna()
-  const { register, handleSubmit, errors, watch, reset } = useForm<Inputs>({
+  const {
+    register,
+    handleSubmit,
+    errors,
+    watch,
+    reset,
+  } = useForm<SendFriendRequestVariables>({
     resolver: zodResolver(schema),
   })
 
-  const mutation = useMutation<
-    Inputs & { added: boolean },
-    errors.FaunaError,
-    Inputs
-  >(
-    variables => {
-      return client.query<Inputs & { added: boolean }>(
-        addFriendMutation(variables.email),
-        { secret: accessToken },
-      )
+  const mutation = useSendFriendRequestMutation({
+    onSuccess: () => {
+      reset()
     },
-    {
-      onSuccess: () => {
-        reset()
-      },
-    },
-  )
+  })
 
   const email = watch('email')
 
-  const onSubmit = (data: Inputs) => {
+  const onSubmit = (data: SendFriendRequestVariables) => {
     mutation.mutate({
       email: data.email,
     })

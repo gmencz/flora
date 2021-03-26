@@ -23,7 +23,8 @@
       "@/util/*": ["util/*"],
       "@/components/*": ["components/*"],
       "@/styles/*": ["styles/*"],
-      "@/fauna/*": ["fauna/*"]
+      "@/fauna/*": ["fauna/*"],
+      "@/hooks/*": ["hooks/*"]
     }
   },
   "exclude": ["node_modules"],

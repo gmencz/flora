@@ -1,15 +1,9 @@
-import getDirectMessageFql from '@/fauna/queries/directMessage'
-import { DirectMessageDetails } from '@/lib/types/messages'
-import useFaunaQuery from '@/lib/useFaunaQuery'
 import { ChannelComponentProps } from '.'
+import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 import 'twin.macro'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
-  const { data } = useFaunaQuery<DirectMessageDetails>({
-    queryKey: ['dm', dm],
-    fql: getDirectMessageFql(dm, channel),
-    staleTime: Infinity,
-  })
+  const { data } = useDirectMessageQuery({ channel, dm })
 
   return (
     <header tw="p-4 sticky top-0 px-6 bg-gray-100 shadow-sm">

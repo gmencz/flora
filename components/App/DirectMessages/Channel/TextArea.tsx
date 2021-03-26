@@ -1,80 +1,23 @@
-import sendDirectMessageFql from '@/fauna/mutations/sendDirectMessage'
-import getDirectMessageFql from '@/fauna/queries/directMessage'
-import {
-  DirectMessageDetails,
-  DirectMessageStatus,
-  NewMessage,
-} from '@/lib/types/messages'
-import { useFauna } from '@/lib/useFauna'
-import useFaunaQuery from '@/lib/useFaunaQuery'
+import { DirectMessageDetails, DirectMessageStatus } from '@/lib/types/messages'
 import { nanoid } from 'nanoid'
 import { FormEventHandler, KeyboardEvent, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
-import 'twin.macro'
 import { differenceInSeconds } from 'date-fns'
 import { DialogContent, DialogOverlay } from '@reach/dialog'
 import '@reach/dialog/styles.css'
+import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
+import { useSendDirectMessageMutation } from '@/hooks/useSendDIrectMessageMutation'
+import 'twin.macro'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
+  const { data } = useDirectMessageQuery({ channel, dm })
   const [message, setMessage] = useState('')
-  const { client, accessToken } = useFauna()
   const queryClient = useQueryClient()
   const lastMessageSentAt = useRef<Date>()
   const [isSpamDialogOpen, setIsSpamDialogOpen] = useState(false)
-  const { data } = useFaunaQuery<DirectMessageDetails>({
-    queryKey: ['dm', dm],
-    fql: getDirectMessageFql(dm, channel),
-    staleTime: Infinity,
-  })
 
-  const mutation = useMutation<unknown, unknown, NewMessage>(
-    async newMessage => {
-      return client.query<string | unknown>(
-        sendDirectMessageFql(newMessage, channel),
-        {
-          secret: accessToken,
-        },
-      )
-    },
-    {
-      onError: (_error, failedMessage) => {
-        queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
-          return {
-            ...existing!,
-            messages: {
-              data: [
-                ...existing!.messages.data.map(message => {
-                  if (message.nonce === failedMessage.nonce) {
-                    return {
-                      ...message,
-                      status: DirectMessageStatus.FAILED,
-                    }
-                  }
-
-                  return message
-                }),
-                {
-                  content:
-                    "Your message could not be delivered. This is usually because the recipient isn't your friend or Chatskee is having internal issues.",
-                  nonce: nanoid(),
-                  status: DirectMessageStatus.INFO,
-                  timestamp: new Date().toISOString(),
-                  user: {
-                    id: nanoid(),
-                    name: 'Bonnie',
-                    photo: '/bonnie.png',
-                  },
-                },
-              ],
-              before: existing!.messages.before,
-              after: existing!.messages.after,
-            },
-          }
-        })
-      },
-    },
-  )
+  const mutation = useSendDirectMessageMutation()
 
   const submitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && event.shiftKey === false) {
@@ -120,6 +63,8 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
     mutation.mutate({
       content: message,
       nonce,
+      channel,
+      dm,
     })
 
     lastMessageSentAt.current = new Date()

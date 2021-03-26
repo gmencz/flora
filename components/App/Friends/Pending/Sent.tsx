@@ -1,44 +1,18 @@
-import Tooltip from '@/components/ui/Tooltip'
-import { SentFriendRequest as ISentFriendRequest } from '@/fauna/queries/pendingFriendRequests'
-import { useFauna } from '@/lib/useFauna'
-import formatMessageTimestamp from '@/util/formatMessageTimestamp'
-import { Collection, Delete, Ref } from 'faunadb'
-import { useMutation, useQueryClient } from 'react-query'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { useCancelFriendRequestMutation } from '@/hooks/useCancelFriendRequestMutation'
+import { SentFriendRequest as FriendRequest } from '@/hooks/usePendingFriendRequestQuery'
+import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import 'twin.macro'
 
 interface SentFriendRequestProps {
-  friendRequest: ISentFriendRequest
-}
-
-interface CancelFriendRequestVariables {
-  friendRequestId: string
+  friendRequest: FriendRequest
 }
 
 function SentFriendRequest({ friendRequest }: SentFriendRequestProps) {
-  const { client, accessToken } = useFauna()
-  const queryClient = useQueryClient()
-  const cancelFriendRequest = useMutation<
-    unknown,
-    unknown,
-    CancelFriendRequestVariables
-  >(
-    variables => {
-      return client.query(
-        Delete(
-          Ref(Collection('user_friend_requests'), variables.friendRequestId),
-        ),
-        { secret: accessToken },
-      )
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pendingFriendRequests')
-      },
-    },
-  )
+  const cancelFriendRequestMutation = useCancelFriendRequestMutation()
 
   const onClickCancel = () => {
-    cancelFriendRequest.mutate({ friendRequestId: friendRequest.id })
+    cancelFriendRequestMutation.mutate({ friendRequestId: friendRequest.id })
   }
 
   return (

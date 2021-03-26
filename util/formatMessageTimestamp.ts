@@ -1,6 +1,6 @@
 import { isToday, isYesterday, parseISO, format } from 'date-fns'
 
-export default function formatMessageTimestamp(timestamp: string) {
+export function formatMessageTimestamp(timestamp: string) {
   const date = parseISO(timestamp)
 
   if (isToday(date)) {

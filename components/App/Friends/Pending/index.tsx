@@ -1,19 +1,13 @@
 import withAuthenticationRequired from '@/components/Auth/withAuthenticationRequired'
 import DirectMesssagesSidebar from '../../DirectMessages/Sidebar'
 import FriendsHeader from '../Header'
-import 'twin.macro'
-import useFaunaQuery from '@/lib/useFaunaQuery'
-import pendingFriendRequestsQuery, {
-  PendingFriendRequestsQuery,
-} from '@/fauna/queries/pendingFriendRequests'
 import ReceivedFriendRequest from './Received'
 import SentFriendRequest from './Sent'
+import { usePendingFriendRequestQuery } from '@/hooks/usePendingFriendRequestQuery'
+import 'twin.macro'
 
 function PendingFriendRequests() {
-  const query = useFaunaQuery<PendingFriendRequestsQuery>({
-    queryKey: 'pendingFriendRequests',
-    fql: pendingFriendRequestsQuery,
-  })
+  const query = usePendingFriendRequestQuery()
 
   return (
     <div tw="flex">

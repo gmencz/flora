@@ -73,7 +73,7 @@ const TooltipText = styled.div<Pick<TooltipProps, 'position'>>(
   ],
 )
 
-function Tooltip({ children, label, position }: TooltipProps) {
+export function Tooltip({ children, label, position }: TooltipProps) {
   return (
     <div className="group rounded-2xl">
       {cloneElement(children)}
@@ -102,5 +102,3 @@ function Tooltip({ children, label, position }: TooltipProps) {
     </div>
   )
 }
-
-export default Tooltip

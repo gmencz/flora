@@ -1,59 +1,24 @@
-import Tooltip from '@/components/ui/Tooltip'
-import acceptFriendRequestMutation from '@/fauna/mutations/acceptFriendRequest'
-import { MessageMutation } from '@/fauna/mutations/getOrCreateDirectMessage'
-import { ReceivedFriendRequest as IReceivedFriendRequest } from '@/fauna/queries/pendingFriendRequests'
-import { useFauna } from '@/lib/useFauna'
-import formatMessageTimestamp from '@/util/formatMessageTimestamp'
-import { Collection, Delete, Ref } from 'faunadb'
-import { useRouter } from 'next/router'
-import { useMutation, useQueryClient } from 'react-query'
+import { Tooltip } from '@/components/ui/Tooltip'
+import { useAcceptFriendRequestMutation } from '@/hooks/useAcceptFriendRequestMutation'
+import { ReceivedFriendRequest as FriendRequest } from '@/hooks/usePendingFriendRequestQuery'
+import { useRejectFriendRequestMutation } from '@/hooks/useRejectFriendRequestMutation'
+import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import 'twin.macro'
 
 interface ReceivedFriendRequestProps {
-  friendRequest: IReceivedFriendRequest
+  friendRequest: FriendRequest
 }
 
 function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
-  const { client, accessToken } = useFauna()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-
-  const acceptMutation = useMutation<MessageMutation>(
-    () => {
-      return client.query(acceptFriendRequestMutation(friendRequest.id), {
-        secret: accessToken,
-      })
-    },
-    {
-      onSuccess: data => {
-        queryClient.invalidateQueries('pendingFriendRequests')
-        queryClient.invalidateQueries('dms').then(() => {
-          router.push(`/app/dms/${data.directMessageId}/${data.channelId}`)
-        })
-      },
-    },
-  )
-
-  const rejectMutation = useMutation(
-    () => {
-      return client.query(
-        Delete(Ref(Collection('user_friend_requests'), friendRequest.id)),
-        { secret: accessToken },
-      )
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('pendingFriendRequests')
-      },
-    },
-  )
+  const acceptMutation = useAcceptFriendRequestMutation()
+  const rejectMutation = useRejectFriendRequestMutation()
 
   const onAccept = () => {
-    acceptMutation.mutate()
+    acceptMutation.mutate({ friendRequestId: friendRequest.id })
   }
 
   const onReject = () => {
-    rejectMutation.mutate()
+    rejectMutation.mutate({ friendRequestId: friendRequest.id })
   }
 
   return (

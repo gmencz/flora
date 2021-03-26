@@ -1,24 +1,19 @@
-import getDirectMessageFql from '@/fauna/queries/directMessage'
 import { createClient } from '@/lib/FaunaClient'
 import { DirectMessage, DirectMessageDetails } from '@/lib/types/messages'
-import { useFauna } from '@/lib/useFauna'
-import useFaunaQuery from '@/lib/useFaunaQuery'
+import { useFauna } from '@/hooks/useFauna'
 import { Collection, Ref } from 'faunadb'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import Message from './Message'
 import 'twin.macro'
+import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { accessToken } = useFauna()
   const queryClient = useQueryClient()
-  const { data, isSuccess } = useFaunaQuery<DirectMessageDetails>({
-    queryKey: ['dm', dm],
-    fql: getDirectMessageFql(dm, channel),
-    staleTime: Infinity,
-  })
+  const { data, isSuccess } = useDirectMessageQuery({ channel, dm })
 
   useEffect(() => {
     const streamClient = createClient(accessToken)

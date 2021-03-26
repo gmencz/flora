@@ -1,33 +1,15 @@
-import directMessagesFql from '@/fauna/queries/directMessages'
-import { Page } from '@/lib/types/common'
-import useFaunaQuery from '@/lib/useFaunaQuery'
-import useUser from '@/lib/useUser'
+import useUser from '@/hooks/useUser'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import Tooltip from '../../ui/Tooltip'
+import { Tooltip } from '../../ui/Tooltip'
 import tw from 'twin.macro'
-
-interface User {
-  id: string
-  name: string
-  photo: string
-}
-
-interface DM {
-  id: string
-  channelId: string
-  withUser: User
-}
+import { useDirectMessagesQuery } from '@/hooks/useDirectMessagesQuery'
 
 export default function DirectMesssagesSidebar() {
   const router = useRouter()
   const { dm: activeDm } = router.query as Record<string, string | undefined>
   const { displayName, photoURL, email } = useUser()
-  const { data: dms } = useFaunaQuery<Page<DM>>({
-    queryKey: 'dms',
-    fql: directMessagesFql,
-    staleTime: Infinity,
-  })
+  const { data: dms } = useDirectMessagesQuery()
 
   return (
     <div tw="flex sticky z-10 top-0 flex-col w-sidebar min-h-screen max-h-screen bg-gray-200">
