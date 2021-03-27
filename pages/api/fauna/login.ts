@@ -13,14 +13,14 @@ import {
   Var,
 } from 'faunadb'
 import admin from '@/lib/firebase/server'
-import catchHandler from '@/util/catchHandler'
 import { FaunaAuthTokens } from '@/lib/types'
 import { createClient } from '@/lib/FaunaClient'
 import { CheckIfUserExists, CreateTokensForUser } from '@/fauna/auth/login'
 import setCookie from '@/util/setCookie'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
+import nc from 'next-connect'
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
   const client = createClient(process.env.FAUNADB_SERVER_KEY!)
 
   if (!req.headers.authorization) {
@@ -131,6 +131,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   })
 
   return res.json(access)
-}
+})
 
-export default catchHandler(handler)
+export default handler

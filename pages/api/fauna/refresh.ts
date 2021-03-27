@@ -2,7 +2,6 @@ import { REFRESH_TOKEN_REUSE_ERROR } from '@/fauna/auth/anomalies'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
 import { createClient } from '@/lib/FaunaClient'
 import { FaunaAuthTokens } from '@/lib/types'
-import catchHandler from '@/util/catchHandler'
 import setCookie from '@/util/setCookie'
 import {
   Call,
@@ -16,8 +15,9 @@ import {
   Var,
 } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
+import nc from 'next-connect'
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
   const refreshToken = req.cookies.chatskeeFaunaRefresh
   const fauna = createClient(refreshToken)
 
@@ -72,6 +72,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   })
 
   return res.json(access)
-}
+})
 
-export default catchHandler(handler)
+export default handler

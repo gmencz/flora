@@ -1,10 +1,10 @@
 import { Call, Function } from 'faunadb'
 import { NextApiRequest, NextApiResponse } from 'next'
-import catchHandler from '@/util/catchHandler'
 import { createClient } from '@/lib/FaunaClient'
 import setCookie from '@/util/setCookie'
+import nc from 'next-connect'
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
   const refreshToken = req.cookies.chatskeeFaunaRefresh
   const fauna = createClient(refreshToken)
 
@@ -27,6 +27,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return res.status(200).json({
     ok: true,
   })
-}
+})
 
-export default catchHandler(handler)
+export default handler
