@@ -6,7 +6,6 @@ import {
   directMessage,
   DirectMessageMutation,
 } from './useDirectMessageMutation'
-import { AddRateLimiting } from '@/fauna/auth/rateLimiting'
 
 interface AcceptFriendRequestVariables {
   friendRequestId: string
@@ -24,7 +23,6 @@ export function useAcceptFriendRequestMutation() {
   >(
     variables => {
       return client.query(
-        AddRateLimiting(
           q.Let(
             {
               friendRequestRef: q.Ref(
@@ -64,7 +62,6 @@ export function useAcceptFriendRequestMutation() {
               ),
             ),
           ),
-        ),
         {
           secret: accessToken,
         },

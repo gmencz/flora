@@ -1,4 +1,3 @@
-import { AddRateLimiting } from '@/fauna/auth/rateLimiting'
 import { query as q } from 'faunadb'
 import { useMutation, useQueryClient } from 'react-query'
 import { useFauna } from './useFauna'
@@ -14,12 +13,10 @@ export function useCancelFriendRequestMutation() {
   return useMutation<unknown, unknown, CancelFriendRequestVariables>(
     variables => {
       return client.query(
-        AddRateLimiting(
-          q.Delete(
-            q.Ref(
-              q.Collection('user_friend_requests'),
-              variables.friendRequestId,
-            ),
+        q.Delete(
+          q.Ref(
+            q.Collection('user_friend_requests'),
+            variables.friendRequestId,
           ),
         ),
         { secret: accessToken },
