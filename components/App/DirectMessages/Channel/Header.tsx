@@ -1,63 +1,12 @@
-import type { ILocalAudioTrack } from 'agora-rtc-sdk-ng'
 import { ChannelComponentProps } from '.'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
-import { useEffect, useRef } from 'react'
-import { useAgoraClient } from '@/hooks/useAgoraClient'
-import useUser from '@/hooks/useUser'
 import 'twin.macro'
-
-interface VoiceChannel {
-  channelName: string
-  token: string
-}
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const { data } = useDirectMessageQuery({ channel, dm })
-  const user = useUser()
-  const { client, rtc } = useAgoraClient({ mode: 'rtc', codec: 'vp8' })
-  const rtcLocalAudioTrackRef = useRef<ILocalAudioTrack>()
 
   const startVoiceCall = async () => {
-    // Get a token for the voice channel we want to create
-    const idToken = await user.getIdToken()
-    const res = await fetch('/api/channels/voice', {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${idToken}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        publisher: data?.currentUser.id,
-        possibleSubscriber: data?.withUser.id,
-      }),
-    })
-
-    const { channelName, token } = (await res.json()) as VoiceChannel
-
-    // Join a new channel with the previously created token
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!
-    await client?.join(appId, channelName, token, user.uid)
-
-    // Create an audio track from the audio sampled by a microphone.
-    const localAudioTrack = await rtc?.createMicrophoneAudioTrack()
-    rtcLocalAudioTrackRef.current = localAudioTrack
-    // Publish the local audio track to the channel.
-    await client?.publish([localAudioTrack!])
-
-    console.log('publish success')
-
-    client?.on('user-published', async (user, mediaType) => {
-      await client.subscribe(user, mediaType)
-      console.log('subscribe success')
-
-      // If the subscribed track is audio.
-      if (mediaType === 'audio') {
-        // Get `RemoteAudioTrack` in the `user` object.
-        const remoteAudioTrack = user.audioTrack
-        // Play the audio track. No need to pass any DOM element.
-        remoteAudioTrack?.play()
-      }
-    })
+    console.log('start voice call')
   }
 
   return (

@@ -16,8 +16,6 @@
     "@hookform/resolvers": "1.3.0",
     "@reach/dialog": "^0.13.2",
     "@reach/menu-button": "^0.13.2",
-    "agora-access-token": "^2.0.4",
-    "agora-rtc-sdk-ng": "^4.3.0",
     "cookie": "^0.4.1",
     "date-fns": "^2.19.0",
     "faunadb": "^4.1.2",
