@@ -1,5 +1,5 @@
 {
-  "name": "@chatskee/tabouleh",
+  "name": "@chatskee/web",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -13,8 +13,8 @@
     "fauna:migrate": "dotenv -e .env.local fauna-schema-migrate apply all"
   },
   "dependencies": {
-    "@chatskee/knafeh": "1.0.0",
-    "@chatskee/tahini": "1.0.0",
+    "@chatskee/gateway": "1.0.0",
+    "@chatskee/gateway-client": "1.0.0",
     "@hookform/resolvers": "1.3.0",
     "@reach/dialog": "^0.13.2",
     "@reach/menu-button": "^0.13.2",

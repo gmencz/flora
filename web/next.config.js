@@ -1,6 +1,6 @@
 const withTM = require('next-transpile-modules')([
-  '@chatskee/knafeh',
-  '@chatskee/tahini',
+  '@chatskee/gateway',
+  '@chatskee/gateway-client',
 ])
 
 module.exports = withTM({

@@ -3,9 +3,9 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "tabouleh",
-      "knafeh",
-      "tahini"
+      "web",
+      "gateway",
+      "gateway-client"
     ],
     "nohoist": [
       "**"

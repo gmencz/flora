@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react'
 import useUser from '@/hooks/useUser'
-import { Connection, connect } from '@chatskee/tahini'
+import { Connection, connect } from '@chatskee/gateway-client'
 
 interface IWebSocketContext {
   conn: Connection | null

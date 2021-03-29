@@ -2,7 +2,7 @@ import type {
   NewICECandidate,
   VoiceCallAnswer,
   VoiceCallOffer,
-} from '@chatskee/knafeh'
+} from '@chatskee/gateway'
 import { ChannelComponentProps } from '.'
 import { useEffect, useRef, useState } from 'react'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'

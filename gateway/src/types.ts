@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http'
 import WebSocket from 'ws'
-import { Opcode } from '@chatskee/tahini'
+import { Opcode } from '@chatskee/gateway-client'
 
 export type EventHandler = (
   op: Opcode,
