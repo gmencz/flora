@@ -21,18 +21,12 @@ export interface RequestWithUser extends IncomingMessage {
 // Events
 export interface VoiceCallOffer {
   calleeId: string
-  offer: {
-    type: string
-    sdp: string
-  }
+  offer: any // RTC Session description
 }
 
 export interface VoiceCallAnswer {
   callerId: string
-  answer: {
-    type: string
-    sdp: string
-  }
+  answer: any // RTC Session description
 }
 
 export interface NewICECandidate {

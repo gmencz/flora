@@ -1,3 +1,8 @@
+import type {
+  NewICECandidate,
+  VoiceCallAnswer,
+  VoiceCallOffer,
+} from '@chatskee/gateway'
 import { ChannelComponentProps } from '.'
 import { useEffect, useRef, useState } from 'react'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
@@ -23,14 +28,14 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
 
   useEffect(() => {
     if (directMessageQuery.data?.withUser.name) {
-      ws.addListener<{ offer: any }>('call_offer', data => {
+      ws.addListener<VoiceCallOffer>('call_offer', data => {
         const { offer: offerSDP } = data
         console.log(`${directMessageQuery.data?.withUser.name} is calling you!`)
         offerRef.current = offerSDP
         setIsBeingCalled(true)
       })
 
-      ws.addListener<{ answer: any }>('call_answer', data => {
+      ws.addListener<VoiceCallAnswer>('call_answer', data => {
         const { answer: answerSDP } = data
         console.log(
           `${directMessageQuery.data?.withUser.name} accepted the voice call!`,
@@ -39,7 +44,7 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         peerConnectionRef.current?.setRemoteDescription(answer)
       })
 
-      ws.addListener<{ candidate: any }>('new_ice_candidate', data => {
+      ws.addListener<NewICECandidate>('new_ice_candidate', data => {
         const { candidate } = data
         const iceCandidate = new RTCIceCandidate(candidate)
         peerConnectionRef.current?.addIceCandidate(iceCandidate)

@@ -1,7 +1,8 @@
 {
-  "name": "chatskee-live-server",
+  "name": "@chatskee/gateway",
   "version": "1.0.0",
-  "description": "Live server for Chatskee, used for WebRTC signaling and other purposes",
+  "private": true,
+  "main": "src/types.ts",
   "scripts": {
     "dev": "nodemon",
     "build": "rimraf ./build && tsc",
