@@ -1,6 +1,7 @@
 import { query as q } from 'faunadb'
 import { useMutation, useQueryClient } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
+import { useFaunaStore } from './useFaunaStore'
 
 interface RejectFriendRequestVariables {
   friendRequestId: string
@@ -8,7 +9,8 @@ interface RejectFriendRequestVariables {
 
 export function useRejectFriendRequestMutation() {
   const queryClient = useQueryClient()
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
 
   return useMutation<unknown, unknown, RejectFriendRequestVariables>(
     variables => {

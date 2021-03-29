@@ -1,11 +1,11 @@
 import firebase from '@/lib/firebase/client'
 import { AuthProvider, FaunaAuthTokens } from '@/lib/types'
-import { useFauna } from '@/hooks/useFauna'
 import { silentRefresh } from '@/util/silentRefresh'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'node:querystring'
 import 'twin.macro'
+import { useFaunaStore } from '@/hooks/useFaunaStore'
 
 // Providers
 const googleProvider = new firebase.auth.GoogleAuthProvider()
@@ -18,7 +18,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const { silentRefreshRef, setAccessToken } = useFauna()
+  const setAccessToken = useFaunaStore(state => state.setAccessToken)
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -40,7 +40,8 @@ function Login() {
             const thirtySeconds = 30 * 1000
             const silentRefreshMs = expInMs - thirtySeconds
 
-            silentRefreshRef.current = setInterval(async () => {
+            // App-wide interval so we don't clean it up
+            setInterval(async () => {
               try {
                 const refreshedAccessToken = await silentRefresh()
                 setAccessToken(refreshedAccessToken.secret)

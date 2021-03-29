@@ -1,6 +1,7 @@
 import { Expr } from 'faunadb'
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
+import { useFaunaStore } from './useFaunaStore'
 
 interface UseFaunaQueryOptions<TQueryFnData, TError, TData>
   extends Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryFn'> {
@@ -14,7 +15,9 @@ function useFaunaQuery<
 >(
   options: UseFaunaQueryOptions<TQueryFnData, TError, TData>,
 ): UseQueryResult<TData, TError> {
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
+
   const query = useQuery<TQueryFnData, TError, TData>({
     ...options,
     queryFn: async () => {

@@ -1,13 +1,15 @@
 import { query as q } from 'faunadb'
 import { useMutation, useQueryClient } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
+import { useFaunaStore } from './useFaunaStore'
 
 interface CancelFriendRequestVariables {
   friendRequestId: string
 }
 
 export function useCancelFriendRequestMutation() {
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
 
   return useMutation<unknown, unknown, CancelFriendRequestVariables>(

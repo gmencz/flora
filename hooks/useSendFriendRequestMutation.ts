@@ -1,6 +1,7 @@
 import { errors, query as q } from 'faunadb'
 import { useMutation, UseMutationOptions } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
+import { useFaunaStore } from './useFaunaStore'
 
 export interface SendFriendRequestVariables {
   email: string
@@ -86,7 +87,7 @@ const addFriend = (variables: SendFriendRequestVariables) =>
                         q.Delete(
                           q.Select(
                             ['ref'],
-                            q.Get(q.Var('existq.ingFriendRequestFromFriend')),
+                            q.Get(q.Var('existingFriendRequestFromFriend')),
                           ),
                         ),
                         q.Create(q.Collection('user_friends'), {
@@ -143,7 +144,8 @@ export function useSendFriendRequestMutation(
     SendFriendRequestVariables
   >,
 ) {
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
 
   return useMutation<
     SendFriendRequestMutation,

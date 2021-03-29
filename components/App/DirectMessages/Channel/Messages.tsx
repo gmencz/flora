@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/FaunaClient'
-import { useFauna } from '@/hooks/useFauna'
 import { Collection, Ref } from 'faunadb'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useQueryClient } from 'react-query'
@@ -11,10 +10,11 @@ import {
   DirectMessageDetails,
   useDirectMessageQuery,
 } from '@/hooks/useDirectMessageQuery'
+import { useFaunaStore } from '@/hooks/useFaunaStore'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { accessToken } = useFauna()
+  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
   const { data, isSuccess } = useDirectMessageQuery({ channel, dm })
 

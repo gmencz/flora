@@ -5,8 +5,9 @@ import {
   DirectMessageStatus,
   DirectMessageDetails,
 } from '@/hooks/useDirectMessageQuery'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
 import { nanoid } from 'nanoid'
+import { useFaunaStore } from './useFaunaStore'
 
 interface SendDirectMessageVariables
   extends Pick<DirectMessage, 'content' | 'nonce'> {
@@ -15,7 +16,8 @@ interface SendDirectMessageVariables
 }
 
 export function useSendDirectMessageMutation() {
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
 
   return useMutation<unknown, unknown, SendDirectMessageVariables>(

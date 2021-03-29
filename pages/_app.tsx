@@ -1,5 +1,5 @@
 import { AppProps } from 'next/dist/next-server/lib/router/router'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
@@ -13,8 +13,6 @@ import 'twin.macro'
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
   const faunaClientRef = useRef<FaunaClient>()
-  const silentRefreshRef = useRef<NodeJS.Timeout>()
-  const [accessToken, setAccessToken] = useState<string>('')
 
   if (!queryClientRef.current) {
     queryClientRef.current = new QueryClient()
@@ -27,12 +25,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClientRef.current}>
       <Hydrate state={pageProps.dehydratedState}>
-        <FaunaClientProvider
-          accessToken={accessToken}
-          setAccessToken={setAccessToken}
-          silentRefreshRef={silentRefreshRef}
-          client={faunaClientRef.current}
-        >
+        <FaunaClientProvider client={faunaClientRef.current}>
           <>
             <Head>
               <meta charSet="UTF-8" />

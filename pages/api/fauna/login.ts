@@ -45,20 +45,21 @@ const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
     Let(
       {
         baseUserData,
-        login: CreateTokensForUser(uid),
       },
       If(
         CheckIfUserExists(uid),
 
-        Do(
-          Update(Select(['ref'], Select(['user'], Var('login'))), {
-            data: Var('baseUserData'),
-          }),
+        Let(
+          {
+            userAndTokens: CreateTokensForUser(uid),
+            tokens: Select(['tokens'], Var('userAndTokens')),
+            user: Select(['user'], Var('userAndTokens')),
+          },
+          Do(
+            Update(Select(['ref'], Var('user')), {
+              data: Var('baseUserData'),
+            }),
 
-          Let(
-            {
-              tokens: Select(['tokens'], Var('login')),
-            },
             {
               access: {
                 secret: Select(['access', 'secret'], Var('tokens')),
@@ -79,9 +80,11 @@ const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
           Create(Collection('users'), {
             data: Merge(Var('baseUserData'), { created: Now() }),
           }),
+
           Let(
             {
-              tokens: Select(['tokens'], Var('login')),
+              userAndTokens: CreateTokensForUser(uid),
+              tokens: Select(['tokens'], Var('userAndTokens')),
             },
             {
               access: {

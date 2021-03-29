@@ -1,0 +1,30 @@
+Update(Role("refresh"), {
+  membership: [{
+    resource: Collection("users"),
+    predicate: Query(Lambda("_ref", And(HasCurrentToken(), Equals(Select(["data", "type"], Get(CurrentToken()), false), "refresh"))))
+  }],
+  privileges: [{
+    resource: Collection("rate_limiting"),
+    actions: {
+      read: Query(Lambda("ref", Equals(CurrentIdentity(), Select(["data", "identity"], Get(Var("ref")))))),
+      write: Query(Lambda(["_oldData", "newData"], Equals(CurrentIdentity(), Select(["data", "identity"], Var("newData"))))),
+      create: Query(Lambda("newData", Equals(CurrentIdentity(), Select(["data", "identity"], Var("newData")))))
+    }
+  }, {
+    resource: Index("rate_limiting_by_action_and_identity"),
+    actions: {
+      read: Query(Lambda("terms", Equals(CurrentIdentity(), Select([1], Var("terms")))))
+    }
+  }, {
+    resource: Function("refresh"),
+    actions: {
+      call: true
+    }
+  }, {
+    resource: Function("logout"),
+    actions: {
+      call: true
+    }
+  }],
+  data: null
+})

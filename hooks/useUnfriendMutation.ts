@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
 import { query as q } from 'faunadb'
+import { useFaunaStore } from './useFaunaStore'
 
 interface UnfriendVariables {
   friendId: string
@@ -8,7 +9,8 @@ interface UnfriendVariables {
 
 export function useUnfriendMutation() {
   const queryClient = useQueryClient()
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
 
   return useMutation<unknown, unknown, UnfriendVariables>(
     variables => {

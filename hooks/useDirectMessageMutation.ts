@@ -1,7 +1,8 @@
 import { query as q } from 'faunadb'
 import { useRouter } from 'next/router'
 import { useMutation, useQueryClient } from 'react-query'
-import { useFauna } from './useFauna'
+import { useFaunaClient } from './useFaunaClient'
+import { useFaunaStore } from './useFaunaStore'
 
 export interface DirectMessageMutation {
   directMessageId: string
@@ -72,7 +73,8 @@ export const directMessage = (variables: DirectMessageVariables) =>
   )
 
 export function useDirectMessageMutation() {
-  const { client, accessToken } = useFauna()
+  const client = useFaunaClient()
+  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
   const router = useRouter()
 

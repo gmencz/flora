@@ -2,24 +2,24 @@ import firebase from '@/lib/firebase/client'
 import { ComponentType, useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useFauna } from '@/hooks/useFauna'
 import { silentRefresh } from '@/util/silentRefresh'
+import { useFaunaStore } from '@/hooks/useFaunaStore'
 
 const auth = firebase.auth()
 
-const defaultOnRedirecting = () => <></>
+const defaultOnAuthenticating = () => <></>
 
 interface WithAuthenticationRequiredOptions {
   /**
    * ```js
    * withAuthenticationRequired(Profile, {
-   *   onRedirecting: () => <div>Redirecting you to the login...</div>
+   *   onAuthenticating: () => <div>Redirecting you to the login...</div>
    * })
    * ```
    *
    * Render a message to show that the user is being redirected to the login.
    */
-  onRedirecting?: () => JSX.Element
+  onAuthenticating?: () => JSX.Element
 }
 
 const withAuthenticationRequired = <P extends object>(
@@ -28,10 +28,11 @@ const withAuthenticationRequired = <P extends object>(
 ) => {
   return function WithAuthenticationRequired(props: P) {
     const [user, loading, error] = useAuthState(auth)
-    const { onRedirecting = defaultOnRedirecting } = options
+    const { onAuthenticating = defaultOnAuthenticating } = options
     const router = useRouter()
-    const { setAccessToken, silentRefreshRef } = useFauna()
-    const [isRefreshing, setIsRefreshing] = useState(!silentRefreshRef.current)
+    const accessToken = useFaunaStore(state => state.accessToken)
+    const setAccessToken = useFaunaStore(state => state.setAccessToken)
+    const [isRefreshing, setIsRefreshing] = useState(!accessToken)
 
     const redirectToLogin = useCallback(() => {
       const nextPath = router.asPath
@@ -39,7 +40,7 @@ const withAuthenticationRequired = <P extends object>(
     }, [router])
 
     useEffect(() => {
-      if (!silentRefreshRef.current) {
+      if (!accessToken) {
         silentRefresh()
           .then(({ secret, expInMs }) => {
             setAccessToken(secret)
@@ -47,7 +48,7 @@ const withAuthenticationRequired = <P extends object>(
             const thirtySeconds = 30 * 1000
             const silentRefreshMs = expInMs - thirtySeconds
 
-            silentRefreshRef.current = setInterval(async () => {
+            setInterval(async () => {
               try {
                 const refreshedAccessToken = await silentRefresh()
                 setAccessToken(refreshedAccessToken.secret)
@@ -73,7 +74,7 @@ const withAuthenticationRequired = <P extends object>(
             }
           })
       }
-    }, [redirectToLogin, setAccessToken, silentRefreshRef])
+    }, [accessToken, redirectToLogin, setAccessToken])
 
     const errorAuthenticating = !loading && (!user || error)
     if (errorAuthenticating) {
@@ -81,7 +82,7 @@ const withAuthenticationRequired = <P extends object>(
     }
 
     const success = !!user && !isRefreshing
-    return success ? <Component {...props} /> : onRedirecting()
+    return success ? <Component {...props} /> : onAuthenticating()
   }
 }
 
