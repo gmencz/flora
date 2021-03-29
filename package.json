@@ -3,8 +3,8 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "next",
-      "gateway"
+      "tabouleh",
+      "knafeh"
     ],
     "nohoist": [
       "**"
