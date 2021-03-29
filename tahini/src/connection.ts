@@ -1,6 +1,5 @@
 import WebSocket from 'isomorphic-ws'
 import ReconnectingWebSocket from 'reconnecting-websocket'
-import type { Opcode } from '@chatskee/tahini'
 
 const healthCheckInterval = 8000
 const connectionTimeout = 15000
@@ -8,6 +7,8 @@ const baseUrl =
   process.env.NODE_ENV === 'production'
     ? 'wss://gateway.gabrielmendezc.com/'
     : 'ws://localhost:9999/'
+
+export type Opcode = 'call_offer' | 'call_answer' | 'new_ice_candidate'
 
 export type Token = string
 

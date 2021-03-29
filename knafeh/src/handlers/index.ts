@@ -1,5 +1,6 @@
 import WebSocket from 'ws'
-import { ConnectedUser, EventHandler, Opcode, SocketEvent } from '../types'
+import { Opcode } from '@chatskee/tahini'
+import { ConnectedUser, EventHandler, SocketEvent } from '../types'
 import { deserialize } from '../util/serialization'
 import { handleVoiceCallOffer } from './voiceCallOffer'
 import { handleVoiceCallAnswer } from './voiceCallAnswer'

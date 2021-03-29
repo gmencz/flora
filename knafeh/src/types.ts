@@ -1,5 +1,6 @@
 import { IncomingMessage } from 'http'
 import WebSocket from 'ws'
+import { Opcode } from '@chatskee/tahini'
 
 export type EventHandler = (
   op: Opcode,
@@ -7,8 +8,6 @@ export type EventHandler = (
   connectedUsers: Map<string, ConnectedUser>,
   socket: WebSocket,
 ) => void
-
-export type Opcode = 'call_offer' | 'call_answer' | 'new_ice_candidate'
 
 export interface ConnectedUser {
   sockets: Set<WebSocket>

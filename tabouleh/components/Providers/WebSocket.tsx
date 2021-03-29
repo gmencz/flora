@@ -6,13 +6,11 @@ import {
   useRef,
   useState,
 } from 'react'
-import { connect, Connection } from '@/lib/ws/raw'
 import useUser from '@/hooks/useUser'
-
-type V = Connection | null
+import { Connection, connect } from '@chatskee/tahini'
 
 interface IWebSocketContext {
-  conn: V
+  conn: Connection | null
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
@@ -25,7 +23,7 @@ interface WebSocketProviderProps {
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
   const user = useUser()
-  const [conn, setConn] = useState<V>(null)
+  const [conn, setConn] = useState<null | Connection>(null)
   const isConnecting = useRef(false)
 
   useEffect(() => {

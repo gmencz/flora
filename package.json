@@ -13,5 +13,7 @@
   },
   "devDependencies": {},
   "config": {},
-  "scripts": {}
+  "scripts": {
+    "firebase": "firebase emulators:start --import=./.firebase --export-on-exit"
+  }
 }
