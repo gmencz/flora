@@ -48,6 +48,7 @@ export function useDirectMessagesQuery() {
                 ),
                 withUser: {
                   id: q.Select(['ref', 'id'], q.Var('withUser')),
+                  uid: q.Select(['data', 'uid'], q.Var('withUser')),
                   name: q.Select(['data', 'name'], q.Var('withUser')),
                   photo: q.Select(['data', 'photoURL'], q.Var('withUser')),
                 },

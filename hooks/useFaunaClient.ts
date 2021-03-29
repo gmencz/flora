@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { FaunaClientContext } from '@/lib/FaunaClient'
+import { FaunaClientContext } from '@/components/Providers/FaunaClient'
 
 export function useFaunaClient() {
   const context = useContext(FaunaClientContext)

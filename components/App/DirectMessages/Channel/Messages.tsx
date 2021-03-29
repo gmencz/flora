@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/FaunaClient'
+import { createFaunaClient } from '@/lib/fauna'
 import { Collection, Ref } from 'faunadb'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useQueryClient } from 'react-query'
@@ -19,7 +19,7 @@ function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const { data, isSuccess } = useDirectMessageQuery({ channel, dm })
 
   useEffect(() => {
-    const streamClient = createClient(accessToken)
+    const streamClient = createFaunaClient(accessToken)
     const stream = streamClient.stream(Ref(Collection('channels'), channel))
 
     const startStream = () => {

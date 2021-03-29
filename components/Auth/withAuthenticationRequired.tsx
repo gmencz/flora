@@ -1,13 +1,20 @@
 import firebase from '@/lib/firebase/client'
-import { ComponentType, useCallback, useEffect, useState } from 'react'
+import {
+  ComponentType,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { silentRefresh } from '@/util/silentRefresh'
 import { useFaunaStore } from '@/hooks/useFaunaStore'
+import { WebSocketContext } from '../Providers/WebSocket'
 
 const auth = firebase.auth()
 
-const defaultOnAuthenticating = () => <></>
+const defaultOnAuthenticating = () => <>Authenticating...</>
 
 interface WithAuthenticationRequiredOptions {
   /**
@@ -33,10 +40,10 @@ const withAuthenticationRequired = <P extends object>(
     const accessToken = useFaunaStore(state => state.accessToken)
     const setAccessToken = useFaunaStore(state => state.setAccessToken)
     const [isRefreshing, setIsRefreshing] = useState(!accessToken)
+    const { conn } = useContext(WebSocketContext)
 
     const redirectToLogin = useCallback(() => {
-      const nextPath = router.asPath
-      router.push(`/login?next=${encodeURIComponent(nextPath)}`)
+      router.push(`/login?next=${window.location.pathname}`)
     }, [router])
 
     useEffect(() => {
@@ -81,7 +88,7 @@ const withAuthenticationRequired = <P extends object>(
       redirectToLogin()
     }
 
-    const success = !!user && !isRefreshing
+    const success = !!user && !isRefreshing && !!conn
     return success ? <Component {...props} /> : onAuthenticating()
   }
 }

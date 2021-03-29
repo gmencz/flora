@@ -1,23 +1,5 @@
-import { Client as FaunaClient, ClientConfig } from 'faunadb'
+import { Client as FaunaClient } from 'faunadb'
 import { createContext, ReactNode, useMemo } from 'react'
-
-const baseConfig: Omit<ClientConfig, 'secret'> =
-  process.env.NODE_ENV === 'production'
-    ? {}
-    : {
-        scheme: 'http',
-        domain: '127.0.0.1',
-        port: 8443,
-      }
-
-export function createClient(secret: string) {
-  const client = new FaunaClient({
-    ...baseConfig,
-    secret,
-  })
-
-  return client
-}
 
 interface IFaunaClientContext {
   client: FaunaClient

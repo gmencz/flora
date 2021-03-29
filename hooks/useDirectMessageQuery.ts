@@ -5,6 +5,7 @@ import resolvePagination from '@/util/resolvePagination'
 
 interface DirectMessageUser {
   id: string
+  uid: string
   name: string
   photo: string
 }
@@ -53,11 +54,13 @@ export function useDirectMessageQuery(variables: DirectMessageVariables) {
       {
         currentUser: {
           id: q.Select(['ref', 'id'], q.Var('currentUserDoc')),
+          uid: q.Select(['data', 'uid'], q.Var('currentUserDoc')),
           name: q.Select(['data', 'name'], q.Var('currentUserDoc')),
           photo: q.Select(['data', 'photoURL'], q.Var('currentUserDoc')),
         },
         withUser: {
           id: q.Select(['ref', 'id'], q.Var('withUserDoc')),
+          uid: q.Select(['data', 'uid'], q.Var('withUserDoc')),
           name: q.Select(['data', 'name'], q.Var('withUserDoc')),
           photo: q.Select(['data', 'photoURL'], q.Var('withUserDoc')),
         },
@@ -85,6 +88,7 @@ export function useDirectMessageQuery(variables: DirectMessageVariables) {
                     },
                     {
                       id: q.Select(['ref', 'id'], q.Var('userDoc')),
+                      uid: q.Select(['data', 'uid'], q.Var('userDoc')),
                       name: q.Select(['data', 'name'], q.Var('userDoc')),
                       photo: q.Select(['data', 'photoURL'], q.Var('userDoc')),
                     },

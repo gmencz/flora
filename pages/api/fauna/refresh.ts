@@ -1,6 +1,6 @@
 import { REFRESH_TOKEN_REUSE_ERROR } from '@/fauna/auth/anomalies'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
-import { createClient } from '@/lib/FaunaClient'
+import { createFaunaClient } from '@/lib/fauna'
 import { FaunaAuthTokens } from '@/lib/types'
 import setCookie from '@/util/setCookie'
 import {
@@ -19,7 +19,7 @@ import nc from 'next-connect'
 
 const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
   const refreshToken = req.cookies.chatskeeFaunaRefresh
-  const fauna = createClient(refreshToken)
+  const fauna = createFaunaClient(refreshToken)
 
   let refreshResult: FaunaAuthTokens | null
   try {

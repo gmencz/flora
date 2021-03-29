@@ -2,7 +2,7 @@ import { ChannelComponentProps } from '.'
 import { useEffect, useRef, useState } from 'react'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 import { useNtsTokenQuery } from '@/hooks/useNtsTokenQuery'
-import { useWebSocket } from '@/hooks/useWebSocket'
+import { useWsConn } from '@/hooks/useWsConn'
 import { handleGetUserMediaError } from '@/util/handleGetUserMediaError'
 import 'twin.macro'
 
@@ -12,7 +12,8 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   // Retrieve a NTS token from Twilio for the RTC configuration
   // (STUN and TURN servers).
   const ntsTokenQuery = useNtsTokenQuery()
-  const ws = useWebSocket(directMessageQuery.data?.currentUser.id)
+
+  const ws = useWsConn()
   const peerConnectionRef = useRef<RTCPeerConnection>()
   const offerRef = useRef<RTCSessionDescriptionInit>()
   const localStreamRef = useRef<MediaStream>()
@@ -21,45 +22,28 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const [isBeingCalled, setIsBeingCalled] = useState(false)
 
   useEffect(() => {
-    if (!ws) {
-      return
-    }
-
-    ws.onmessage = async message => {
-      const {
-        ok,
-        code,
-        offer: rtcOffer,
-        answer: rtcAnswer,
-        candidate,
-      } = JSON.parse(message.data)
-      if (!ok) {
-        if (code === 'user_offline') {
-          alert(`${directMessageQuery.data?.withUser.name} is offline`)
-        } else {
-          alert(
-            `Something went wrong calling ${directMessageQuery.data?.withUser.name}`,
-          )
-        }
-
-        return
-      }
-
-      if (rtcOffer) {
+    if (directMessageQuery.data?.withUser.name) {
+      ws.addListener<{ offer: any }>('call_offer', data => {
+        const { offer: offerSDP } = data
         console.log(`${directMessageQuery.data?.withUser.name} is calling you!`)
-        offerRef.current = rtcOffer
+        offerRef.current = offerSDP
         setIsBeingCalled(true)
-      } else if (rtcAnswer) {
+      })
+
+      ws.addListener<{ answer: any }>('call_answer', data => {
+        const { answer: answerSDP } = data
         console.log(
           `${directMessageQuery.data?.withUser.name} accepted the voice call!`,
         )
+        const answer = new RTCSessionDescription(answerSDP)
+        peerConnectionRef.current?.setRemoteDescription(answer)
+      })
 
-        const answer = new RTCSessionDescription(rtcAnswer)
-        await peerConnectionRef.current?.setRemoteDescription(answer)
-      } else if (candidate) {
+      ws.addListener<{ candidate: any }>('new_ice_candidate', data => {
+        const { candidate } = data
         const iceCandidate = new RTCIceCandidate(candidate)
         peerConnectionRef.current?.addIceCandidate(iceCandidate)
-      }
+      })
     }
   }, [directMessageQuery.data?.withUser.name, ws])
 
@@ -69,18 +53,13 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         return
       }
 
-      ws?.send(
-        JSON.stringify({
-          type: 'new_ice_candidate',
-          targetId: directMessageQuery.data?.withUser.id,
-          candidate: event.candidate.toJSON(),
-        }),
-      )
+      ws.send('new_ice_candidate', {
+        targetId: directMessageQuery.data?.withUser.uid,
+        candidate: event.candidate.toJSON(),
+      })
     })
 
     peerConnectionRef.current?.addEventListener('track', event => {
-      console.log(event)
-
       receivedAudioRef.current!.srcObject = event.streams[0]
     })
 
@@ -90,18 +69,14 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         offerRef.current = await peerConnectionRef.current?.createOffer()
         await peerConnectionRef.current?.setLocalDescription(offerRef.current!)
 
-        const callWithOffer = {
-          type: 'call_with_offer',
-          callerId: directMessageQuery.data?.currentUser.id,
-          calleeId: directMessageQuery.data?.withUser.id,
+        ws.send('call_offer', {
+          callerId: directMessageQuery.data?.currentUser.uid,
+          calleeId: directMessageQuery.data?.withUser.uid,
           offer: {
             type: offerRef.current!.type,
             sdp: offerRef.current!.sdp,
           },
-        }
-
-        // Post the offer to our dedicated signaling server.
-        ws?.send(JSON.stringify(callWithOffer))
+        })
       },
     )
   }
@@ -176,18 +151,14 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
     const answer = await peerConnectionRef.current.createAnswer()
     await peerConnectionRef.current.setLocalDescription(answer)
 
-    const callWithAnswer = {
-      type: 'call_with_answer',
-      callerId: directMessageQuery.data?.withUser.id,
-      calleeId: directMessageQuery.data?.currentUser.id,
+    ws.send('call_answer', {
+      callerId: directMessageQuery.data?.withUser.uid,
+      calleeId: directMessageQuery.data?.currentUser.uid,
       answer: {
         type: answer.type,
         sdp: answer.sdp,
       },
-    }
-
-    // Post the answer to our dedicated signaling server.
-    ws?.send(JSON.stringify(callWithAnswer))
+    })
   }
 
   return (
