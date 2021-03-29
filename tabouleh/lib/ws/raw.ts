@@ -1,6 +1,6 @@
 import WebSocket from 'isomorphic-ws'
 import ReconnectingWebSocket from 'reconnecting-websocket'
-import type { Opcode } from '@chatskee/knafeh'
+import type { Opcode } from '@chatskee/tahini'
 
 const healthCheckInterval = 8000
 const connectionTimeout = 15000

@@ -1,0 +1,1 @@
+export type Opcode = 'call_offer' | 'call_answer' | 'new_ice_candidate'
