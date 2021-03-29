@@ -19,37 +19,17 @@ import { CheckIfUserExists, CreateTokensForUser } from '@/fauna/auth/login'
 import setCookie from '@/util/setCookie'
 import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
 import nc from 'next-connect'
+import { authorizeHandler } from '@/util/authorizeHandler'
 
 const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
   const client = createClient(process.env.FAUNADB_SERVER_KEY!)
 
-  if (!req.headers.authorization) {
-    return res.status(401).json({
-      message: 'Missing authorization header',
-    })
-  }
-
-  if (!req.headers.authorization.startsWith('Bearer')) {
-    return res.status(401).json({
-      message: 'Invalid authorization header, must use the Bearer format',
-    })
-  }
-
-  const [, idToken] = req.headers.authorization.split(' ')
-
-  if (!idToken) {
-    return res.status(401).json({
-      message: 'Invalid authorization header, missing token',
-    })
-  }
-
   let user: admin.auth.DecodedIdToken
   try {
-    user = await admin.auth().verifyIdToken(idToken)
+    user = await authorizeHandler(req)
   } catch (error) {
-    console.error(error)
     return res.status(401).json({
-      message: 'Invalid ID token',
+      message: error.message,
     })
   }
 
