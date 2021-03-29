@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { Opcode } from '@chatskee/gateway-client'
+import { Opcode } from '@chatskee/gateway'
 import { ConnectedUser, EventHandler, SocketEvent } from '../types'
 import { deserialize } from '../util/serialization'
 import { handleVoiceCallOffer } from './voiceCallOffer'

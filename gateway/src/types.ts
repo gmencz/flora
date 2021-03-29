@@ -1,6 +1,7 @@
 import { IncomingMessage } from 'http'
 import WebSocket from 'ws'
-import { Opcode } from '@chatskee/gateway-client'
+
+export type Opcode = 'call_offer' | 'call_answer' | 'new_ice_candidate'
 
 export type EventHandler = (
   op: Opcode,
