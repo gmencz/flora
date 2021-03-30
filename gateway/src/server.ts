@@ -23,6 +23,17 @@ export async function startServer() {
 
         const targetSocket = connectedUsers.get(target)
         if (!targetSocket) {
+          /*
+            If the target socket is not found this can mean one of two things:
+            
+            1. The socket is on a different node.
+          
+            2. The connection with the socket was closed before the message was published.
+            
+            For now we're just going to assume it's the first one but in the future
+            we should handle this differently.
+          */
+
           return
         }
 
