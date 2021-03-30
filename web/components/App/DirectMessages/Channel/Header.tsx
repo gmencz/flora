@@ -1,14 +1,10 @@
-import type {
-  NewICECandidate,
-  VoiceCallAnswer,
-  VoiceCallOffer,
-} from '@chatskee/gateway'
 import { ChannelComponentProps } from '.'
 import { useEffect, useRef, useState } from 'react'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 import { useNtsTokenQuery } from '@/hooks/useNtsTokenQuery'
 import { useWsConn } from '@/hooks/useWsConn'
 import { handleGetUserMediaError } from '@/util/handleGetUserMediaError'
+import { MaybeError } from '@/lib/types'
 import 'twin.macro'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
@@ -26,29 +22,67 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const localAudioRef = useRef<HTMLAudioElement>(null)
   const [isBeingCalled, setIsBeingCalled] = useState(false)
 
+  const cancelCall = () => {
+    localStreamRef.current?.getTracks().forEach(track => {
+      track.stop()
+    })
+
+    offerRef.current = undefined
+    peerConnectionRef.current = undefined
+  }
+
   useEffect(() => {
     if (directMessageQuery.data?.withUser.name) {
-      ws.addListener<VoiceCallOffer>('call_offer', data => {
-        const { offer: offerSDP } = data
-        console.log(`${directMessageQuery.data?.withUser.name} is calling you!`)
-        offerRef.current = offerSDP
-        setIsBeingCalled(true)
-      })
+      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
+        'voice_call_offer',
+        offer => {
+          if (offer.err) {
+            cancelCall()
 
-      ws.addListener<VoiceCallAnswer>('call_answer', data => {
-        const { answer: answerSDP } = data
-        console.log(
-          `${directMessageQuery.data?.withUser.name} accepted the voice call!`,
-        )
-        const answer = new RTCSessionDescription(answerSDP)
-        peerConnectionRef.current?.setRemoteDescription(answer)
-      })
+            if (offer.err === 'callee_offline') {
+              alert('User is offline')
+            }
 
-      ws.addListener<NewICECandidate>('new_ice_candidate', data => {
-        const { candidate } = data
-        const iceCandidate = new RTCIceCandidate(candidate)
-        peerConnectionRef.current?.addIceCandidate(iceCandidate)
-      })
+            return
+          }
+
+          console.log(
+            `${directMessageQuery.data?.withUser.name} is calling you!`,
+          )
+          offerRef.current = offer
+          setIsBeingCalled(true)
+        },
+      )
+
+      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
+        'voice_call_answer',
+        answerInit => {
+          if (answerInit.err) {
+            cancelCall()
+            return
+          }
+
+          console.log(
+            `${directMessageQuery.data?.withUser.name} accepted the voice call!`,
+          )
+
+          const answer = new RTCSessionDescription(answerInit)
+          peerConnectionRef.current?.setRemoteDescription(answer)
+        },
+      )
+
+      ws.addListener<MaybeError<RTCIceCandidateInit>>(
+        'new_ice_candidate',
+        candidate => {
+          if (candidate.err) {
+            cancelCall()
+            return
+          }
+
+          const iceCandidate = new RTCIceCandidate(candidate)
+          peerConnectionRef.current?.addIceCandidate(iceCandidate)
+        },
+      )
     }
   }, [directMessageQuery.data?.withUser.name, ws])
 
@@ -74,7 +108,7 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         offerRef.current = await peerConnectionRef.current?.createOffer()
         await peerConnectionRef.current?.setLocalDescription(offerRef.current!)
 
-        ws.send('call_offer', {
+        ws.send('voice_call_offer', {
           callerId: directMessageQuery.data?.currentUser.uid,
           calleeId: directMessageQuery.data?.withUser.uid,
           offer: {
@@ -156,7 +190,7 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
     const answer = await peerConnectionRef.current.createAnswer()
     await peerConnectionRef.current.setLocalDescription(answer)
 
-    ws.send('call_answer', {
+    ws.send('voice_call_answer', {
       callerId: directMessageQuery.data?.withUser.uid,
       calleeId: directMessageQuery.data?.currentUser.uid,
       answer: {

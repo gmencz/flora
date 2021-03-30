@@ -14,10 +14,10 @@ export function useMainWsHandler() {
     }
 
     const unsubs: (() => void)[] = [
-      // conn.addListener('call_offer', () => {
+      // conn.addListener('voice_call_offer', () => {
       //   console.log('Call offer')
       // }),
-      // conn.addListener('call_answer', () => {
+      // conn.addListener('voice_call_answer', () => {
       //   console.log('Call answer')
       // }),
       // conn.addListener('new_ice_candidate', () => {

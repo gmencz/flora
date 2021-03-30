@@ -32,3 +32,5 @@ export interface Page<TData> {
   before: string | null
   after: string | null
 }
+
+export type MaybeError<T> = T & { err?: string }

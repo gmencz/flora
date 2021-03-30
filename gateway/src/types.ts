@@ -1,18 +1,12 @@
 import { IncomingMessage } from 'http'
 import WebSocket from 'ws'
 
-export type Opcode = 'call_offer' | 'call_answer' | 'new_ice_candidate'
+export type Opcode =
+  | 'voice_call_offer'
+  | 'voice_call_answer'
+  | 'new_ice_candidate'
 
-export type EventHandler = (
-  op: Opcode,
-  data: any,
-  connectedUsers: Map<string, ConnectedUser>,
-  socket: WebSocket,
-) => void
-
-export interface ConnectedUser {
-  sockets: Set<WebSocket>
-}
+export type EventHandler = (op: Opcode, data: any, socket: WebSocket) => void
 
 export interface RequestWithUser extends IncomingMessage {
   userId: string
@@ -37,4 +31,9 @@ export interface NewICECandidate {
 export interface SocketEvent {
   op: Opcode
   d: VoiceCallOffer | VoiceCallAnswer | NewICECandidate
+}
+
+export interface RedisEvent {
+  event: SocketEvent
+  target: string
 }

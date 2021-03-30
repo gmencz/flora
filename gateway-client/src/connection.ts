@@ -22,7 +22,7 @@ export interface Connection {
   close: () => void
   once: <Data = unknown>(opcode: Opcode, handler: ListenerHandler<Data>) => void
   send: (opcode: Opcode, data: unknown) => void
-  addListener: <Data = unknown>(
+  addListener: <Data>(
     opcode: Opcode,
     handler: ListenerHandler<Data>,
   ) => () => void
@@ -62,9 +62,11 @@ export const connect = (token: Token): Promise<Connection> => {
 
         const message = JSON.parse(event.data)
 
+        console.log(message)
+
         listeners
           .filter(({ opcode }) => opcode === message.op)
-          .forEach(it => it.handler(message.d))
+          .forEach(it => it.handler(message.err ? message : message.d))
       })
 
       const connection: Connection = {

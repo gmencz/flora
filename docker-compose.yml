@@ -8,6 +8,11 @@ services:
       - 8084:8084
     volumes:
       - fauna_data:/var/lib/faunadb
+  redis:
+    image: redis
+    command: redis-server --requirepass myredispassword
+    ports:
+      - 6379:6379
 
 volumes:
   fauna_data:

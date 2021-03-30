@@ -1,20 +1,19 @@
+import { redisClient } from '../lib/redis'
 import { VoiceCallAnswer, EventHandler } from '../types'
-import { serialize } from '../util/serialization'
+import { publishEvent } from '../util/publishEvent'
+import { sendOpError } from '../util/sendOpError'
 
-export const handleVoiceCallAnswer: EventHandler = (
+export const handleVoiceCallAnswer: EventHandler = async (
   op,
   data: VoiceCallAnswer,
-  connectedUsers,
   socket,
 ) => {
   const { callerId, answer } = data
-  const caller = connectedUsers.get(callerId)
+  const isCallerOnline = await redisClient.exists(`u:${callerId}`)
 
-  if (!caller) {
-    return socket.send(serialize({ code: 'user_offline' }))
+  if (!isCallerOnline) {
+    return sendOpError(op, 'caller_offline', socket)
   }
 
-  caller.sockets.forEach(callerSocket => {
-    callerSocket.send(serialize({ op, d: { answer } }))
-  })
+  publishEvent({ op, d: answer }, callerId)
 }
