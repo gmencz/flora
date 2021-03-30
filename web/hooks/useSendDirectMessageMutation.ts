@@ -169,6 +169,8 @@ export function useSendDirectMessageMutation() {
         queryClient.setQueryData<DirectMessageDetails>(
           ['dm', variables.dm],
           existing => {
+            const botUid = nanoid()
+
             return {
               ...existing!,
               messages: {
@@ -191,7 +193,8 @@ export function useSendDirectMessageMutation() {
                     status: DirectMessageStatus.INFO,
                     timestamp: new Date().toISOString(),
                     user: {
-                      id: nanoid(),
+                      id: botUid,
+                      uid: botUid,
                       name: 'Bonnie',
                       photo: '/bonnie.png',
                     },

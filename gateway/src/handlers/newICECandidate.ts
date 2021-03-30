@@ -1,6 +1,6 @@
-import { redisClient } from '../lib/redis'
+import { getUser } from '../lib/redis/user'
 import { NewICECandidate, EventHandler } from '../types'
-import { publishEvent } from '../util/publishEvent'
+import { publishEventForTarget } from '../util/publishEventForTarget'
 import { sendOpError } from '../util/sendOpError'
 
 export const handleNewICECandidate: EventHandler = async (
@@ -9,11 +9,11 @@ export const handleNewICECandidate: EventHandler = async (
   socket,
 ) => {
   const { targetId, candidate } = data
-  const isTargetOnline = await redisClient.exists(`u:${targetId}`)
+  const isTargetOnline = await getUser(targetId)
 
   if (!isTargetOnline) {
     return sendOpError(op, 'user_offline', socket)
   }
 
-  publishEvent({ op, d: candidate }, targetId)
+  publishEventForTarget(op, candidate, targetId)
 }

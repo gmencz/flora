@@ -62,8 +62,6 @@ export const connect = (token: Token): Promise<Connection> => {
 
         const message = JSON.parse(event.data)
 
-        console.log(message)
-
         listeners
           .filter(({ opcode }) => opcode === message.op)
           .forEach(it => it.handler(message.err ? message : message.d))

@@ -3,5 +3,20 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 import { startServer } from './server'
+import { redisClient, redisPublisher, redisSubscriber } from './lib/redis'
 
-startServer()
+startServer().catch(async reason => {
+  console.error(`Server startup error: ${reason}`)
+
+  try {
+    await Promise.all([
+      redisClient.quit(),
+      redisSubscriber.quit(),
+      redisPublisher.quit(),
+    ])
+  } catch (error) {
+    console.error(
+      `Something went wrong cleaning up after server startup error: ${error}`,
+    )
+  }
+})

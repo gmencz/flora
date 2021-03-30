@@ -1,88 +1,38 @@
-import WebSocket from 'ws'
-import qs from 'qs'
 import http from 'http'
-import admin from './lib/firebase'
+import WebSocket from 'ws'
 import { PORT } from './constants'
-import { RedisEvent, RequestWithUser } from './types'
+import { RequestWithUser } from './types'
 import { handleEvent } from './handlers'
-import { handleUnauthorizedUpgrade } from './util/handleUnauthorizedUpgrade'
-import { redisPublisher, redisSubscriber, redisClient } from './lib/redis'
-import { deserialize, serialize } from './util/serialization'
+import { initRedisPubsub } from './util/initRedisPubsub'
+import { authorizeUser } from './util/authorizeUser'
+import { connectUser, disconnectUser } from './util/connection'
 
+const connectedUsers = new Map<string, WebSocket>()
 export async function startServer() {
-  try {
-    const connectedUsers = new Map<string, WebSocket>()
-    const server = http.createServer()
-    const wss = new WebSocket.Server({ clientTracking: false, noServer: true })
+  const server = http.createServer()
+  const wss = new WebSocket.Server({ clientTracking: false, noServer: true })
+  await initRedisPubsub(connectedUsers)
 
-    await redisSubscriber.subscribe('events')
+  server.on('upgrade', async (request, socket, head) => {
+    try {
+      await authorizeUser(request, socket)
+    } catch (error) {
+      socket.destroy()
+    }
 
-    redisSubscriber.on('message', (channel: string, message: string) => {
-      if (channel === 'events') {
-        const { event, target } = deserialize<RedisEvent>(message)
-
-        const targetSocket = connectedUsers.get(target)
-        if (!targetSocket) {
-          /*
-            If the target socket is not found this can mean one of two things:
-            
-            1. The socket is on a different node.
-          
-            2. The connection with the socket was closed before the message was published.
-            
-            For now we're just going to assume it's the first one but in the future
-            we should handle this differently.
-          */
-
-          return
-        }
-
-        targetSocket.send(serialize(event))
-      }
+    wss.handleUpgrade(request, socket, head, ws => {
+      wss.emit('connection', ws, request)
     })
+  })
 
-    server.on('upgrade', async (request, socket, head) => {
-      const url = request.url.substr(2)
-      const { token } = qs.parse(url)
+  wss.on('connection', async (socket, request: RequestWithUser) => {
+    connectUser(request, socket, connectedUsers)
 
-      if (!token) {
-        return handleUnauthorizedUpgrade(socket)
-      }
+    socket.on('message', event => handleEvent(event.toString(), socket))
+    socket.on('close', () => disconnectUser(request, connectedUsers))
+  })
 
-      try {
-        const { uid } = await admin.auth().verifyIdToken(token as string)
-        request.userId = uid
-      } catch (error) {
-        console.error(error)
-        return handleUnauthorizedUpgrade(socket)
-      }
-
-      wss.handleUpgrade(request, socket, head, ws => {
-        wss.emit('connection', ws, request)
-      })
-    })
-
-    wss.on('connection', async (socket, request: RequestWithUser) => {
-      const { userId } = request
-      connectedUsers.set(userId, socket)
-      redisClient.set(`u:${userId}`, '')
-
-      socket.on('message', event => {
-        handleEvent(event.toString(), socket)
-      })
-
-      socket.on('close', () => {
-        connectedUsers.delete(userId)
-        redisClient.del(`u:${userId}`)
-      })
-    })
-
-    server.listen(PORT, () => {
-      console.log(`Listening on PORT ${PORT}`)
-    })
-  } catch (error) {
-    redisClient.quit()
-    redisSubscriber.quit()
-    redisPublisher.quit()
-  }
+  server.listen(PORT, () => {
+    console.log(`Listening on PORT ${PORT}`)
+  })
 }

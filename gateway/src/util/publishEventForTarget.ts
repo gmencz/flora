@@ -1,10 +1,17 @@
 import { redisPublisher } from '../lib/redis/publisher'
-import { SocketEvent } from '../types'
+import { Opcode, SocketEvent } from '../types'
 import { serialize } from './serialization'
 
-export function publishEvent(event: SocketEvent, target: string) {
+export function publishEventForTarget(
+  op: SocketEvent['op'],
+  d: SocketEvent['d'],
+  target: string,
+) {
   const redisEvent = serialize({
-    event,
+    event: {
+      op,
+      d,
+    },
     target,
   })
 

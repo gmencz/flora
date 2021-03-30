@@ -1,6 +1,6 @@
-import { redisClient } from '../lib/redis'
+import { getUser } from '../lib/redis/user'
 import { VoiceCallOffer, EventHandler } from '../types'
-import { publishEvent } from '../util/publishEvent'
+import { publishEventForTarget } from '../util/publishEventForTarget'
 import { sendOpError } from '../util/sendOpError'
 
 export const handleVoiceCallOffer: EventHandler = async (
@@ -9,11 +9,11 @@ export const handleVoiceCallOffer: EventHandler = async (
   socket,
 ) => {
   const { calleeId, offer } = data
-  const isCalleeId = await redisClient.exists(`u:${calleeId}`)
+  const isCalleeId = await getUser(calleeId)
 
   if (!isCalleeId) {
     return sendOpError(op, 'callee_offline', socket)
   }
 
-  publishEvent({ op, d: offer }, calleeId)
+  publishEventForTarget(op, offer, calleeId)
 }
