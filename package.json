@@ -5,14 +5,13 @@
     "packages": [
       "web",
       "gateway",
-      "gateway-client"
+      "gateway-client",
+      "sfu"
     ],
     "nohoist": [
       "**"
     ]
   },
-  "devDependencies": {},
-  "config": {},
   "scripts": {
     "firebase": "firebase emulators:start --import=./.firebase --export-on-exit"
   }
