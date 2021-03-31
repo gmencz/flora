@@ -28,5 +28,5 @@
     }
   },
   "exclude": ["node_modules"],
-  "include": ["**/*.ts", "**/*.tsx", "fauna/resources/roles/user.js"]
+  "include": ["**/*.ts", "**/*.tsx", "fauna/resources/roles/user.ts"]
 }

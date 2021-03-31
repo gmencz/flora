@@ -1,27 +1,51 @@
-import faunadb from 'faunadb'
-import { CreateAccessAndRefreshToken } from './tokens'
+import { SESSION_TTL } from '@/util/session'
+import {
+  Create,
+  Exists,
+  Expr,
+  Get,
+  Index,
+  Let,
+  Match,
+  Now,
+  Select,
+  TimeAdd,
+  Tokens,
+  Var,
+} from 'faunadb'
 
-const q = faunadb.query
-const { Let, Var, Select, Match, Index, Get, Exists } = q
+export interface User {
+  id: string
+  name: string
+  email: string
+  photoURL: string
+  firebaseUid: string
+  created: string
+}
 
-function GetUserByUid(uid: string) {
+export interface AuthResult {
+  user: User
+  secret: string
+}
+
+export function GetUserByUid(uid: string) {
   return Get(Match(Index('users_by_uid'), uid))
+}
+
+export function CreateTokenForUser(instance: Expr) {
+  return Let(
+    {
+      token: Create(Tokens(), {
+        instance,
+        ttl: TimeAdd(Now(), SESSION_TTL + 120, 'seconds'),
+      }),
+    },
+    {
+      secret: Select(['secret'], Var('token')),
+    },
+  )
 }
 
 export function CheckIfUserExists(uid: string) {
   return Exists(Match(Index('users_by_uid'), uid))
-}
-
-export function CreateTokensForUser(uid: string) {
-  return Let(
-    {
-      user: GetUserByUid(uid),
-      userRef: Select(['ref'], Var('user')),
-      tokens: CreateAccessAndRefreshToken(Var('userRef')),
-    },
-    {
-      tokens: Var('tokens'),
-      user: Var('user'),
-    },
-  )
 }

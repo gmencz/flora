@@ -1,36 +1,28 @@
 import {
   And,
-  Any,
   Collection,
   CreateRole,
   CurrentIdentity,
-  CurrentToken,
   Equals,
   Exists,
-  Function,
   Get,
   If,
   Index,
   Lambda,
   Let,
-  Map,
   Match,
   Or,
-  Paginate,
   Query,
-  Ref,
   Select,
   Union,
   Var,
 } from 'faunadb'
-import { IsCalledWithAccessToken } from '../../auth/tokens'
 
 export default CreateRole({
   name: 'user',
   membership: [
     {
       resource: Collection('users'),
-      predicate: Query(Lambda(_ref => IsCalledWithAccessToken())),
     },
   ],
   privileges: [

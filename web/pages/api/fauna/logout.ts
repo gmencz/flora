@@ -1,32 +1,16 @@
-import { Call, Function } from 'faunadb'
-import { NextApiRequest, NextApiResponse } from 'next'
-import nc from 'next-connect'
-import setCookie from '@/util/setCookie'
+import { CurrentToken, Delete } from 'faunadb'
 import { createFaunaClient } from '@/lib/fauna'
+import { authorize, getUser, handler } from '@/util/handler'
 
-const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
-  const refreshToken = req.cookies.chatskeeFaunaRefresh
-  const fauna = createFaunaClient(refreshToken)
+export default handler()
+  .use(authorize)
+  .post(async (req, res) => {
+    const user = getUser(req)
 
-  const { allDevices = false } = req.body
+    const fauna = createFaunaClient(user.faunaToken)
+    await fauna.query(Delete(CurrentToken()))
 
-  try {
-    await fauna.query(Call(Function('logout'), allDevices))
-  } catch (error) {
-    console.error(error)
-  }
+    req.session.destroy()
 
-  setCookie(res, 'chatskeeFaunaRefresh', '', {
-    maxAge: -1,
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
+    return res.status(200).send('Logged out')
   })
-
-  return res.status(200).json({
-    ok: true,
-  })
-})
-
-export default handler

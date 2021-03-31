@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next'
 import {
   Collection,
   Create,
@@ -8,32 +7,34 @@ import {
   Merge,
   Now,
   Select,
-  TimeDiff,
+  ToString,
   Update,
   Var,
 } from 'faunadb'
 import admin from '@/lib/firebase/server'
-import { FaunaAuthTokens } from '@/lib/types'
-import { CheckIfUserExists, CreateTokensForUser } from '@/fauna/auth/login'
-import setCookie from '@/util/setCookie'
-import { REFRESH_TOKEN_LIFETIME_SECONDS } from '@/fauna/auth/tokens'
-import nc from 'next-connect'
+import {
+  AuthResult,
+  CheckIfUserExists,
+  CreateTokenForUser,
+  GetUserByUid,
+} from '@/fauna/auth/login'
 import { authorizeHandler } from '@/util/authorizeHandler'
 import { createFaunaClient } from '@/lib/fauna'
+import { handler } from '@/util/handler'
 
-const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
+export default handler().post(async (req, res) => {
   const client = createFaunaClient(process.env.FAUNADB_SERVER_KEY!)
 
-  let user: admin.auth.DecodedIdToken
+  let firebaseUser: admin.auth.DecodedIdToken
   try {
-    user = await authorizeHandler(req)
+    firebaseUser = await authorizeHandler(req)
   } catch (error) {
     return res.status(401).json({
       message: error.message,
     })
   }
 
-  const { name, uid, picture, email } = user
+  const { name, uid, picture, email } = firebaseUser
   const baseUserData = {
     name,
     uid,
@@ -41,7 +42,7 @@ const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
     email,
   }
 
-  const { access, refresh } = await client.query<FaunaAuthTokens>(
+  const { secret, user } = await client.query<AuthResult>(
     Let(
       {
         baseUserData,
@@ -51,28 +52,24 @@ const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
 
         Let(
           {
-            userAndTokens: CreateTokensForUser(uid),
-            tokens: Select(['tokens'], Var('userAndTokens')),
-            user: Select(['user'], Var('userAndTokens')),
+            user: GetUserByUid(uid),
+            userRef: Select(['ref'], Var('user')),
           },
           Do(
-            Update(Select(['ref'], Var('user')), {
+            Update(Var('userRef'), {
               data: Var('baseUserData'),
             }),
 
-            {
-              access: {
-                secret: Select(['access', 'secret'], Var('tokens')),
-                expInMs: TimeDiff(
-                  Now(),
-                  Select(['access', 'ttl'], Var('tokens')),
-                  'milliseconds',
-                ),
+            Merge(CreateTokenForUser(Var('userRef')), {
+              user: {
+                id: Select(['id'], Var('userRef')),
+                name: Select(['data', 'name'], Var('user')),
+                email: Select(['data', 'email'], Var('user')),
+                photoURL: Select(['data', 'photoURL'], Var('user')),
+                firebaseUid: Select(['data', 'uid'], Var('user')),
+                created: ToString(Select(['data', 'created'], Var('user'))),
               },
-              refresh: {
-                secret: Select(['refresh', 'secret'], Var('tokens')),
-              },
-            },
+            }),
           ),
         ),
 
@@ -83,37 +80,30 @@ const handler = nc<NextApiRequest, NextApiResponse>().post(async (req, res) => {
 
           Let(
             {
-              userAndTokens: CreateTokensForUser(uid),
-              tokens: Select(['tokens'], Var('userAndTokens')),
+              user: GetUserByUid(uid),
+              userRef: Select(['ref'], Var('user')),
             },
-            {
-              access: {
-                secret: Select(['access', 'secret'], Var('tokens')),
-                expInMs: TimeDiff(
-                  Now(),
-                  Select(['access', 'ttl'], Var('tokens')),
-                  'milliseconds',
-                ),
+
+            Merge(CreateTokenForUser(Var('userRef')), {
+              user: {
+                id: Select(['id'], Var('userRef')),
+                name: Select(['data', 'name'], Var('user')),
+                email: Select(['data', 'email'], Var('user')),
+                photoURL: Select(['data', 'photoURL'], Var('user')),
+                firebaseUid: Select(['data', 'uid'], Var('user')),
+                created: ToString(Select(['data', 'created'], Var('user'))),
               },
-              refresh: {
-                secret: Select(['refresh', 'secret'], Var('tokens')),
-              },
-            },
+            }),
           ),
         ),
       ),
     ),
   )
 
-  setCookie(res, 'chatskeeFaunaRefresh', refresh.secret, {
-    maxAge: REFRESH_TOKEN_LIFETIME_SECONDS,
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
+  req.session.set('user', {
+    faunaToken: secret,
   })
 
-  return res.json(access)
+  await req.session.save()
+  return res.json(user)
 })
-
-export default handler

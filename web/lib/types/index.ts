@@ -1,4 +1,6 @@
 import firebase from 'firebase'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { Session } from 'next-iron-session'
 
 export type AuthProvider =
   | firebase.auth.GoogleAuthProvider
@@ -34,3 +36,12 @@ export interface Page<TData> {
 }
 
 export type MaybeError<T> = T & { err?: string }
+
+export interface RequestWithSession extends NextApiRequest {
+  session: Session
+}
+
+export type WithSessionHandler<T = any> = (
+  request: RequestWithSession,
+  response: NextApiResponse<T>,
+) => void | Promise<void>

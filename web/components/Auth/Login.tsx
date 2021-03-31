@@ -1,13 +1,12 @@
-import firebase from '@/lib/firebase/client'
-import { AuthProvider, FaunaAuthTokens } from '@/lib/types'
-import { silentRefresh } from '@/util/silentRefresh'
 import Image from 'next/image'
+import { ParsedUrlQuery } from 'querystring'
 import { useRouter } from 'next/router'
-import { ParsedUrlQuery } from 'node:querystring'
+import { AuthProvider } from '@/lib/types'
+import { User } from '@/fauna/auth/login'
+import firebase from '@/lib/firebase/client'
+import { useUserStore } from '@/hooks/useUserStore'
 import 'twin.macro'
-import { useFaunaStore } from '@/hooks/useFaunaStore'
 
-// Providers
 const googleProvider = new firebase.auth.GoogleAuthProvider()
 const githubProvider = new firebase.auth.GithubAuthProvider()
 const auth = firebase.auth()
@@ -18,7 +17,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const setAccessToken = useFaunaStore(state => state.setAccessToken)
+  const setUser = useUserStore(state => state.setUser)
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -27,33 +26,17 @@ function Login() {
       .then(async result => {
         if (result.user) {
           const idToken = await result.user.getIdToken()
-          const { secret, expInMs } = (await fetch('/api/fauna/login', {
+          const user = (await fetch('/api/fauna/login', {
             method: 'POST',
             headers: {
               authorization: `Bearer ${idToken}`,
             },
-          }).then(res => res.json())) as FaunaAuthTokens['access']
+          }).then(res => res.json())) as User
 
-          if (secret && expInMs) {
-            setAccessToken(secret)
+          setUser(user)
 
-            const thirtySeconds = 30 * 1000
-            const silentRefreshMs = expInMs - thirtySeconds
-
-            // App-wide interval so we don't clean it up
-            setInterval(async () => {
-              try {
-                const refreshedAccessToken = await silentRefresh()
-                setAccessToken(refreshedAccessToken.secret)
-              } catch (error) {
-                console.error(error)
-                await auth.signOut()
-              }
-            }, silentRefreshMs)
-
-            const { next = '/app' } = router.query as RouterQuery
-            router.push(next)
-          }
+          const { next = '/app' } = router.query as RouterQuery
+          router.push(next)
         }
       })
       .catch(error => {
