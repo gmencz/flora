@@ -18,7 +18,7 @@ import {
   CreateTokenForUser,
   GetUserByUid,
 } from '@/fauna/auth/login'
-import { authorizeHandler } from '@/util/authorizeHandler'
+import { getFirebaseUser } from '@/util/getFirebaseUser'
 import { createFaunaClient } from '@/lib/fauna'
 import { handler } from '@/util/handler'
 
@@ -27,7 +27,7 @@ export default handler().post(async (req, res) => {
 
   let firebaseUser: admin.auth.DecodedIdToken
   try {
-    firebaseUser = await authorizeHandler(req)
+    firebaseUser = await getFirebaseUser(req)
   } catch (error) {
     return res.status(401).json({
       message: error.message,

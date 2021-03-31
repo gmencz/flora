@@ -1,6 +1,6 @@
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useCancelFriendRequestMutation } from '@/hooks/useCancelFriendRequestMutation'
-import { SentFriendRequest as FriendRequest } from '@/hooks/usePendingFriendRequestQuery'
+import { SentFriendRequest as FriendRequest } from '@/api/friendRequests'
 import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import 'twin.macro'
 
@@ -12,7 +12,7 @@ function SentFriendRequest({ friendRequest }: SentFriendRequestProps) {
   const cancelFriendRequestMutation = useCancelFriendRequestMutation()
 
   const onClickCancel = () => {
-    cancelFriendRequestMutation.mutate({ friendRequestId: friendRequest.id })
+    cancelFriendRequestMutation.mutate({ id: friendRequest.id })
   }
 
   return (

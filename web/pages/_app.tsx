@@ -14,7 +14,12 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
 
   if (!queryClientRef.current) {
-    queryClientRef.current = new QueryClient()
+    // The reason we're choosing a default Infinity stale time
+    // is because the gateway ws client will notify us when
+    // we need to update a query.
+    queryClientRef.current = new QueryClient({
+      defaultOptions: { queries: { staleTime: Infinity } },
+    })
   }
 
   return (

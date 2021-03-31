@@ -1,9 +1,9 @@
-import { Tooltip } from '@/components/ui/Tooltip'
 import {
   DirectMessage,
-  DirectMessageDetails,
   DirectMessageStatus,
-} from '@/hooks/useDirectMessageQuery'
+} from '@/api/directMessages/channels/[channel]'
+import { DirectMessagePayload } from '@/api/directMessages/channels/[channel]/[dm]'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import { parseISO, differenceInMinutes, format } from 'date-fns'
 import { useMemo } from 'react'
@@ -41,7 +41,7 @@ export default function Message({
   }, [message.timestamp, message.user.id, previousMessage])
 
   const onDismissInfoMessage = (nonce: string) => {
-    queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
+    queryClient.setQueryData<DirectMessagePayload>(['dm', dm], existing => {
       return {
         ...existing!,
         messages: {

@@ -4,14 +4,12 @@ import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
 import { differenceInSeconds } from 'date-fns'
 import { DialogContent, DialogOverlay } from '@reach/dialog'
-import '@reach/dialog/styles.css'
-import {
-  DirectMessageDetails,
-  DirectMessageStatus,
-  useDirectMessageQuery,
-} from '@/hooks/useDirectMessageQuery'
 import { useSendDirectMessageMutation } from '@/hooks/useSendDirectMessageMutation'
+import '@reach/dialog/styles.css'
 import 'twin.macro'
+import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
+import { DirectMessagePayload } from '@/api/directMessages/channels/[channel]/[dm]'
+import { DirectMessageStatus } from '@/api/directMessages/channels/[channel]'
 
 function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
   const { data } = useDirectMessageQuery({ channel, dm })
@@ -44,7 +42,7 @@ function ChannelTextArea({ channel, dm }: ChannelComponentProps) {
 
     const nonce = nanoid()
 
-    queryClient.setQueryData<DirectMessageDetails>(['dm', dm], existing => {
+    queryClient.setQueryData<DirectMessagePayload>(['dm', dm], existing => {
       return {
         ...existing!,
         messages: {

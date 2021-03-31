@@ -2,7 +2,7 @@ import { NextApiRequest } from 'next'
 import admin from '@/lib/firebase/server'
 import { RequestWithSession } from '@/lib/types'
 
-export async function authorizeHandler(
+export async function getFirebaseUser(
   req: NextApiRequest | RequestWithSession,
 ) {
   if (!req.headers.authorization) {

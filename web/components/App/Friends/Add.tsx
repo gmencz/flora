@@ -5,10 +5,9 @@ import 'twin.macro'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  useSendFriendRequestMutation,
-  SendFriendRequestVariables,
-} from '@/hooks/useSendFriendRequestMutation'
+import { useSendFriendRequestMutation } from '@/hooks/useSendFriendRequestMutation'
+import { SendFriendRequestVariables } from '@/api/friendRequests'
+import { useQueryClient } from 'react-query'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email.'),
@@ -25,9 +24,12 @@ function AddFriend() {
     resolver: zodResolver(schema),
   })
 
+  const queryClient = useQueryClient()
+
   const mutation = useSendFriendRequestMutation({
     onSuccess: () => {
       reset()
+      queryClient.invalidateQueries('friendRequests')
     },
   })
 
@@ -82,7 +84,7 @@ function AddFriend() {
           )}
 
           {mutation.isError && (
-            <p tw="mt-4 text-red-600 text-sm">{mutation.error?.description}</p>
+            <p tw="mt-4 text-red-600 text-sm">{mutation.error?.message}</p>
           )}
         </div>
       </div>

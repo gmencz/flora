@@ -3,11 +3,11 @@ import DirectMesssagesSidebar from '../../DirectMessages/Sidebar'
 import FriendsHeader from '../Header'
 import ReceivedFriendRequest from './Received'
 import SentFriendRequest from './Sent'
-import { usePendingFriendRequestQuery } from '@/hooks/usePendingFriendRequestQuery'
 import 'twin.macro'
+import { useFriendRequestsQuery } from '@/hooks/useFriendRequestsQuery'
 
 function PendingFriendRequests() {
-  const query = usePendingFriendRequestQuery()
+  const query = useFriendRequestsQuery()
 
   return (
     <div tw="flex">

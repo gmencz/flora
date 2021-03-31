@@ -1,73 +1,65 @@
-import { createFaunaClient } from '@/lib/fauna'
-import { Collection, Ref } from 'faunadb'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useQueryClient } from 'react-query'
 import { ChannelComponentProps } from '.'
+import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 import Message from './Message'
 import 'twin.macro'
-import {
-  DirectMessage,
-  DirectMessageDetails,
-  useDirectMessageQuery,
-} from '@/hooks/useDirectMessageQuery'
-import { useFaunaStore } from '@/hooks/useFaunaStore'
 
 function ChannelMessages({ channel, dm }: ChannelComponentProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
   const { data, isSuccess } = useDirectMessageQuery({ channel, dm })
 
   useEffect(() => {
-    const streamClient = createFaunaClient(accessToken)
-    const stream = streamClient.stream(Ref(Collection('channels'), channel))
-
-    const startStream = () => {
-      stream
-        .on('version', event => {
-          const { document } = event as any
-          const { data } = document as {
-            data: { latestMessage: DirectMessage }
-          }
-          queryClient.setQueryData<DirectMessageDetails>(
-            ['dm', dm],
-            existing => {
-              const isMessageInQueue = existing!.messages.data.find(
-                message => message.nonce === data.latestMessage.nonce,
-              )
-
-              return {
-                ...existing!,
-                messages: {
-                  ...existing!.messages,
-                  data: isMessageInQueue
-                    ? existing!.messages.data.map(message => {
-                        if (message.nonce === data.latestMessage.nonce) {
-                          return data.latestMessage
-                        }
-
-                        return message
-                      })
-                    : [...existing!.messages.data, data.latestMessage],
-                },
-              }
-            },
-          )
-        })
-        .on('error', error => {
-          console.log('STREAM ERROR', error)
-          stream.close()
-          setTimeout(startStream, 1000)
-        })
-        .start()
-    }
-
-    startStream()
-
-    return () => {
-      stream.close()
-    }
-  }, [accessToken, channel, dm, queryClient])
+    // TODO: Listen to new messages from gateway
+    // =====================================================
+    // =====================================================
+    // =====================================================
+    // =====================================================
+    // const streamClient = createFaunaClient(accessToken)
+    // const stream = streamClient.stream(Ref(Collection('channels'), channel))
+    // const startStream = () => {
+    //   stream
+    //     .on('version', event => {
+    //       const { document } = event as any
+    //       const { data } = document as {
+    //         data: { latestMessage: DirectMessage }
+    //       }
+    //       queryClient.setQueryData<DirectMessageDetails>(
+    //         ['dm', dm],
+    //         existing => {
+    //           const isMessageInQueue = existing!.messages.data.find(
+    //             message => message.nonce === data.latestMessage.nonce,
+    //           )
+    //           return {
+    //             ...existing!,
+    //             messages: {
+    //               ...existing!.messages,
+    //               data: isMessageInQueue
+    //                 ? existing!.messages.data.map(message => {
+    //                     if (message.nonce === data.latestMessage.nonce) {
+    //                       return data.latestMessage
+    //                     }
+    //                     return message
+    //                   })
+    //                 : [...existing!.messages.data, data.latestMessage],
+    //             },
+    //           }
+    //         },
+    //       )
+    //     })
+    //     .on('error', error => {
+    //       console.log('STREAM ERROR', error)
+    //       stream.close()
+    //       setTimeout(startStream, 1000)
+    //     })
+    //     .start()
+    // }
+    // startStream()
+    // return () => {
+    //   stream.close()
+    // }
+  }, [])
 
   useLayoutEffect(() => {
     if (data && data.messages.data.length > 0) {

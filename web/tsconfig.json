@@ -24,9 +24,10 @@
       "@/components/*": ["components/*"],
       "@/styles/*": ["styles/*"],
       "@/fauna/*": ["fauna/*"],
-      "@/hooks/*": ["hooks/*"]
+      "@/hooks/*": ["hooks/*"],
+      "@/api/*": ["pages/api/*"]
     }
   },
   "exclude": ["node_modules"],
-  "include": ["**/*.ts", "**/*.tsx", "fauna/resources/roles/user.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

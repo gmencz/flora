@@ -1,6 +1,6 @@
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useAcceptFriendRequestMutation } from '@/hooks/useAcceptFriendRequestMutation'
-import { ReceivedFriendRequest as FriendRequest } from '@/hooks/usePendingFriendRequestQuery'
+import { ReceivedFriendRequest as FriendRequest } from '@/api/friendRequests'
 import { useRejectFriendRequestMutation } from '@/hooks/useRejectFriendRequestMutation'
 import { formatMessageTimestamp } from '@/util/formatMessageTimestamp'
 import 'twin.macro'
@@ -14,11 +14,11 @@ function ReceivedFriendRequest({ friendRequest }: ReceivedFriendRequestProps) {
   const rejectMutation = useRejectFriendRequestMutation()
 
   const onAccept = () => {
-    acceptMutation.mutate({ friendRequestId: friendRequest.id })
+    acceptMutation.mutate({ id: friendRequest.id })
   }
 
   const onReject = () => {
-    rejectMutation.mutate({ friendRequestId: friendRequest.id })
+    rejectMutation.mutate({ id: friendRequest.id })
   }
 
   return (

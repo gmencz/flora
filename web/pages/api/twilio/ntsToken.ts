@@ -1,5 +1,4 @@
 import createTwilioClient from 'twilio'
-import { authorizeHandler } from '@/util/authorizeHandler'
 import { authorize, handler } from '@/util/handler'
 
 interface IceServer {
@@ -10,15 +9,7 @@ interface IceServer {
 
 export default handler()
   .use(authorize)
-  .get(async (req, res) => {
-    try {
-      await authorizeHandler(req)
-    } catch (error) {
-      return res.status(401).json({
-        message: error.message,
-      })
-    }
-
+  .get(async (_req, res) => {
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
     const twilio = createTwilioClient(accountSid, authToken)

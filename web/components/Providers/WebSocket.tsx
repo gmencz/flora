@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import useUser from '@/hooks/useUser'
+import useFirebaseUser from '@/hooks/useFirebaseUser'
 import { Connection, connect } from '@chatskee/gateway-client'
 
 interface IWebSocketContext {
@@ -22,7 +22,7 @@ interface WebSocketProviderProps {
 }
 
 export function WebSocketProvider({ children }: WebSocketProviderProps) {
-  const user = useUser()
+  const user = useFirebaseUser()
   const [conn, setConn] = useState<null | Connection>(null)
   const isConnecting = useRef(false)
 

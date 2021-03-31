@@ -1,172 +1,35 @@
-import { Expr, query as q } from 'faunadb'
 import { useMutation, useQueryClient } from 'react-query'
-import {
-  DirectMessage,
-  DirectMessageStatus,
-  DirectMessageDetails,
-} from '@/hooks/useDirectMessageQuery'
-import { useFaunaClient } from './useFaunaClient'
 import { nanoid } from 'nanoid'
-import { useFaunaStore } from './useFaunaStore'
-
-interface SendDirectMessageVariables
-  extends Pick<DirectMessage, 'content' | 'nonce'> {
-  channel: string
-  dm: string
-}
+import { HttpError, json } from '@/util/json'
+import {
+  DirectMessageStatus,
+  SendDirectMessageVariables,
+} from '@/api/directMessages/channels/[channel]'
+import { DirectMessagePayload } from '@/api/directMessages/channels/[channel]/[dm]'
 
 export function useSendDirectMessageMutation() {
-  const client = useFaunaClient()
-  const accessToken = useFaunaStore(state => state.accessToken)
   const queryClient = useQueryClient()
 
-  return useMutation<unknown, unknown, SendDirectMessageVariables>(
-    async variables => {
-      return client.query<string | unknown>(
-        q.Let(
-          {
-            lastMessageSentAt: q.Select(
-              ['data', 'lastMessageSentAt'],
-              q.Get(q.CurrentIdentity()),
-              (null as unknown) as Expr,
-            ),
-            rateLimitTimestamp: q.Now(),
-          },
-          q.If(
-            q.IsNull(q.Var('lastMessageSentAt')),
-
-            q.Do(
-              q.Let(
-                {
-                  newMessage: q.Create(q.Collection('messages'), {
-                    data: {
-                      content: variables.content,
-                      nonce: variables.nonce,
-                      channelRef: q.Ref(
-                        q.Collection('channels'),
-                        variables.channel,
-                      ),
-                      userRef: q.CurrentIdentity(),
-                      timestamp: q.Now(),
-                    },
-                  }),
-                  newMessageData: {
-                    timestamp: q.ToString(
-                      q.Select(['data', 'timestamp'], q.Var('newMessage')),
-                    ),
-                    nonce: q.Select(['data', 'nonce'], q.Var('newMessage')),
-                    content: q.Select(['data', 'content'], q.Var('newMessage')),
-                    status: DirectMessageStatus.DELIVERED,
-                    user: q.Let(
-                      {
-                        userDoc: q.Get(
-                          q.Select(['data', 'userRef'], q.Var('newMessage')),
-                        ),
-                      },
-                      {
-                        id: q.Select(['ref', 'id'], q.Var('userDoc')),
-                        name: q.Select(['data', 'name'], q.Var('userDoc')),
-                        photo: q.Select(['data', 'photoURL'], q.Var('userDoc')),
-                      },
-                    ),
-                  },
-                },
-                q.Update(q.Ref(q.Collection('channels'), variables.channel), {
-                  data: {
-                    latestMessage: q.Var('newMessageData'),
-                  },
-                }),
-              ),
-
-              q.Update(q.CurrentIdentity(), {
-                data: {
-                  lastMessageSentAt: q.Var('rateLimitTimestamp'),
-                },
-              }),
-
-              {
-                rateLimitTimestamp: q.ToString(q.Var('rateLimitTimestamp')),
-              },
-            ),
-
-            q.If(
-              q.LT(
-                q.TimeDiff(q.Var('lastMessageSentAt'), q.Now(), 'milliseconds'),
-                1000,
-              ),
-
-              q.Abort("You can't send more than 1 message every second"),
-
-              q.Do(
-                q.Let(
-                  {
-                    newMessage: q.Create(q.Collection('messages'), {
-                      data: {
-                        content: variables.content,
-                        nonce: variables.nonce,
-                        channelRef: q.Ref(
-                          q.Collection('channels'),
-                          variables.channel,
-                        ),
-                        userRef: q.CurrentIdentity(),
-                        timestamp: q.Now(),
-                      },
-                    }),
-                    newMessageData: {
-                      timestamp: q.ToString(
-                        q.Select(['data', 'timestamp'], q.Var('newMessage')),
-                      ),
-                      nonce: q.Select(['data', 'nonce'], q.Var('newMessage')),
-                      content: q.Select(
-                        ['data', 'content'],
-                        q.Var('newMessage'),
-                      ),
-                      status: DirectMessageStatus.DELIVERED,
-                      user: q.Let(
-                        {
-                          userDoc: q.Get(
-                            q.Select(['data', 'userRef'], q.Var('newMessage')),
-                          ),
-                        },
-                        {
-                          id: q.Select(['ref', 'id'], q.Var('userDoc')),
-                          name: q.Select(['data', 'name'], q.Var('userDoc')),
-                          photo: q.Select(
-                            ['data', 'photoURL'],
-                            q.Var('userDoc'),
-                          ),
-                        },
-                      ),
-                    },
-                  },
-                  q.Update(q.Ref(q.Collection('channels'), variables.channel), {
-                    data: {
-                      latestMessage: q.Var('newMessageData'),
-                    },
-                  }),
-                ),
-
-                q.Update(q.CurrentIdentity(), {
-                  data: {
-                    lastMessageSentAt: q.Var('rateLimitTimestamp'),
-                  },
-                }),
-
-                {
-                  rateLimitTimestamp: q.ToString(q.Var('rateLimitTimestamp')),
-                },
-              ),
-            ),
-          ),
-        ),
+  return useMutation<
+    any,
+    HttpError,
+    SendDirectMessageVariables & { channel: string }
+  >(
+    async variables =>
+      json<any, SendDirectMessageVariables>(
+        `/api/directMessages/channels/${variables.channel}`,
         {
-          secret: accessToken,
+          method: 'POST',
+          body: {
+            content: variables.content,
+            dm: variables.dm,
+            nonce: variables.nonce,
+          },
         },
-      )
-    },
+      ),
     {
       onError: (_error, variables) => {
-        queryClient.setQueryData<DirectMessageDetails>(
+        queryClient.setQueryData<DirectMessagePayload>(
           ['dm', variables.dm],
           existing => {
             const botUid = nanoid()

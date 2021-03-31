@@ -1,16 +1,9 @@
 import firebase from '@/lib/firebase/client'
-import {
-  ComponentType,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { ComponentType, useCallback, useContext, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { silentRefresh } from '@/util/silentRefresh'
-import { useFaunaStore } from '@/hooks/useFaunaStore'
 import { WebSocketContext } from '../Providers/WebSocket'
+import { json } from '@/util/json'
 
 const auth = firebase.auth()
 
@@ -37,58 +30,22 @@ const withAuthenticationRequired = <P extends object>(
     const [user, loading, error] = useAuthState(auth)
     const { onAuthenticating = defaultOnAuthenticating } = options
     const router = useRouter()
-    const accessToken = useFaunaStore(state => state.accessToken)
-    const setAccessToken = useFaunaStore(state => state.setAccessToken)
-    const [isRefreshing, setIsRefreshing] = useState(!accessToken)
     const { conn } = useContext(WebSocketContext)
 
     const redirectToLogin = useCallback(() => {
-      router.push(`/login?next=${window.location.pathname}`)
+      json('/api/auth/logout', { method: 'POST' }).finally(() => {
+        router.push(`/login?next=${window.location.pathname}`)
+      })
     }, [router])
 
-    useEffect(() => {
-      if (!accessToken) {
-        silentRefresh()
-          .then(({ secret, expInMs }) => {
-            setAccessToken(secret)
-
-            const thirtySeconds = 30 * 1000
-            const silentRefreshMs = expInMs - thirtySeconds
-
-            setInterval(async () => {
-              try {
-                const refreshedAccessToken = await silentRefresh()
-                setAccessToken(refreshedAccessToken.secret)
-              } catch (error) {
-                console.error(error)
-                try {
-                  await auth.signOut()
-                } catch (error) {
-                } finally {
-                  redirectToLogin()
-                }
-              }
-            }, silentRefreshMs)
-
-            setIsRefreshing(false)
-          })
-          .catch(async () => {
-            try {
-              await auth.signOut()
-            } catch (error) {
-            } finally {
-              redirectToLogin()
-            }
-          })
-      }
-    }, [accessToken, redirectToLogin, setAccessToken])
+    useEffect(() => {}, [])
 
     const errorAuthenticating = !loading && (!user || error)
     if (errorAuthenticating) {
       redirectToLogin()
     }
 
-    const success = !!user && !isRefreshing && !!conn
+    const success = !!user && !!conn
     return success ? <Component {...props} /> : onAuthenticating()
   }
 }

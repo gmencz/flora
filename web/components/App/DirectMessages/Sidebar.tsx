@@ -1,4 +1,4 @@
-import useUser from '@/hooks/useUser'
+import useFirebaseUser from '@/hooks/useFirebaseUser'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Tooltip } from '../../ui/Tooltip'
@@ -8,7 +8,7 @@ import { useDirectMessagesQuery } from '@/hooks/useDirectMessagesQuery'
 export default function DirectMesssagesSidebar() {
   const router = useRouter()
   const { dm: activeDm } = router.query as Record<string, string | undefined>
-  const { displayName, photoURL, email } = useUser()
+  const { displayName, photoURL, email } = useFirebaseUser()
   const { data: dms } = useDirectMessagesQuery()
 
   return (

@@ -26,11 +26,11 @@ function Friends() {
   const unfriendMutation = useUnfriendMutation()
 
   const onMessage = (friendId: string) => {
-    directMessageMutation.mutate({ friendId })
+    directMessageMutation.mutate({ id: friendId })
   }
 
   const onUnfriend = (friendId: string) => {
-    unfriendMutation.mutate({ friendId })
+    unfriendMutation.mutate({ id: friendId })
   }
 
   return (

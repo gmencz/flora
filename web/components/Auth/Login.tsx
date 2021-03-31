@@ -26,7 +26,7 @@ function Login() {
       .then(async result => {
         if (result.user) {
           const idToken = await result.user.getIdToken()
-          const user = (await fetch('/api/fauna/login', {
+          const user = (await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
               authorization: `Bearer ${idToken}`,
