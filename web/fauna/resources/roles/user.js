@@ -109,7 +109,7 @@ export default CreateRole({
       },
     },
     {
-      resource: Index('dms_by_user1'),
+      resource: Index('dms_by_user1_sorted_by_last_interaction_desc'),
       actions: {
         read: Query(
           Lambda('dmRef', Equals(CurrentIdentity(), Select([0], Var('dmRef')))),
@@ -117,7 +117,7 @@ export default CreateRole({
       },
     },
     {
-      resource: Index('dms_by_user2'),
+      resource: Index('dms_by_user2_sorted_by_last_interaction_desc'),
       actions: {
         read: Query(
           Lambda('dmRef', Equals(CurrentIdentity(), Select([0], Var('dmRef')))),
@@ -162,6 +162,7 @@ export default CreateRole({
             Var('isDmUserAFriend'),
           ),
         ),
+        write: true,
       },
     },
     {

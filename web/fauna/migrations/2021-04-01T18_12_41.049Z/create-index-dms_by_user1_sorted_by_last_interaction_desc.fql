@@ -1,0 +1,13 @@
+CreateIndex({
+  name: "dms_by_user1_sorted_by_last_interaction_desc",
+  source: [Collection("dms")],
+  terms: [{
+    field: ["data", "user1Ref"]
+  }],
+  values: [{
+    field: ["data", "lastInteraction"],
+    reverse: true
+  }, {
+    field: ["ref"]
+  }]
+})

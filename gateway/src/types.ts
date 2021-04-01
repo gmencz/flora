@@ -16,12 +16,14 @@ export interface RequestWithUser extends IncomingMessage {
 export interface VoiceCallOffer {
   callerId: string
   calleeId: string
+  dm: string
   offer: any // RTC Session description
 }
 
 export interface VoiceCallAnswer {
   callerId: string
   calleeId: string
+  dm: string
   answer: any // RTC Session description
 }
 

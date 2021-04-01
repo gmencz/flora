@@ -4,14 +4,46 @@ import { useOneToOneCall } from '@/hooks/useOneToOneCall'
 import { useRef } from 'react'
 import { useNotificationSoundStore } from '@/hooks/useNotificationSoundStore'
 import 'twin.macro'
+import { DirectMessagesPayload } from '@/api/directMessages'
+import { useQueryClient } from 'react-query'
+import { useUpdateDmLastInteraction } from '@/hooks/useUpdateDmLastInteraction'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const directMessageQuery = useDirectMessageQuery({ channel, dm })
+  const queryClient = useQueryClient()
   const localAudioElement = useRef<HTMLAudioElement>(null)
   const remoteAudioElement = useRef<HTMLAudioElement>(null)
-  const stop = useNotificationSoundStore(state => state.stop)
+
+  const play = useNotificationSoundStore(state => state.play)
+  const stopCallSoundNotification = useNotificationSoundStore(
+    state => state.stop,
+  )
+
+  const { mutate: updateDmLastInteraction } = useUpdateDmLastInteraction({
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData<DirectMessagesPayload>('dms', existing => {
+        const updatedDm = existing?.data.find(dm => dm.id === variables.id)
+
+        if (!updatedDm) {
+          return existing!
+        }
+
+        return {
+          before: existing!.before,
+          after: existing!.after,
+          data: [
+            updatedDm,
+            ...existing!.data.filter(dm => dm.id !== updatedDm.id),
+          ],
+        }
+      })
+
+      play('/sounds/call-sound.mp3', { loop: true })
+    },
+  })
 
   const { startCall, acceptIncomingCall } = useOneToOneCall({
+    dm,
     onAlreadyInCall: () => {
       console.log('Already in a call with this user')
     },
@@ -26,6 +58,9 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
     },
     onUnexpectedError: () => {
       console.log('Unexpected error')
+    },
+    onCallEstablished: () => {
+      console.log('Call established')
     },
     onLocalStreamReady: stream => {
       if (!localAudioElement.current) {
@@ -75,7 +110,7 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
           <button
             onClick={() =>
               acceptIncomingCall().then(() => {
-                stop()
+                stopCallSoundNotification()
               })
             }
           >
@@ -92,7 +127,11 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
           </button>
 
           <button
-            onClick={() => startCall(directMessageQuery.data!.withUser.uid)}
+            onClick={() =>
+              startCall(directMessageQuery.data!.withUser.uid).then(() => {
+                updateDmLastInteraction({ id: dm })
+              })
+            }
           >
             <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-gray-500">
               <path

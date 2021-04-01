@@ -6,6 +6,7 @@ import {
   SendDirectMessageVariables,
 } from '@/api/directMessages/channels/[channel]'
 import { DirectMessagePayload } from '@/api/directMessages/channels/[channel]/[dm]'
+import { DirectMessagesPayload } from '@/api/directMessages'
 
 export function useSendDirectMessageMutation() {
   const queryClient = useQueryClient()
@@ -28,6 +29,24 @@ export function useSendDirectMessageMutation() {
         },
       ),
     {
+      onSuccess: (_, variables) => {
+        queryClient.setQueryData<DirectMessagesPayload>('dms', existing => {
+          const updatedDm = existing?.data.find(dm => dm.id === variables.dm)
+
+          if (!updatedDm) {
+            return existing!
+          }
+
+          return {
+            before: existing!.before,
+            after: existing!.after,
+            data: [
+              updatedDm,
+              ...existing!.data.filter(dm => dm.id !== updatedDm.id),
+            ],
+          }
+        })
+      },
       onError: (_error, variables) => {
         queryClient.setQueryData<DirectMessagePayload>(
           ['dm', variables.dm],

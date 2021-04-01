@@ -120,6 +120,7 @@ export default handler<DirectMessageFriendPayload>()
                             user1Ref: CurrentIdentity(),
                             user2Ref: Var('friendRef'),
                             channel: Select(['ref'], Var('channel')),
+                            lastInteraction: Now(),
                           },
                         }),
                       },

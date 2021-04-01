@@ -52,12 +52,18 @@ export default handler<DirectMessagesPayload>()
               paginationResult: Map(
                 Paginate(
                   Union(
-                    Match(Index('dms_by_user1'), CurrentIdentity()),
-                    Match(Index('dms_by_user2'), CurrentIdentity()),
+                    Match(
+                      Index('dms_by_user1_sorted_by_last_interaction_desc'),
+                      CurrentIdentity(),
+                    ),
+                    Match(
+                      Index('dms_by_user2_sorted_by_last_interaction_desc'),
+                      CurrentIdentity(),
+                    ),
                   ),
                 ),
                 Lambda(
-                  'ref',
+                  ['lastInteraction', 'ref'],
                   Let(
                     {
                       dmDoc: Get(Var('ref')),

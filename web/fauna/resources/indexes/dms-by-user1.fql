@@ -1,7 +1,0 @@
-CreateIndex({
-  name: "dms_by_user1",
-  source: [Collection("dms")],
-  terms: [
-    { field: ["data", "user1Ref"] },
-  ],
-})

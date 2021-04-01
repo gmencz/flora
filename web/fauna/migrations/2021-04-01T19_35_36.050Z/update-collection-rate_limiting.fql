@@ -1,0 +1,6 @@
+Update(Collection("rate_limiting"), {
+  ttl_days: 1,
+  data: null,
+  history_days: 30,
+  permissions: null
+})

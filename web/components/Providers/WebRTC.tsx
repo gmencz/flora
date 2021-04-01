@@ -2,6 +2,7 @@ import {
   createContext,
   MutableRefObject,
   ReactNode,
+  useCallback,
   useMemo,
   useRef,
 } from 'react'
@@ -12,6 +13,7 @@ interface IWebRTCContext {
   otherPeerUid: MutableRefObject<string>
   localStream: MutableRefObject<MediaStream | undefined>
   remoteStream: MutableRefObject<MediaStream | undefined>
+  cleanup: VoidFunction
 }
 
 export const WebRTCContext = createContext<IWebRTCContext | null>(null)
@@ -27,6 +29,22 @@ export function WebRTCProvider({ children }: WebRTCProviderProps) {
   const localStream = useRef<MediaStream>()
   const remoteStream = useRef<MediaStream>()
 
+  const cleanup = useCallback(() => {
+    localStream.current?.getTracks().forEach(track => {
+      track.stop()
+    })
+
+    remoteStream.current?.getTracks().forEach(track => {
+      track.stop()
+    })
+
+    localStream.current = undefined
+    remoteStream.current = undefined
+    offer.current = undefined
+    peerConnection.current = undefined
+    otherPeerUid.current = ''
+  }, [localStream, offer, otherPeerUid, peerConnection])
+
   const value = useMemo<IWebRTCContext>(
     () => ({
       peerConnection,
@@ -34,8 +52,9 @@ export function WebRTCProvider({ children }: WebRTCProviderProps) {
       otherPeerUid,
       localStream,
       remoteStream,
+      cleanup,
     }),
-    [],
+    [cleanup],
   )
 
   return (

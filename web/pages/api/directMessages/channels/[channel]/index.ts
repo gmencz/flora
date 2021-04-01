@@ -16,9 +16,11 @@ import {
   Expr,
   Get,
   If,
+  Index,
   IsNull,
   Let,
   LT,
+  Match,
   Now,
   Ref,
   Select,
@@ -55,6 +57,11 @@ export interface SendDirectMessageVariables
   dm: string
 }
 
+export interface SendDirectMessagePayload {
+  rateLimitTimestamp: string
+  message: DirectMessage
+}
+
 export default handler()
   .use(authorize)
   .post(async (req, res) => {
@@ -65,7 +72,7 @@ export default handler()
       const fauna = createFaunaClient(faunaToken)
 
       try {
-        await fauna.query(
+        const data = await fauna.query<SendDirectMessagePayload>(
           Let(
             {
               lastMessageSentAt: Select(
@@ -78,7 +85,82 @@ export default handler()
             If(
               IsNull(Var('lastMessageSentAt')),
 
-              Do(
+              Let(
+                {
+                  newMessage: Create(Collection('messages'), {
+                    data: {
+                      content: variables.content,
+                      nonce: variables.nonce,
+                      channelRef: Ref(Collection('channels'), channel),
+                      userRef: CurrentIdentity(),
+                      timestamp: Now(),
+                    },
+                  }),
+                  newMessageData: {
+                    timestamp: ToString(
+                      Select(['data', 'timestamp'], Var('newMessage')),
+                    ),
+                    nonce: Select(['data', 'nonce'], Var('newMessage')),
+                    content: Select(['data', 'content'], Var('newMessage')),
+                    status: DirectMessageStatus.DELIVERED,
+                    user: Let(
+                      {
+                        userDoc: Get(
+                          Select(['data', 'userRef'], Var('newMessage')),
+                        ),
+                      },
+                      {
+                        id: Select(['ref', 'id'], Var('userDoc')),
+                        uid: Select(['data', 'uid'], Var('userDoc')),
+                        name: Select(['data', 'name'], Var('userDoc')),
+                        photo: Select(['data', 'photoURL'], Var('userDoc')),
+                      },
+                    ),
+                  },
+                },
+
+                Do(
+                  Update(
+                    Ref(
+                      Collection('dms'),
+                      Select(
+                        ['ref', 'id'],
+                        Get(
+                          Match(
+                            Index('dms_by_channel'),
+                            Ref(Collection('channels'), channel),
+                          ),
+                        ),
+                      ),
+                    ),
+                    {
+                      data: {
+                        lastInteraction: Now(),
+                      },
+                    },
+                  ),
+
+                  Update(CurrentIdentity(), {
+                    data: {
+                      lastMessageSentAt: Var('rateLimitTimestamp'),
+                    },
+                  }),
+
+                  {
+                    rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
+                    message: Var('newMessageData'),
+                  },
+                ),
+              ),
+
+              If(
+                LT(
+                  TimeDiff(Var('lastMessageSentAt'), Now(), 'milliseconds'),
+                  1000,
+                ),
+
+                Abort("You can't send more than 1 message every second"),
+
                 Let(
                   {
                     newMessage: Create(Collection('messages'), {
@@ -105,94 +187,53 @@ export default handler()
                         },
                         {
                           id: Select(['ref', 'id'], Var('userDoc')),
+                          uid: Select(['data', 'uid'], Var('userDoc')),
                           name: Select(['data', 'name'], Var('userDoc')),
                           photo: Select(['data', 'photoURL'], Var('userDoc')),
                         },
                       ),
                     },
                   },
-                  Update(Ref(Collection('channels'), channel), {
-                    data: {
-                      latestMessage: Var('newMessageData'),
-                    },
-                  }),
-                ),
 
-                Update(CurrentIdentity(), {
-                  data: {
-                    lastMessageSentAt: Var('rateLimitTimestamp'),
-                  },
-                }),
-
-                {
-                  rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
-                },
-              ),
-
-              If(
-                LT(
-                  TimeDiff(Var('lastMessageSentAt'), Now(), 'milliseconds'),
-                  1000,
-                ),
-
-                Abort("You can't send more than 1 message every second"),
-
-                Do(
-                  Let(
-                    {
-                      newMessage: Create(Collection('messages'), {
-                        data: {
-                          content: variables.content,
-                          nonce: variables.nonce,
-                          channelRef: Ref(Collection('channels'), channel),
-                          userRef: CurrentIdentity(),
-                          timestamp: Now(),
-                        },
-                      }),
-                      newMessageData: {
-                        timestamp: ToString(
-                          Select(['data', 'timestamp'], Var('newMessage')),
-                        ),
-                        nonce: Select(['data', 'nonce'], Var('newMessage')),
-                        content: Select(['data', 'content'], Var('newMessage')),
-                        status: DirectMessageStatus.DELIVERED,
-                        user: Let(
-                          {
-                            userDoc: Get(
-                              Select(['data', 'userRef'], Var('newMessage')),
+                  Do(
+                    Update(
+                      Ref(
+                        Collection('dms'),
+                        Select(
+                          ['ref', 'id'],
+                          Get(
+                            Match(
+                              Index('dms_by_channel'),
+                              Ref(Collection('channels'), channel),
                             ),
-                          },
-                          {
-                            id: Select(['ref', 'id'], Var('userDoc')),
-                            name: Select(['data', 'name'], Var('userDoc')),
-                            photo: Select(['data', 'photoURL'], Var('userDoc')),
-                          },
+                          ),
                         ),
+                      ),
+                      {
+                        data: {
+                          lastInteraction: Now(),
+                        },
                       },
-                    },
-                    Update(Ref(Collection('channels'), channel), {
+                    ),
+
+                    Update(CurrentIdentity(), {
                       data: {
-                        latestMessage: Var('newMessageData'),
+                        lastMessageSentAt: Var('rateLimitTimestamp'),
                       },
                     }),
-                  ),
 
-                  Update(CurrentIdentity(), {
-                    data: {
-                      lastMessageSentAt: Var('rateLimitTimestamp'),
+                    {
+                      rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
+                      message: Var('newMessageData'),
                     },
-                  }),
-
-                  {
-                    rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
-                  },
+                  ),
                 ),
               ),
             ),
           ),
         )
 
-        res.json({ ok: true })
+        return res.json(data)
       } catch (error) {
         return handleFaunaError(error, res)
       }

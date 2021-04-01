@@ -1,0 +1,222 @@
+Update(Role("user"), {
+  membership: [{
+    resource: Collection("users")
+  }],
+  privileges: [{
+    resource: Collection("rate_limiting"),
+    actions: {
+      read: Query(Lambda("ref", Equals(CurrentIdentity(), Select(["data", "identity"], Get(Var("ref")))))),
+      write: Query(Lambda(["_oldData", "newData"], Equals(CurrentIdentity(), Select(["data", "identity"], Var("newData"))))),
+      create: Query(Lambda("newData", Equals(CurrentIdentity(), Select(["data", "identity"], Var("newData")))))
+    }
+  }, {
+    resource: Index("rate_limiting_by_action_and_identity"),
+    actions: {
+      read: Query(Lambda("terms", Equals(CurrentIdentity(), Select([1], Var("terms")))))
+    }
+  }, {
+    resource: Collection("users"),
+    actions: {
+      read: true,
+      write: Query(Lambda(["oldData", "newData", "ref"], Equals(CurrentIdentity(), Var("ref"))))
+    }
+  }, {
+    resource: Collection("channels"),
+    actions: {
+      read: Query(Lambda("channelRef", Let([{
+        subscriber1: Select(["data", "subscriber1"], Get(Var("channelRef")))
+      }, {
+        subscriber2: Select(["data", "subscriber2"], Get(Var("channelRef")))
+      }], Or(Equals(CurrentIdentity(), Var("subscriber1")), Equals(CurrentIdentity(), Var("subscriber2")))))),
+      write: Query(Lambda(["_oldData", "newData"], Let([{
+        subscriber1: Select(["data", "subscriber1"], Var("newData"))
+      }, {
+        subscriber2: Select(["data", "subscriber2"], Var("newData"))
+      }], Or(Equals(CurrentIdentity(), Var("subscriber1")), Equals(CurrentIdentity(), Var("subscriber2")))))),
+      create: Query(Lambda("newChannel", Let([{
+        subscriber1: Select(["data", "subscriber1"], Var("newChannel"))
+      }, {
+        subscriber2: Select(["data", "subscriber2"], Var("newChannel"))
+      }], Or(Equals(CurrentIdentity(), Var("subscriber1")), Equals(CurrentIdentity(), Var("subscriber2"))))))
+    }
+  }, {
+    resource: Index("dms_by_user1"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Select([0], Var("dmRef")))))
+    }
+  }, {
+    resource: Index("dms_by_user2"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Select([0], Var("dmRef")))))
+    }
+  }, {
+    resource: Index("dms_by_user1_sorted_by_last_interaction_desc"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Select([0], Var("dmRef")))))
+    }
+  }, {
+    resource: Index("dms_by_user2_sorted_by_last_interaction_desc"),
+    actions: {
+      read: Query(Lambda("dmRef", Equals(CurrentIdentity(), Select([0], Var("dmRef")))))
+    }
+  }, {
+    resource: Collection("dms"),
+    actions: {
+      read: Query(Lambda("dmRef", Let([{
+        user1: Select(["data", "user1Ref"], Get(Var("dmRef")))
+      }, {
+        user2: Select(["data", "user2Ref"], Get(Var("dmRef")))
+      }], Or(Equals(CurrentIdentity(), Var("user1")), Equals(CurrentIdentity(), Var("user2")))))),
+      create: Query(Lambda("newDm", Let([{
+        dmUser: Select(["data", "user2Ref"], Var("newDm"))
+      }, {
+        isDmUserAFriend: Exists(Union(Match(Index("friends_by_user1_and_user2"), [CurrentIdentity(), Var("dmUser")]), Match(Index("friends_by_user1_and_user2"), [Var("dmUser"), CurrentIdentity()])))
+      }], Var("isDmUserAFriend"))))
+    }
+  }, {
+    resource: Index("messages_by_channel"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        channelSubscriber1: Select(["data", "subscriber1"], Get(Select([0], Var("terms"))))
+      }, {
+        channelSubscriber2: Select(["data", "subscriber2"], Get(Select([0], Var("terms"))))
+      }], Or(Equals(CurrentIdentity(), Var("channelSubscriber1")), Equals(CurrentIdentity(), Var("channelSubscriber2"))))))
+    }
+  }, {
+    resource: Collection("messages"),
+    actions: {
+      read: Query(Lambda("message", Let([{
+        channel: Get(Select(["data", "channelRef"], Get(Var("message"))))
+      }, {
+        channelSubscriber1: Select(["data", "subscriber1"], Var("channel"))
+      }, {
+        channelSubscriber2: Select(["data", "subscriber2"], Var("channel"))
+      }], Or(Equals(CurrentIdentity(), Var("channelSubscriber1")), Equals(CurrentIdentity(), Var("channelSubscriber2")))))),
+      create: Query(Lambda("newMessage", Let([{
+        channel: Get(Select(["data", "channelRef"], Var("newMessage")))
+      }, {
+        channelSubscriber1: Select(["data", "subscriber1"], Var("channel"))
+      }, {
+        channelSubscriber2: Select(["data", "subscriber2"], Var("channel"))
+      }, {
+        otherSubscriber: If(Equals(CurrentIdentity(), Var("channelSubscriber1")), Var("channelSubscriber2"), Var("channelSubscriber1"))
+      }], And(Or(Equals(CurrentIdentity(), Var("channelSubscriber1")), Equals(CurrentIdentity(), Var("channelSubscriber2"))), Exists(Union(Match(Index("friends_by_user1_and_user2"), [Var("channelSubscriber1"), Var("channelSubscriber2")]), Match(Index("friends_by_user1_and_user2"), [Var("channelSubscriber2"), Var("channelSubscriber1")])))))))
+    }
+  }, {
+    resource: Collection("user_friends"),
+    actions: {
+      read: Query(Lambda("ref", Let([{
+        doc: Get(Var("ref"))
+      }, {
+        user1Ref: Select(["data", "user1Ref"], Var("doc"))
+      }, {
+        user2Ref: Select(["data", "user2Ref"], Var("doc"))
+      }], Or(Equals(CurrentIdentity(), Var("user1Ref")), Equals(CurrentIdentity(), Var("user2Ref")))))),
+      create: Query(Lambda("newFriend", Let([{
+        user1Ref: Select(["data", "user1Ref"], Var("newFriend"))
+      }, {
+        user2Ref: Select(["data", "user2Ref"], Var("newFriend"))
+      }], Or(Equals(CurrentIdentity(), Var("user1Ref")), Equals(CurrentIdentity(), Var("user2Ref")))))),
+      delete: Query(Lambda("ref", Let([{
+        doc: Get(Var("ref"))
+      }, {
+        user1Ref: Select(["data", "user1Ref"], Var("doc"))
+      }, {
+        user2Ref: Select(["data", "user2Ref"], Var("doc"))
+      }], Or(Equals(CurrentIdentity(), Var("user1Ref")), Equals(CurrentIdentity(), Var("user2Ref"))))))
+    }
+  }, {
+    resource: Index("friends_by_user1"),
+    actions: {
+      read: Query(Lambda("terms", Equals(CurrentIdentity(), Select([0], Var("terms")))))
+    }
+  }, {
+    resource: Index("friends_by_user2"),
+    actions: {
+      read: Query(Lambda("terms", Equals(CurrentIdentity(), Select([0], Var("terms")))))
+    }
+  }, {
+    resource: Index("users_by_email"),
+    actions: {
+      read: true
+    }
+  }, {
+    resource: Collection("user_friend_requests"),
+    actions: {
+      read: Query(Lambda("friendRequestRef", Let([{
+        friendRequestDoc: Get(Var("friendRequestRef"))
+      }, {
+        user: Select(["data", "userRef"], Var("friendRequestDoc"))
+      }, {
+        friend: Select(["data", "friendRef"], Var("friendRequestDoc"))
+      }], Or(Equals(CurrentIdentity(), Var("user")), Equals(CurrentIdentity(), Var("friend")))))),
+      create: Query(Lambda("newFriendRequest", Let([{
+        user: Select(["data", "userRef"], Var("newFriendRequest"))
+      }, {
+        friend: Select(["data", "friendRef"], Var("newFriendRequest"))
+      }], Or(Equals(CurrentIdentity(), Var("user")), Equals(CurrentIdentity(), Var("friend")))))),
+      delete: Query(Lambda("friendRequestRef", Let([{
+        friendRequestDoc: Get(Var("friendRequestRef"))
+      }, {
+        user: Select(["data", "userRef"], Var("friendRequestDoc"))
+      }, {
+        friend: Select(["data", "friendRef"], Var("friendRequestDoc"))
+      }], Or(Equals(CurrentIdentity(), Var("user")), Equals(CurrentIdentity(), Var("friend"))))))
+    }
+  }, {
+    resource: Index("friend_requests_by_friend"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        friendRequest: Match(Index("friend_requests_by_friend"), Select([0], Var("terms")))
+      }], If(Exists(Var("friendRequest")), Let([{
+        friendRequestDoc: Get(Var("friendRequest"))
+      }, {
+        friendRef: Select(["data", "friendRef"], Var("friendRequestDoc"))
+      }], Equals(CurrentIdentity(), Var("friendRef"))), true))))
+    }
+  }, {
+    resource: Index("friend_requests_by_user"),
+    actions: {
+      read: Query(Lambda("terms", Equals(CurrentIdentity(), Select([0], Var("terms")))))
+    }
+  }, {
+    resource: Index("friends_by_user1_and_user2"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        user1: Select([0], Var("terms"))
+      }, {
+        user2: Select([1], Var("terms"))
+      }], Or(Equals(CurrentIdentity(), Var("user1")), Equals(CurrentIdentity(), Var("user2"))))))
+    }
+  }, {
+    resource: Index("friend_requests_by_friend_and_user"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        friend: Select([0], Var("terms"))
+      }, {
+        user: Select([1], Var("terms"))
+      }], Or(Equals(CurrentIdentity(), Var("friend")), Equals(CurrentIdentity(), Var("user"))))))
+    }
+  }, {
+    resource: Index("dms_by_channel"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        channel: Get(Select([0], Var("terms")))
+      }, {
+        channelSubscriber1: Select(["data", "subscriber1"], Var("channel"))
+      }, {
+        channelSubscriber2: Select(["data", "subscriber2"], Var("channel"))
+      }], Or(Equals(CurrentIdentity(), Var("channelSubscriber1")), Equals(CurrentIdentity(), Var("channelSubscriber2"))))))
+    }
+  }, {
+    resource: Index("channels_by_subscriber1_and_subscriber2"),
+    actions: {
+      read: Query(Lambda("terms", Let([{
+        subscriber1: Select([0], Var("terms"))
+      }, {
+        subscriber2: Select([1], Var("terms"))
+      }], Or(Equals(CurrentIdentity(), Var("subscriber1")), Equals(CurrentIdentity(), Var("subscriber2"))))))
+    }
+  }],
+  data: null
+})

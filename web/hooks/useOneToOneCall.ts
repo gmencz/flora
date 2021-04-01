@@ -14,6 +14,8 @@ interface UseOneToOneCallOptions {
   onGetUserMediaError: (error: Error) => void
   onLocalStreamReady: (localStream: MediaStream) => void
   onRemoteStreamReady: (localStream: MediaStream) => void
+  onCallEstablished: () => void
+  dm: string
 }
 
 interface UseOneToOneCall {
@@ -24,7 +26,7 @@ interface UseOneToOneCall {
 }
 
 export function useOneToOneCall(
-  options?: Partial<UseOneToOneCallOptions>,
+  options: UseOneToOneCallOptions,
 ): UseOneToOneCall {
   const {
     peerConnection,
@@ -32,21 +34,12 @@ export function useOneToOneCall(
     otherPeerUid,
     localStream,
     remoteStream,
+    cleanup,
   } = useWebRTC()
 
   const currentUser = useUserStore(state => state.user)
   const ntsTokenQuery = useNtsTokenQuery()
   const ws = useGatewayWs()
-
-  const cleanup = useCallback(() => {
-    localStream.current?.getTracks().forEach(track => {
-      track.stop()
-    })
-
-    offer.current = undefined
-    peerConnection.current = undefined
-    otherPeerUid.current = ''
-  }, [localStream, offer, otherPeerUid, peerConnection])
 
   useEffect(() => {
     const unsubs = [
@@ -67,15 +60,20 @@ export function useOneToOneCall(
 
       ws.addListener<MaybeError<VoiceCallAnswer>>(
         'voice_call_answer',
-        event => {
+        async event => {
           if (event.err) {
             cleanup()
             return
           }
 
           const answer = new RTCSessionDescription(event.answer)
-          peerConnection.current?.setRemoteDescription(answer)
+          try {
+            await peerConnection.current?.setRemoteDescription(answer)
+          } catch (error) {
+            options?.onUnexpectedError?.()
+          }
           otherPeerUid.current = event.calleeId
+          options?.onCallEstablished?.()
         },
       ),
 
@@ -122,6 +120,7 @@ export function useOneToOneCall(
       ws.send('voice_call_offer', {
         callerId: currentUser?.firebaseUid,
         calleeId: otherPeerUid.current,
+        dm: options.dm,
         offer: {
           type: offer.current!.type,
           sdp: offer.current!.sdp,
@@ -227,6 +226,7 @@ export function useOneToOneCall(
     ws.send('voice_call_answer', {
       callerId: otherPeerUid.current,
       calleeId: currentUser?.firebaseUid,
+      dm: options.dm,
       answer: {
         type: answer.type,
         sdp: answer.sdp,
