@@ -4,6 +4,9 @@ import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { WebSocketContext } from '../Providers/WebSocket'
 import { json } from '@/util/json'
+import { useUserStore } from '@/hooks/useUserStore'
+import shallow from 'zustand/shallow'
+import { User } from '@/fauna/auth/login'
 
 const auth = firebase.auth()
 
@@ -27,25 +30,39 @@ const withAuthenticationRequired = <P extends object>(
   options: WithAuthenticationRequiredOptions = {},
 ) => {
   return function WithAuthenticationRequired(props: P) {
-    const [user, loading, error] = useAuthState(auth)
-    const { onAuthenticating = defaultOnAuthenticating } = options
     const router = useRouter()
+    const [firebaseUser, loadingFirebase, firebaseError] = useAuthState(auth)
+    const { onAuthenticating = defaultOnAuthenticating } = options
     const { conn } = useContext(WebSocketContext)
+    const { user, setUser } = useUserStore(
+      state => ({ user: state.user, setUser: state.setUser }),
+      shallow,
+    )
 
     const redirectToLogin = useCallback(() => {
-      json('/api/auth/logout', { method: 'POST' }).finally(() => {
-        router.push(`/login?next=${window.location.pathname}`)
-      })
+      router.push(`/login?next=${window.location.pathname}`)
     }, [router])
 
-    useEffect(() => {}, [])
+    useEffect(() => {
+      if (!user) {
+        json<User>('/api/auth/me')
+          .then(me => {
+            setUser(me)
+          })
+          .catch(error => {
+            console.error(error)
+            redirectToLogin()
+          })
+      }
+    }, [redirectToLogin, setUser, user])
 
-    const errorAuthenticating = !loading && (!user || error)
+    const errorAuthenticating =
+      !loadingFirebase && (!firebaseUser || firebaseError)
     if (errorAuthenticating) {
       redirectToLogin()
     }
 
-    const success = !!user && !!conn
+    const success = !!firebaseUser && !!conn && !!user
     return success ? <Component {...props} /> : onAuthenticating()
   }
 }

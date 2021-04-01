@@ -9,6 +9,7 @@ import { MainWsHandlerProvider } from '@/components/Providers/MainWsHandler'
 import GlobalStyles from '@/components/ui/GlobalStyles'
 import '../styles/globals.css'
 import 'twin.macro'
+import { WebRTCProvider } from '@/components/Providers/WebRTC'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
@@ -27,19 +28,21 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClientRef.current}>
         <Hydrate state={pageProps.dehydratedState}>
           <MainWsHandlerProvider>
-            <Head>
-              <meta charSet="UTF-8" />
-              <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-              <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-              />
-              <title>Chatskee</title>
-            </Head>
-            <GlobalStyles />
-            <div tw="bg-gray-100">
-              <Component {...pageProps} />
-            </div>
+            <WebRTCProvider>
+              <Head>
+                <meta charSet="UTF-8" />
+                <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+                <meta
+                  name="viewport"
+                  content="width=device-width, initial-scale=1.0"
+                />
+                <title>Chatskee</title>
+              </Head>
+              <GlobalStyles />
+              <div tw="bg-gray-100">
+                <Component {...pageProps} />
+              </div>
+            </WebRTCProvider>
           </MainWsHandlerProvider>
           <ReactQueryDevtools />
         </Hydrate>

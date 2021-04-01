@@ -1,211 +1,54 @@
 import { ChannelComponentProps } from '.'
-import { useEffect, useRef, useState } from 'react'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
-import { useNtsTokenQuery } from '@/hooks/useNtsTokenQuery'
-import { useWsConn } from '@/hooks/useWsConn'
-import { handleGetUserMediaError } from '@/util/handleGetUserMediaError'
-import { MaybeError } from '@/lib/types'
+import { useOneToOneCall } from '@/hooks/useOneToOneCall'
+import { useRef } from 'react'
 import 'twin.macro'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const directMessageQuery = useDirectMessageQuery({ channel, dm })
 
-  // Retrieve a NTS token from Twilio for the RTC configuration
-  // (STUN and TURN servers).
-  const ntsTokenQuery = useNtsTokenQuery()
+  const localAudioElement = useRef<HTMLAudioElement>(null)
+  const remoteAudioElement = useRef<HTMLAudioElement>(null)
 
-  const ws = useWsConn()
-  const peerConnectionRef = useRef<RTCPeerConnection>()
-  const offerRef = useRef<RTCSessionDescriptionInit>()
-  const localStreamRef = useRef<MediaStream>()
-  const receivedAudioRef = useRef<HTMLAudioElement>(null)
-  const localAudioRef = useRef<HTMLAudioElement>(null)
-  const [isBeingCalled, setIsBeingCalled] = useState(false)
-
-  const cancelCall = () => {
-    localStreamRef.current?.getTracks().forEach(track => {
-      track.stop()
-    })
-
-    offerRef.current = undefined
-    peerConnectionRef.current = undefined
-  }
-
-  useEffect(() => {
-    if (directMessageQuery.data?.withUser.name) {
-      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
-        'voice_call_offer',
-        offer => {
-          if (offer.err) {
-            cancelCall()
-
-            if (offer.err === 'callee_offline') {
-              alert('User is offline')
-            }
-
-            return
-          }
-
-          console.log(
-            `${directMessageQuery.data?.withUser.name} is calling you!`,
-          )
-          offerRef.current = offer
-          setIsBeingCalled(true)
-        },
-      )
-
-      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
-        'voice_call_answer',
-        answerInit => {
-          if (answerInit.err) {
-            cancelCall()
-            return
-          }
-
-          console.log(
-            `${directMessageQuery.data?.withUser.name} accepted the voice call!`,
-          )
-
-          const answer = new RTCSessionDescription(answerInit)
-          peerConnectionRef.current?.setRemoteDescription(answer)
-        },
-      )
-
-      ws.addListener<MaybeError<RTCIceCandidateInit>>(
-        'new_ice_candidate',
-        candidate => {
-          if (candidate.err) {
-            cancelCall()
-            return
-          }
-
-          const iceCandidate = new RTCIceCandidate(candidate)
-          peerConnectionRef.current?.addIceCandidate(iceCandidate)
-        },
-      )
-    }
-  }, [directMessageQuery.data?.withUser.name, ws])
-
-  const registerPeerConnectionListeners = () => {
-    peerConnectionRef.current?.addEventListener('icecandidate', event => {
-      if (!event.candidate) {
+  const { startCall, acceptIncomingCall } = useOneToOneCall({
+    otherPeerUid: directMessageQuery.data?.withUser.uid ?? '',
+    onAlreadyInCall: () => {
+      console.log('Already in a call with this user')
+    },
+    onCalleeOffline: () => {
+      console.log('Callee offline')
+    },
+    onGetUserMediaError: error => {
+      console.log('Error getting user media: ', error)
+    },
+    onReceivedCall: () => {
+      console.log('Call received')
+    },
+    onUnexpectedError: () => {
+      console.log('Unexpected error')
+    },
+    onLocalStreamReady: stream => {
+      if (!localAudioElement.current) {
         return
       }
 
-      ws.send('new_ice_candidate', {
-        targetId: directMessageQuery.data?.withUser.uid,
-        candidate: event.candidate.toJSON(),
-      })
-    })
+      localAudioElement.current.srcObject = stream
+    },
+    onRemoteStreamReady: stream => {
+      if (!remoteAudioElement.current) {
+        return
+      }
 
-    peerConnectionRef.current?.addEventListener('track', event => {
-      receivedAudioRef.current!.srcObject = event.streams[0]
-    })
-
-    peerConnectionRef.current?.addEventListener(
-      'negotiationneeded',
-      async () => {
-        offerRef.current = await peerConnectionRef.current?.createOffer()
-        await peerConnectionRef.current?.setLocalDescription(offerRef.current!)
-
-        ws.send('voice_call_offer', {
-          callerId: directMessageQuery.data?.currentUser.uid,
-          calleeId: directMessageQuery.data?.withUser.uid,
-          offer: {
-            type: offerRef.current!.type,
-            sdp: offerRef.current!.sdp,
-          },
-        })
-      },
-    )
-  }
-
-  const startVoiceCall = async () => {
-    if (peerConnectionRef.current) {
-      alert("You can't start a call because you already have one open!")
-    }
-
-    // TODO: Don't allow users to start the voice call until
-    // the NTS token query and the direct message query are successful.
-    const { iceServers } = ntsTokenQuery.data!
-
-    // Create the configuration with the NTS token
-    const configuration: RTCConfiguration = {
-      iceServers,
-    }
-
-    // Establish an RTC peer connection with the configuration and
-    // create an offer
-    peerConnectionRef.current = new RTCPeerConnection(configuration)
-    registerPeerConnectionListeners()
-
-    try {
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      })
-
-      localAudioRef.current!.srcObject = localStreamRef.current
-
-      localStreamRef.current.getTracks().forEach(track => {
-        peerConnectionRef.current?.addTrack(track, localStreamRef.current!)
-      })
-    } catch (error) {
-      handleGetUserMediaError(error, () => {
-        peerConnectionRef.current?.close()
-      })
-    }
-  }
-
-  const acceptIncomingVoiceCall = async () => {
-    // TODO: Don't allow users to start the voice call until
-    // the NTS token query and the direct message query are successful.
-    const { iceServers } = ntsTokenQuery.data!
-
-    // Create the configuration with the NTS token
-    const configuration: RTCConfiguration = {
-      iceServers,
-    }
-
-    // Establish an RTC peer connection with the configuration and
-    // Create an answer for the received offer
-    peerConnectionRef.current = new RTCPeerConnection(configuration)
-    registerPeerConnectionListeners()
-
-    await peerConnectionRef.current.setRemoteDescription(offerRef.current!)
-
-    try {
-      localStreamRef.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      })
-
-      localStreamRef.current.getTracks().forEach(track => {
-        peerConnectionRef.current?.addTrack(track, localStreamRef.current!)
-      })
-    } catch (error) {
-      handleGetUserMediaError(error, () => {
-        peerConnectionRef.current?.close()
-      })
-    }
-
-    const answer = await peerConnectionRef.current.createAnswer()
-    await peerConnectionRef.current.setLocalDescription(answer)
-
-    ws.send('voice_call_answer', {
-      callerId: directMessageQuery.data?.withUser.uid,
-      calleeId: directMessageQuery.data?.currentUser.uid,
-      answer: {
-        type: answer.type,
-        sdp: answer.sdp,
-      },
-    })
-  }
+      remoteAudioElement.current.srcObject = stream
+    },
+  })
 
   return (
     <header tw="p-4 sticky top-0 px-6 bg-gray-100 shadow-sm">
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={receivedAudioRef} autoPlay></audio>
+      <audio ref={remoteAudioElement} autoPlay></audio>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={localAudioRef} autoPlay muted></audio>
+      <audio ref={localAudioElement} autoPlay muted></audio>
 
       <div tw="flex">
         <div tw="flex space-x-2.5 items-center">
@@ -229,22 +72,20 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         </div>
 
         <div tw="flex ml-auto items-center space-x-4">
-          {isBeingCalled && (
-            <button onClick={acceptIncomingVoiceCall}>
-              <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-green-500">
-                <path
-                  fill="currentColor"
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M11 5V3C16.515 3 21 7.486 21 13H19C19 8.589 15.411 5 11 5ZM17 13H15C15 10.795 13.206 9 11 9V7C14.309 7 17 9.691 17 13ZM11 11V13H13C13 11.896 12.105 11 11 11ZM14 16H18C18.553 16 19 16.447 19 17V21C19 21.553 18.553 22 18 22H13C6.925 22 2 17.075 2 11V6C2 5.447 2.448 5 3 5H7C7.553 5 8 5.447 8 6V10C8 10.553 7.553 11 7 11H6C6.063 14.938 9 18 13 18V17C13 16.447 13.447 16 14 16Z"
-                ></path>
-              </svg>
+          <button onClick={acceptIncomingCall}>
+            <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-green-500">
+              <path
+                fill="currentColor"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M11 5V3C16.515 3 21 7.486 21 13H19C19 8.589 15.411 5 11 5ZM17 13H15C15 10.795 13.206 9 11 9V7C14.309 7 17 9.691 17 13ZM11 11V13H13C13 11.896 12.105 11 11 11ZM14 16H18C18.553 16 19 16.447 19 17V21C19 21.553 18.553 22 18 22H13C6.925 22 2 17.075 2 11V6C2 5.447 2.448 5 3 5H7C7.553 5 8 5.447 8 6V10C8 10.553 7.553 11 7 11H6C6.063 14.938 9 18 13 18V17C13 16.447 13.447 16 14 16Z"
+              ></path>
+            </svg>
 
-              <span tw="sr-only">Accept Incoming Voice Call</span>
-            </button>
-          )}
+            <span tw="sr-only">Accept Incoming Voice Call</span>
+          </button>
 
-          <button onClick={startVoiceCall}>
+          <button onClick={startCall}>
             <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-gray-500">
               <path
                 fill="currentColor"
