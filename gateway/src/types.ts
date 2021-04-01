@@ -5,6 +5,7 @@ export type Opcode =
   | 'voice_call_offer'
   | 'voice_call_answer'
   | 'new_ice_candidate'
+  | 'voice_call_ended'
 
 export type EventHandler = (op: Opcode, data: any, socket: WebSocket) => void
 
@@ -32,9 +33,13 @@ export interface NewICECandidate {
   targetId: string
 }
 
+export interface VoiceCallEnded {
+  otherPeerId: string
+}
+
 export interface SocketEvent {
   op: Opcode
-  d: VoiceCallOffer | VoiceCallAnswer | NewICECandidate
+  d: VoiceCallOffer | VoiceCallAnswer | NewICECandidate | VoiceCallEnded
 }
 
 export interface RedisEvent {

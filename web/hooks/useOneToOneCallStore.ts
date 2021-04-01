@@ -1,13 +1,17 @@
 import create, { State } from 'zustand'
 
-type Peers = [string | null, string | null]
-
 interface OneToOneCallStore extends State {
-  peers: Peers
-  setPeers: (peers: Peers) => void
+  isOtherPeerConnected: boolean
+  setIsOtherPeerConnected: (isOtherPeerConnected: boolean) => void
+  isCurrentPeerConnected: boolean
+  setIsCurrentPeerConnected: (isCurrentPeerConnected: boolean) => void
 }
 
 export const useOneToOneCallStore = create<OneToOneCallStore>(set => ({
-  peers: [null, null],
-  setPeers: peers => set({ peers }),
+  isOtherPeerConnected: false,
+  setIsOtherPeerConnected: isOtherPeerConnected =>
+    set({ isOtherPeerConnected }),
+  isCurrentPeerConnected: false,
+  setIsCurrentPeerConnected: isCurrentPeerConnected =>
+    set({ isCurrentPeerConnected }),
 }))

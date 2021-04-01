@@ -14,6 +14,8 @@ export const useNotificationSoundStore = create<NotificationSoundStore>(
   (set, get) => ({
     audio: null,
     play: (src, options) => {
+      // Stop the current audio if there's any
+      get().stop()
       const audio = new Audio(src)
 
       if (options?.loop) {

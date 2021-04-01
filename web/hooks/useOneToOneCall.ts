@@ -1,20 +1,21 @@
 import { MaybeError } from '@/lib/types'
 import { VoiceCallAnswer, VoiceCallOffer } from '@chatskee/gateway'
 import { useCallback, useEffect } from 'react'
+import shallow from 'zustand/shallow'
 import { useGatewayWs } from './useGatewayWs'
+import { useNotificationSoundStore } from './useNotificationSoundStore'
 import { useNtsTokenQuery } from './useNtsTokenQuery'
+import { useOneToOneCallStore } from './useOneToOneCallStore'
 import { useUserStore } from './useUserStore'
 import { useWebRTC } from './useWebRTC'
 
 interface UseOneToOneCallOptions {
   onCalleeOffline: VoidFunction
-  onReceivedCall: VoidFunction
   onUnexpectedError: VoidFunction
   onAlreadyInCall: VoidFunction
   onGetUserMediaError: (error: Error) => void
   onLocalStreamReady: (localStream: MediaStream) => void
   onRemoteStreamReady: (localStream: MediaStream) => void
-  onCallEstablished: () => void
   dm: string
 }
 
@@ -23,6 +24,10 @@ interface UseOneToOneCall {
   acceptIncomingCall: () => Promise<void>
   localStream: MediaStream | undefined
   remoteStream: MediaStream | undefined
+  isConnectedWithPeer: (peerUid: string) => boolean
+  isCurrentPeerConnected: boolean
+  otherPeerUid: string
+  endCall: VoidFunction
 }
 
 export function useOneToOneCall(
@@ -37,6 +42,22 @@ export function useOneToOneCall(
     cleanup,
   } = useWebRTC()
 
+  const {
+    isCurrentPeerConnected,
+    setIsCurrentPeerConnected,
+    isOtherPeerConnected,
+    setIsOtherPeerConnected,
+  } = useOneToOneCallStore(
+    state => ({
+      isCurrentPeerConnected: state.isCurrentPeerConnected,
+      setIsCurrentPeerConnected: state.setIsCurrentPeerConnected,
+      isOtherPeerConnected: state.isOtherPeerConnected,
+      setIsOtherPeerConnected: state.setIsOtherPeerConnected,
+    }),
+    shallow,
+  )
+
+  const play = useNotificationSoundStore(state => state.play)
   const currentUser = useUserStore(state => state.user)
   const ntsTokenQuery = useNtsTokenQuery()
   const ws = useGatewayWs()
@@ -55,7 +76,7 @@ export function useOneToOneCall(
 
         offer.current = event.offer
         otherPeerUid.current = event.callerId
-        options?.onReceivedCall?.()
+        setIsOtherPeerConnected(true)
       }),
 
       ws.addListener<MaybeError<VoiceCallAnswer>>(
@@ -72,8 +93,9 @@ export function useOneToOneCall(
           } catch (error) {
             options?.onUnexpectedError?.()
           }
+
           otherPeerUid.current = event.calleeId
-          options?.onCallEstablished?.()
+          setIsOtherPeerConnected(true)
         },
       ),
 
@@ -94,7 +116,17 @@ export function useOneToOneCall(
     return () => {
       unsubs.forEach(unsub => unsub())
     }
-  }, [cleanup, currentUser, offer, options, otherPeerUid, peerConnection, ws])
+  }, [
+    cleanup,
+    currentUser,
+    offer,
+    options,
+    otherPeerUid,
+    peerConnection,
+    setIsCurrentPeerConnected,
+    setIsOtherPeerConnected,
+    ws,
+  ])
 
   const registerPeerConnectionListeners = useCallback(() => {
     peerConnection.current?.addEventListener('icecandidate', event => {
@@ -139,7 +171,7 @@ export function useOneToOneCall(
 
   const startCall = useCallback<UseOneToOneCall['startCall']>(
     async uid => {
-      if (peerConnection && otherPeerUid.current === uid) {
+      if (peerConnection) {
         options?.onAlreadyInCall?.()
       } else if (peerConnection) {
         // If there's a connection established between the current user
@@ -173,6 +205,8 @@ export function useOneToOneCall(
         localStream.current.getTracks().forEach(track => {
           peerConnection.current?.addTrack(track, localStream.current!)
         })
+
+        setIsCurrentPeerConnected(true)
       } catch (error) {
         cleanup()
         options?.onGetUserMediaError?.(error)
@@ -186,6 +220,7 @@ export function useOneToOneCall(
       otherPeerUid,
       peerConnection,
       registerPeerConnectionListeners,
+      setIsCurrentPeerConnected,
     ],
   )
 
@@ -232,6 +267,9 @@ export function useOneToOneCall(
         sdp: answer.sdp,
       },
     })
+
+    setIsCurrentPeerConnected(true)
+    setIsOtherPeerConnected(true)
   }, [
     cleanup,
     currentUser?.firebaseUid,
@@ -242,13 +280,44 @@ export function useOneToOneCall(
     otherPeerUid,
     peerConnection,
     registerPeerConnectionListeners,
+    setIsCurrentPeerConnected,
+    setIsOtherPeerConnected,
     ws,
+  ])
+
+  const endCall = useCallback(() => {
+    ws.send('voice_call_ended', {
+      otherPeerId: otherPeerUid.current,
+    })
+
+    cleanup()
+    setIsCurrentPeerConnected(false)
+    setIsOtherPeerConnected(false)
+    play('/sounds/ended-call.mp3')
+  }, [
+    cleanup,
+    otherPeerUid,
+    play,
+    setIsCurrentPeerConnected,
+    setIsOtherPeerConnected,
+    ws,
+  ])
+
+  const isConnectedWithPeer = useCallback<
+    UseOneToOneCall['isConnectedWithPeer']
+  >(peerUid => isOtherPeerConnected && peerUid === otherPeerUid.current, [
+    isOtherPeerConnected,
+    otherPeerUid,
   ])
 
   return {
     startCall,
     acceptIncomingCall,
+    isConnectedWithPeer,
+    isCurrentPeerConnected,
     localStream: localStream.current,
     remoteStream: remoteStream.current,
+    otherPeerUid: otherPeerUid.current,
+    endCall,
   }
 }

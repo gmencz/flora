@@ -1,11 +1,14 @@
 import { DirectMessagesPayload } from '@/api/directMessages'
 import { useGatewayWs } from '@/hooks/useGatewayWs'
 import { useNotificationSoundStore } from '@/hooks/useNotificationSoundStore'
+import { useOneToOneCallStore } from '@/hooks/useOneToOneCallStore'
 import { useUpdateDmLastInteraction } from '@/hooks/useUpdateDmLastInteraction'
+import { useWebRTC } from '@/hooks/useWebRTC'
 import { MaybeError } from '@/lib/types'
 import { VoiceCallAnswer, VoiceCallOffer } from '@chatskee/gateway'
 import { ReactNode, useEffect } from 'react'
 import { useQueryClient } from 'react-query'
+import shallow from 'zustand/shallow'
 
 interface MainWsHandlerProviderProps {
   children: ReactNode
@@ -14,10 +17,22 @@ interface MainWsHandlerProviderProps {
 export function useMainWsHandler() {
   const conn = useGatewayWs()
   const play = useNotificationSoundStore(state => state.play)
-  const stopCallSoundNotification = useNotificationSoundStore(
-    state => state.stop,
-  )
   const queryClient = useQueryClient()
+  const { cleanup } = useWebRTC()
+
+  const {
+    setIsCurrentPeerConnected,
+    setIsOtherPeerConnected,
+  } = useOneToOneCallStore(
+    state => ({
+      isCurrentPeerConnected: state.isCurrentPeerConnected,
+      setIsCurrentPeerConnected: state.setIsCurrentPeerConnected,
+      isOtherPeerConnected: state.isOtherPeerConnected,
+      setIsOtherPeerConnected: state.setIsOtherPeerConnected,
+    }),
+    shallow,
+  )
+
   const { mutate: updateDmLastInteraction } = useUpdateDmLastInteraction({
     onSuccess: (_, variables) => {
       queryClient.setQueryData<DirectMessagesPayload>('dms', existing => {
@@ -36,8 +51,6 @@ export function useMainWsHandler() {
           ],
         }
       })
-
-      play('/sounds/call-sound.mp3', { loop: true })
     },
   })
 
@@ -54,6 +67,7 @@ export function useMainWsHandler() {
             return
           }
 
+          play('/sounds/call-sound.mp3', { loop: true })
           updateDmLastInteraction({ id: event.dm })
         },
       ),
@@ -65,17 +79,33 @@ export function useMainWsHandler() {
             return
           }
 
-          // We will only get here when the callee answers the call
-          // so we can assume success
-          stopCallSoundNotification()
+          play('/sounds/joined-call.mp3')
         },
       ),
+
+      conn.addListener<MaybeError<1>>('voice_call_ended', event => {
+        if (event.err) {
+          return
+        }
+
+        cleanup()
+        setIsCurrentPeerConnected(false)
+        setIsOtherPeerConnected(false)
+        play('/sounds/ended-call.mp3')
+      }),
     ]
 
     return () => {
       unsubs.forEach(u => u())
     }
-  }, [conn, play, stopCallSoundNotification, updateDmLastInteraction])
+  }, [
+    cleanup,
+    conn,
+    play,
+    setIsCurrentPeerConnected,
+    setIsOtherPeerConnected,
+    updateDmLastInteraction,
+  ])
 }
 
 export function MainWsHandlerProvider({

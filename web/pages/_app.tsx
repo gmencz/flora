@@ -27,8 +27,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <WebSocketProvider>
       <QueryClientProvider client={queryClientRef.current}>
         <Hydrate state={pageProps.dehydratedState}>
-          <MainWsHandlerProvider>
-            <WebRTCProvider>
+          <WebRTCProvider>
+            <MainWsHandlerProvider>
               <Head>
                 <meta charSet="UTF-8" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -42,8 +42,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
               <div tw="bg-gray-100">
                 <Component {...pageProps} />
               </div>
-            </WebRTCProvider>
-          </MainWsHandlerProvider>
+            </MainWsHandlerProvider>
+          </WebRTCProvider>
           <ReactQueryDevtools />
         </Hydrate>
       </QueryClientProvider>
