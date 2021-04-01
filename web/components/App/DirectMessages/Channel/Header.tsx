@@ -2,16 +2,16 @@ import { ChannelComponentProps } from '.'
 import { useDirectMessageQuery } from '@/hooks/useDirectMessageQuery'
 import { useOneToOneCall } from '@/hooks/useOneToOneCall'
 import { useRef } from 'react'
+import { useNotificationSoundStore } from '@/hooks/useNotificationSoundStore'
 import 'twin.macro'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const directMessageQuery = useDirectMessageQuery({ channel, dm })
-
   const localAudioElement = useRef<HTMLAudioElement>(null)
   const remoteAudioElement = useRef<HTMLAudioElement>(null)
+  const stop = useNotificationSoundStore(state => state.stop)
 
   const { startCall, acceptIncomingCall } = useOneToOneCall({
-    otherPeerUid: directMessageQuery.data?.withUser.uid ?? '',
     onAlreadyInCall: () => {
       console.log('Already in a call with this user')
     },
@@ -72,7 +72,13 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
         </div>
 
         <div tw="flex ml-auto items-center space-x-4">
-          <button onClick={acceptIncomingCall}>
+          <button
+            onClick={() =>
+              acceptIncomingCall().then(() => {
+                stop()
+              })
+            }
+          >
             <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-green-500">
               <path
                 fill="currentColor"
@@ -85,7 +91,9 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
             <span tw="sr-only">Accept Incoming Voice Call</span>
           </button>
 
-          <button onClick={startCall}>
+          <button
+            onClick={() => startCall(directMessageQuery.data!.withUser.uid)}
+          >
             <svg x="0" y="0" viewBox="0 0 24 24" tw="h-6 w-6 text-gray-500">
               <path
                 fill="currentColor"

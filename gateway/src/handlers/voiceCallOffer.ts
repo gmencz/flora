@@ -8,12 +8,12 @@ export const handleVoiceCallOffer: EventHandler = async (
   data: VoiceCallOffer,
   socket,
 ) => {
-  const { calleeId, offer } = data
+  const { calleeId, callerId, offer } = data
   const isCalleeId = await getUser(calleeId)
 
   if (!isCalleeId) {
     return sendOpError(op, 'callee_offline', socket)
   }
 
-  publishEventForTarget(op, offer, calleeId)
+  publishEventForTarget(op, { calleeId, callerId, offer }, calleeId)
 }

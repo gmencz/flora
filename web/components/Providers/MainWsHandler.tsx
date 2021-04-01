@@ -1,34 +1,37 @@
-import { ReactNode, useContext, useEffect } from 'react'
-import { WebSocketContext } from './WebSocket'
+import { useGatewayWs } from '@/hooks/useGatewayWs'
+import { useNotificationSoundStore } from '@/hooks/useNotificationSoundStore'
+import { MaybeError } from '@/lib/types'
+import { VoiceCallOffer } from '@chatskee/gateway'
+import { ReactNode, useEffect } from 'react'
 
 interface MainWsHandlerProviderProps {
   children: ReactNode
 }
 
 export function useMainWsHandler() {
-  const { conn } = useContext(WebSocketContext)
+  const conn = useGatewayWs()
+  const play = useNotificationSoundStore(state => state.play)
 
   useEffect(() => {
     if (!conn) {
       return
     }
 
-    const unsubs: (() => void)[] = [
-      // conn.addListener('voice_call_offer', () => {
-      //   console.log('Call offer')
-      // }),
-      // conn.addListener('voice_call_answer', () => {
-      //   console.log('Call answer')
-      // }),
-      // conn.addListener('new_ice_candidate', () => {
-      //   console.log('New ICE candidate')
-      // }),
+    const unsubs = [
+      conn.addListener<MaybeError<VoiceCallOffer>>(
+        'voice_call_offer',
+        event => {
+          if (!event.err) {
+            play('/sounds/call-sound.mp3', { loop: true })
+          }
+        },
+      ),
     ]
 
     return () => {
       unsubs.forEach(u => u())
     }
-  }, [conn])
+  }, [conn, play])
 }
 
 export function MainWsHandlerProvider({

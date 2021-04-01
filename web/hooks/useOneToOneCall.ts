@@ -1,14 +1,12 @@
 import { MaybeError } from '@/lib/types'
-import { useCallback, useEffect, useRef } from 'react'
-import shallow from 'zustand/shallow'
+import { VoiceCallAnswer, VoiceCallOffer } from '@chatskee/gateway'
+import { useCallback, useEffect } from 'react'
 import { useGatewayWs } from './useGatewayWs'
 import { useNtsTokenQuery } from './useNtsTokenQuery'
-import { useOneToOneCallStore } from './useOneToOneCallStore'
 import { useUserStore } from './useUserStore'
 import { useWebRTC } from './useWebRTC'
 
 interface UseOneToOneCallOptions {
-  otherPeerUid: string
   onCalleeOffline: VoidFunction
   onReceivedCall: VoidFunction
   onUnexpectedError: VoidFunction
@@ -19,31 +17,26 @@ interface UseOneToOneCallOptions {
 }
 
 interface UseOneToOneCall {
-  startCall: () => Promise<void>
+  startCall: (otherPeerUid: string) => Promise<void>
   acceptIncomingCall: () => Promise<void>
   localStream: MediaStream | undefined
   remoteStream: MediaStream | undefined
-  isCallEstablished: boolean
 }
 
 export function useOneToOneCall(
-  options: UseOneToOneCallOptions,
+  options?: Partial<UseOneToOneCallOptions>,
 ): UseOneToOneCall {
-  const offer = useRef<RTCSessionDescriptionInit>()
-  const localStream = useRef<MediaStream>()
-  const remoteStream = useRef<MediaStream>()
-  const isCallEstablished = useRef(false)
+  const {
+    peerConnection,
+    offer,
+    otherPeerUid,
+    localStream,
+    remoteStream,
+  } = useWebRTC()
+
   const currentUser = useUserStore(state => state.user)
   const ntsTokenQuery = useNtsTokenQuery()
   const ws = useGatewayWs()
-  const { peerConnection } = useWebRTC()
-  const { peers, setPeers } = useOneToOneCallStore(
-    state => ({
-      peers: state.peers,
-      setPeers: state.setPeers,
-    }),
-    shallow,
-  )
 
   const cleanup = useCallback(() => {
     localStream.current?.getTracks().forEach(track => {
@@ -52,45 +45,37 @@ export function useOneToOneCall(
 
     offer.current = undefined
     peerConnection.current = undefined
-    setPeers([null, null])
-  }, [peerConnection, setPeers])
+    otherPeerUid.current = ''
+  }, [localStream, offer, otherPeerUid, peerConnection])
 
   useEffect(() => {
-    if (!options.otherPeerUid) {
-      return
-    }
-
     const unsubs = [
-      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
-        'voice_call_offer',
-        offerInit => {
-          if (offerInit.err) {
-            cleanup()
-
-            if (offerInit.err === 'callee_offline') {
-              options.onCalleeOffline()
-            }
-
-            return
+      ws.addListener<MaybeError<VoiceCallOffer>>('voice_call_offer', event => {
+        if (event.err) {
+          if (event.err === 'callee_offline') {
+            options?.onCalleeOffline?.()
           }
 
-          offer.current = offerInit
-          setPeers([null, options.otherPeerUid])
-          options.onReceivedCall()
-        },
-      ),
+          cleanup()
+          return
+        }
 
-      ws.addListener<MaybeError<RTCSessionDescriptionInit>>(
+        offer.current = event.offer
+        otherPeerUid.current = event.callerId
+        options?.onReceivedCall?.()
+      }),
+
+      ws.addListener<MaybeError<VoiceCallAnswer>>(
         'voice_call_answer',
-        answerInit => {
-          if (answerInit.err) {
+        event => {
+          if (event.err) {
             cleanup()
             return
           }
 
-          const answer = new RTCSessionDescription(answerInit)
+          const answer = new RTCSessionDescription(event.answer)
           peerConnection.current?.setRemoteDescription(answer)
-          setPeers([currentUser!.firebaseUid, options.otherPeerUid])
+          otherPeerUid.current = event.calleeId
         },
       ),
 
@@ -111,17 +96,7 @@ export function useOneToOneCall(
     return () => {
       unsubs.forEach(unsub => unsub())
     }
-  }, [cleanup, currentUser, options, peerConnection, setPeers, ws])
-
-  useEffect(() => {
-    if (
-      !isCallEstablished.current &&
-      peers[0] === currentUser?.firebaseUid &&
-      options.otherPeerUid
-    ) {
-      isCallEstablished.current = true
-    }
-  }, [currentUser?.firebaseUid, options, options.otherPeerUid, peers])
+  }, [cleanup, currentUser, offer, options, otherPeerUid, peerConnection, ws])
 
   const registerPeerConnectionListeners = useCallback(() => {
     peerConnection.current?.addEventListener('icecandidate', event => {
@@ -130,14 +105,14 @@ export function useOneToOneCall(
       }
 
       ws.send('new_ice_candidate', {
-        targetId: options.otherPeerUid,
+        targetId: otherPeerUid.current,
         candidate: event.candidate.toJSON(),
       })
     })
 
     peerConnection.current?.addEventListener('track', event => {
       remoteStream.current = event.streams[0]
-      options.onRemoteStreamReady(remoteStream.current)
+      options?.onRemoteStreamReady?.(remoteStream.current)
     })
 
     peerConnection.current?.addEventListener('negotiationneeded', async () => {
@@ -146,7 +121,7 @@ export function useOneToOneCall(
 
       ws.send('voice_call_offer', {
         callerId: currentUser?.firebaseUid,
-        calleeId: options.otherPeerUid,
+        calleeId: otherPeerUid.current,
         offer: {
           type: offer.current!.type,
           sdp: offer.current!.sdp,
@@ -155,63 +130,65 @@ export function useOneToOneCall(
     })
   }, [
     currentUser?.firebaseUid,
-    options.otherPeerUid,
-    options.remoteElement,
+    offer,
+    options,
+    otherPeerUid,
     peerConnection,
+    remoteStream,
     ws,
   ])
 
-  const startCall = useCallback<UseOneToOneCall['startCall']>(async () => {
-    if (
-      peerConnection &&
-      peers[0] === currentUser?.firebaseUid &&
-      peers[1] === options.otherPeerUid
-    ) {
-      options.onAlreadyInCall()
-    } else if (peerConnection) {
-      // If there's a connection established between the current user
-      // and some other peer and we're trying to start a call with a
-      // different peer than the one with which we're currently on a
-      // call with, we cleanup the connection to establish the new one
-      // with the desired peer.
-      cleanup()
-    }
+  const startCall = useCallback<UseOneToOneCall['startCall']>(
+    async uid => {
+      if (peerConnection && otherPeerUid.current === uid) {
+        options?.onAlreadyInCall?.()
+      } else if (peerConnection) {
+        // If there's a connection established between the current user
+        // and some other peer and we're trying to start a call with a
+        // different peer than the one with which we're currently on a
+        // call with, we cleanup the connection to establish the new one
+        // with the desired peer.
+        cleanup()
+      }
 
-    const { iceServers } = ntsTokenQuery.data!
+      const { iceServers } = ntsTokenQuery.data!
 
-    // Create the configuration with the NTS token
-    const configuration: RTCConfiguration = {
-      iceServers,
-    }
+      // Create the configuration with the NTS token
+      const configuration: RTCConfiguration = {
+        iceServers,
+      }
 
-    // Establish an RTC peer connection with the configuration and
-    // create an offer
-    peerConnection.current = new RTCPeerConnection(configuration)
-    registerPeerConnectionListeners()
+      // Establish an RTC peer connection with the configuration and
+      // create an offer
+      peerConnection.current = new RTCPeerConnection(configuration)
+      registerPeerConnectionListeners()
 
-    try {
-      localStream.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      })
+      try {
+        localStream.current = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
 
-      options.onLocalStreamReady(localStream.current)
+        otherPeerUid.current = uid
+        options?.onLocalStreamReady?.(localStream.current)
 
-      localStream.current.getTracks().forEach(track => {
-        peerConnection.current?.addTrack(track, localStream.current!)
-      })
-    } catch (error) {
-      cleanup()
-      options.onGetUserMediaError(error)
-    }
-  }, [
-    cleanup,
-    currentUser?.firebaseUid,
-    ntsTokenQuery.data,
-    options,
-    peerConnection,
-    peers,
-    registerPeerConnectionListeners,
-  ])
+        localStream.current.getTracks().forEach(track => {
+          peerConnection.current?.addTrack(track, localStream.current!)
+        })
+      } catch (error) {
+        cleanup()
+        options?.onGetUserMediaError?.(error)
+      }
+    },
+    [
+      cleanup,
+      localStream,
+      ntsTokenQuery.data,
+      options,
+      otherPeerUid,
+      peerConnection,
+      registerPeerConnectionListeners,
+    ],
+  )
 
   const acceptIncomingCall = useCallback<
     UseOneToOneCall['acceptIncomingCall']
@@ -234,21 +211,21 @@ export function useOneToOneCall(
         audio: true,
       })
 
-      options.onLocalStreamReady(localStream.current)
+      options?.onLocalStreamReady?.(localStream.current)
 
       localStream.current.getTracks().forEach(track => {
         peerConnection.current?.addTrack(track, localStream.current!)
       })
     } catch (error) {
       cleanup()
-      return options.onGetUserMediaError(error)
+      return options?.onGetUserMediaError?.(error)
     }
 
     const answer = await peerConnection.current.createAnswer()
     await peerConnection.current.setLocalDescription(answer)
 
     ws.send('voice_call_answer', {
-      callerId: options.otherPeerUid,
+      callerId: otherPeerUid.current,
       calleeId: currentUser?.firebaseUid,
       answer: {
         type: answer.type,
@@ -258,8 +235,11 @@ export function useOneToOneCall(
   }, [
     cleanup,
     currentUser?.firebaseUid,
+    localStream,
     ntsTokenQuery.data,
+    offer,
     options,
+    otherPeerUid,
     peerConnection,
     registerPeerConnectionListeners,
     ws,
@@ -270,6 +250,5 @@ export function useOneToOneCall(
     acceptIncomingCall,
     localStream: localStream.current,
     remoteStream: remoteStream.current,
-    isCallEstablished: isCallEstablished.current,
   }
 }
