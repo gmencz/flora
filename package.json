@@ -7,9 +7,6 @@
       "gateway",
       "gateway-client",
       "sfu"
-    ],
-    "nohoist": [
-      "**"
     ]
   },
   "scripts": {

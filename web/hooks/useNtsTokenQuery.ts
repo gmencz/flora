@@ -12,7 +12,11 @@ interface NtsToken {
 }
 
 export function useNtsTokenQuery() {
-  return useQuery<NtsToken>('ntsToken', () =>
-    json<NtsToken>('/api/twilio/ntsToken'),
+  return useQuery<NtsToken>(
+    'ntsToken',
+    () => json<NtsToken>('/api/twilio/ntsToken'),
+    {
+      staleTime: 40000 * 1000,
+    },
   )
 }
