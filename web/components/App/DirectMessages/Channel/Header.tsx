@@ -7,13 +7,14 @@ import { DirectMessagesPayload } from '@/api/directMessages'
 import { useQueryClient } from 'react-query'
 import { useUpdateDmLastInteraction } from '@/hooks/useUpdateDmLastInteraction'
 import 'twin.macro'
+import { useOneToOneCallStore } from '@/hooks/useOneToOneCallStore'
 
 function ChannelHeader({ channel, dm }: ChannelComponentProps) {
   const directMessageQuery = useDirectMessageQuery({ channel, dm })
   const queryClient = useQueryClient()
   const localAudioElement = useRef<HTMLAudioElement>(null)
   const remoteAudioElement = useRef<HTMLAudioElement>(null)
-  const play = useNotificationSoundStore(state => state.play)
+  const connectionStatus = useOneToOneCallStore(state => state.connectionStatus)
   const stopCallSoundNotification = useNotificationSoundStore(
     state => state.stop,
   )
@@ -48,9 +49,6 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
     otherPeerUid,
   } = useOneToOneCall({
     dm,
-    onAlreadyInCall: () => {
-      console.log('Already in a call with this user')
-    },
     onCalleeOffline: () => {
       console.log('Callee offline')
     },
@@ -82,7 +80,8 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
 
   if (
     (isOtherPeerConnected || isCurrentPeerConnected) &&
-    otherPeerUid === directMessageQuery.data?.withUser.uid
+    otherPeerUid === directMessageQuery.data?.withUser.uid &&
+    connectionStatus === 'connected'
   ) {
     return (
       <header tw="flex flex-col items-center justify-center pt-16 pb-6 sticky top-0 px-6 bg-gray-100 border-b border-gray-200">
@@ -176,7 +175,6 @@ function ChannelHeader({ channel, dm }: ChannelComponentProps) {
           <button
             onClick={() =>
               startCall(directMessageQuery.data!.withUser.uid).then(() => {
-                play('/sounds/call-sound.mp3', { loop: true })
                 updateDmLastInteraction({ id: dm })
               })
             }

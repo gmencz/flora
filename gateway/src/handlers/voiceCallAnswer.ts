@@ -1,6 +1,7 @@
 import { getUser } from '../lib/redis/user'
 import { VoiceCallAnswer, EventHandler } from '../types'
 import { publishEventForTarget } from '../util/publishEventForTarget'
+import { sendOp } from '../util/sendOp'
 import { sendOpError } from '../util/sendOpError'
 
 export const handleVoiceCallAnswer: EventHandler = async (
@@ -15,5 +16,6 @@ export const handleVoiceCallAnswer: EventHandler = async (
     return sendOpError(op, 'caller_offline', socket)
   }
 
+  sendOp('voice_call_answer_good', socket)
   publishEventForTarget(op, data, callerId)
 }

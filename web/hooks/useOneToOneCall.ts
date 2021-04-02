@@ -12,7 +12,6 @@ import { useWebRTC } from './useWebRTC'
 interface UseOneToOneCallOptions {
   onCalleeOffline: VoidFunction
   onUnexpectedError: VoidFunction
-  onAlreadyInCall: VoidFunction
   onGetUserMediaError: (error: Error) => void
   onLocalStreamReady: (localStream: MediaStream) => void
   onRemoteStreamReady: (localStream: MediaStream) => void
@@ -49,6 +48,7 @@ export function useOneToOneCall(
     setIsOtherPeerConnected,
   } = useOneToOneCallStore(
     state => ({
+      setConnectionStatus: state.setConnectionStatus,
       isCurrentPeerConnected: state.isCurrentPeerConnected,
       setIsCurrentPeerConnected: state.setIsCurrentPeerConnected,
       isOtherPeerConnected: state.isOtherPeerConnected,
@@ -62,15 +62,22 @@ export function useOneToOneCall(
   const ntsTokenQuery = useNtsTokenQuery()
   const ws = useGatewayWs()
 
+  const _endCall = useCallback(() => {
+    cleanup()
+    setIsCurrentPeerConnected(false)
+    setIsOtherPeerConnected(false)
+    play('/sounds/ended-call.mp3')
+  }, [cleanup, play, setIsCurrentPeerConnected, setIsOtherPeerConnected])
+
   useEffect(() => {
     const unsubs = [
       ws.addListener<MaybeError<VoiceCallOffer>>('voice_call_offer', event => {
         if (event.err) {
-          if (event.err === 'callee_offline') {
-            options?.onCalleeOffline?.()
+          if (event.err === 'user_offline') {
+            options.onCalleeOffline()
+          } else {
+            options.onUnexpectedError()
           }
-
-          cleanup()
           return
         }
 
@@ -83,7 +90,7 @@ export function useOneToOneCall(
         'voice_call_answer',
         async event => {
           if (event.err) {
-            cleanup()
+            options.onUnexpectedError()
             return
           }
 
@@ -91,7 +98,7 @@ export function useOneToOneCall(
           try {
             await peerConnection.current?.setRemoteDescription(answer)
           } catch (error) {
-            options?.onUnexpectedError?.()
+            options.onUnexpectedError()
           }
 
           otherPeerUid.current = event.calleeId
@@ -103,7 +110,6 @@ export function useOneToOneCall(
         'new_ice_candidate',
         candidate => {
           if (candidate.err) {
-            cleanup()
             return
           }
 
@@ -117,6 +123,7 @@ export function useOneToOneCall(
       unsubs.forEach(unsub => unsub())
     }
   }, [
+    _endCall,
     cleanup,
     currentUser,
     offer,
@@ -171,17 +178,6 @@ export function useOneToOneCall(
 
   const startCall = useCallback<UseOneToOneCall['startCall']>(
     async uid => {
-      if (peerConnection) {
-        options?.onAlreadyInCall?.()
-      } else if (peerConnection) {
-        // If there's a connection established between the current user
-        // and some other peer and we're trying to start a call with a
-        // different peer than the one with which we're currently on a
-        // call with, we cleanup the connection to establish the new one
-        // with the desired peer.
-        cleanup()
-      }
-
       const { iceServers } = ntsTokenQuery.data!
 
       // Create the configuration with the NTS token
@@ -290,18 +286,8 @@ export function useOneToOneCall(
       otherPeerId: otherPeerUid.current,
     })
 
-    cleanup()
-    setIsCurrentPeerConnected(false)
-    setIsOtherPeerConnected(false)
-    play('/sounds/ended-call.mp3')
-  }, [
-    cleanup,
-    otherPeerUid,
-    play,
-    setIsCurrentPeerConnected,
-    setIsOtherPeerConnected,
-    ws,
-  ])
+    _endCall()
+  }, [_endCall, otherPeerUid, ws])
 
   const isConnectedWithPeer = useCallback<
     UseOneToOneCall['isConnectedWithPeer']

@@ -2,7 +2,11 @@ import { redisPublisher } from '../lib/redis/publisher'
 import { Opcode } from '../types'
 import { serialize } from './serialization'
 
-export function publishEventForTarget(op: Opcode, d: any, target: string) {
+export async function publishEventForTarget(
+  op: Opcode,
+  d: any,
+  target: string,
+) {
   const redisEvent = serialize({
     event: {
       op,
@@ -11,5 +15,5 @@ export function publishEventForTarget(op: Opcode, d: any, target: string) {
     target,
   })
 
-  redisPublisher.publish('events', redisEvent as string)
+  return redisPublisher.publish('events', redisEvent as string)
 }

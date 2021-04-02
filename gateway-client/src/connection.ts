@@ -1,6 +1,5 @@
 import WebSocket from 'isomorphic-ws'
 import ReconnectingWebSocket from 'reconnecting-websocket'
-import { Opcode } from '@chatskee/gateway'
 
 const healthCheckInterval = 8000
 const connectionTimeout = 15000
@@ -14,16 +13,16 @@ export type Token = string
 export type ListenerHandler<Data = unknown> = (data: Data) => void
 
 export type Listener<Data = unknown> = {
-  opcode: Opcode
+  opcode: string
   handler: ListenerHandler<Data>
 }
 
 export interface Connection {
   close: () => void
-  once: <Data = unknown>(opcode: Opcode, handler: ListenerHandler<Data>) => void
-  send: (opcode: Opcode, data: unknown) => void
+  once: <Data = unknown>(opcode: string, handler: ListenerHandler<Data>) => void
+  send: (opcode: string, data: unknown) => void
   addListener: <Data>(
-    opcode: Opcode,
+    opcode: string,
     handler: ListenerHandler<Data>,
   ) => () => void
 }

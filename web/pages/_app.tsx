@@ -5,11 +5,11 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import { Hydrate } from 'react-query/hydration'
 import { WebSocketProvider } from '@/components/Providers/WebSocket'
-import { MainWsHandlerProvider } from '@/components/Providers/MainWsHandler'
+import { MainWsHandler } from '@/components/Providers/MainWsHandler'
 import GlobalStyles from '@/components/ui/GlobalStyles'
+import { WebRTCProvider } from '@/components/Providers/WebRTC'
 import '../styles/globals.css'
 import 'twin.macro'
-import { WebRTCProvider } from '@/components/Providers/WebRTC'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const queryClientRef = useRef<QueryClient>()
@@ -28,21 +28,20 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       <QueryClientProvider client={queryClientRef.current}>
         <Hydrate state={pageProps.dehydratedState}>
           <WebRTCProvider>
-            <MainWsHandlerProvider>
-              <Head>
-                <meta charSet="UTF-8" />
-                <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-                <meta
-                  name="viewport"
-                  content="width=device-width, initial-scale=1.0"
-                />
-                <title>Chatskee</title>
-              </Head>
-              <GlobalStyles />
-              <div tw="bg-gray-100">
-                <Component {...pageProps} />
-              </div>
-            </MainWsHandlerProvider>
+            <MainWsHandler />
+            <Head>
+              <meta charSet="UTF-8" />
+              <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0"
+              />
+              <title>Chatskee</title>
+            </Head>
+            <GlobalStyles />
+            <div tw="bg-gray-100">
+              <Component {...pageProps} />
+            </div>
           </WebRTCProvider>
           <ReactQueryDevtools />
         </Hydrate>

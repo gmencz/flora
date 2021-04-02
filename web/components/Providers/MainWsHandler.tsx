@@ -6,13 +6,9 @@ import { useUpdateDmLastInteraction } from '@/hooks/useUpdateDmLastInteraction'
 import { useWebRTC } from '@/hooks/useWebRTC'
 import { MaybeError } from '@/lib/types'
 import { VoiceCallAnswer, VoiceCallOffer } from '@chatskee/gateway'
-import { ReactNode, useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useQueryClient } from 'react-query'
 import shallow from 'zustand/shallow'
-
-interface MainWsHandlerProviderProps {
-  children: ReactNode
-}
 
 export function useMainWsHandler() {
   const conn = useGatewayWs()
@@ -21,16 +17,29 @@ export function useMainWsHandler() {
   const { cleanup } = useWebRTC()
 
   const {
+    setConnectionStatus,
     setIsCurrentPeerConnected,
     setIsOtherPeerConnected,
   } = useOneToOneCallStore(
     state => ({
-      isCurrentPeerConnected: state.isCurrentPeerConnected,
+      setConnectionStatus: state.setConnectionStatus,
       setIsCurrentPeerConnected: state.setIsCurrentPeerConnected,
-      isOtherPeerConnected: state.isOtherPeerConnected,
       setIsOtherPeerConnected: state.setIsOtherPeerConnected,
     }),
     shallow,
+  )
+
+  const endCall = useCallback(
+    (playAudio: boolean = true) => {
+      cleanup()
+      setIsCurrentPeerConnected(false)
+      setIsOtherPeerConnected(false)
+
+      if (playAudio) {
+        play('/sounds/ended-call.mp3')
+      }
+    },
+    [cleanup, play, setIsCurrentPeerConnected, setIsOtherPeerConnected],
   )
 
   const { mutate: updateDmLastInteraction } = useUpdateDmLastInteraction({
@@ -64,10 +73,13 @@ export function useMainWsHandler() {
         'voice_call_offer',
         event => {
           if (event.err) {
+            setConnectionStatus('idle')
+            endCall(false)
             return
           }
 
-          play('/sounds/call-sound.mp3', { loop: true })
+          play('/sounds/call-sound.mp3')
+          setConnectionStatus('connected')
           updateDmLastInteraction({ id: event.dm })
         },
       ),
@@ -76,6 +88,8 @@ export function useMainWsHandler() {
         'voice_call_answer',
         event => {
           if (event.err) {
+            setConnectionStatus('idle')
+            endCall(false)
             return
           }
 
@@ -83,15 +97,19 @@ export function useMainWsHandler() {
         },
       ),
 
-      conn.addListener<MaybeError<1>>('voice_call_ended', event => {
-        if (event.err) {
-          return
-        }
+      conn.addListener<MaybeError<1>>('voice_call_ended', () => {
+        endCall()
+        setConnectionStatus('idle')
+      }),
 
-        cleanup()
-        setIsCurrentPeerConnected(false)
-        setIsOtherPeerConnected(false)
-        play('/sounds/ended-call.mp3')
+      conn.addListener('voice_call_answer_good', () => {
+        play('/sounds/joined-call.mp3')
+        setConnectionStatus('connected')
+      }),
+
+      conn.addListener('voice_call_offer_good', () => {
+        play('/sounds/call-sound.mp3', { loop: true })
+        setConnectionStatus('connected')
       }),
     ]
 
@@ -101,16 +119,16 @@ export function useMainWsHandler() {
   }, [
     cleanup,
     conn,
+    endCall,
     play,
+    setConnectionStatus,
     setIsCurrentPeerConnected,
     setIsOtherPeerConnected,
     updateDmLastInteraction,
   ])
 }
 
-export function MainWsHandlerProvider({
-  children,
-}: MainWsHandlerProviderProps) {
+export function MainWsHandler() {
   useMainWsHandler()
-  return <>{children}</>
+  return null
 }
