@@ -1,12 +1,9 @@
 import firebase from '@/lib/firebase/client'
-import { ComponentType, useCallback, useContext, useEffect } from 'react'
+import { ComponentType, useCallback, useContext } from 'react'
 import { useRouter } from 'next/router'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { WebSocketContext } from '../Providers/WebSocket'
-import { json } from '@/util/json'
-import { useUserStore } from '@/hooks/useUserStore'
-import shallow from 'zustand/shallow'
-import { User } from '@/fauna/auth/login'
+import { useMeQuery } from '@/hooks/useMeQuery'
 
 const auth = firebase.auth()
 
@@ -34,35 +31,20 @@ const withAuthenticationRequired = <P extends object>(
     const [firebaseUser, loadingFirebase, firebaseError] = useAuthState(auth)
     const { onAuthenticating = defaultOnAuthenticating } = options
     const { conn } = useContext(WebSocketContext)
-    const { user, setUser } = useUserStore(
-      state => ({ user: state.user, setUser: state.setUser }),
-      shallow,
-    )
+    const meQuery = useMeQuery()
 
     const redirectToLogin = useCallback(() => {
       router.push(`/login?next=${window.location.pathname}`)
     }, [router])
 
-    useEffect(() => {
-      if (!user) {
-        json<User>('/api/auth/me')
-          .then(me => {
-            setUser(me)
-          })
-          .catch(error => {
-            console.error(error)
-            redirectToLogin()
-          })
-      }
-    }, [redirectToLogin, setUser, user])
-
     const errorAuthenticating =
-      !loadingFirebase && (!firebaseUser || firebaseError)
+      (!loadingFirebase && (!firebaseUser || firebaseError)) || meQuery.isError
+
     if (errorAuthenticating) {
       redirectToLogin()
     }
 
-    const success = !!firebaseUser && !!conn && !!user
+    const success = !!firebaseUser && !!conn && meQuery.isSuccess
     return success ? <Component {...props} /> : onAuthenticating()
   }
 }

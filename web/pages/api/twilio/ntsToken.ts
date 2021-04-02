@@ -29,6 +29,7 @@ export default handler()
       const authToken = process.env.TWILIO_AUTH_TOKEN
       const twilio = createTwilioClient(accountSid, authToken)
       const oneDay = 86400 // 24 hours
+      const oneHour = 3600
       const token = await twilio.tokens.create({ ttl: oneDay })
 
       // We cache the token so we don't have to hit twilio's api
@@ -37,7 +38,7 @@ export default handler()
         'twilio-nts-token',
         JSON.stringify(token),
         'ex',
-        oneDay / 2,
+        oneDay - oneHour,
       )
 
       return res.json({

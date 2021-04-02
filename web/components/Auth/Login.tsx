@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { AuthProvider } from '@/lib/types'
 import { User } from '@/fauna/auth/login'
 import firebase from '@/lib/firebase/client'
-import { useUserStore } from '@/hooks/useUserStore'
+import { useQueryClient } from 'react-query'
 import 'twin.macro'
 
 const googleProvider = new firebase.auth.GoogleAuthProvider()
@@ -17,7 +17,7 @@ interface RouterQuery extends ParsedUrlQuery {
 
 function Login() {
   const router = useRouter()
-  const setUser = useUserStore(state => state.setUser)
+  const queryClient = useQueryClient()
 
   const signIn = (provider: AuthProvider) => {
     auth.useDeviceLanguage()
@@ -33,7 +33,7 @@ function Login() {
             },
           }).then(res => res.json())) as User
 
-          setUser(user)
+          queryClient.setQueryData<User>('me', user)
 
           const { next = '/app' } = router.query as RouterQuery
           router.push(next)

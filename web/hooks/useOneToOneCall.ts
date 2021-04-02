@@ -3,10 +3,10 @@ import { VoiceCallAnswer, VoiceCallOffer } from '@chatskee/gateway'
 import { useCallback, useEffect } from 'react'
 import shallow from 'zustand/shallow'
 import { useGatewayWs } from './useGatewayWs'
+import { useMeQuery } from './useMeQuery'
 import { useNotificationSoundStore } from './useNotificationSoundStore'
 import { useNtsTokenQuery } from './useNtsTokenQuery'
 import { useOneToOneCallStore } from './useOneToOneCallStore'
-import { useUserStore } from './useUserStore'
 import { useWebRTC } from './useWebRTC'
 
 interface UseOneToOneCallOptions {
@@ -58,7 +58,7 @@ export function useOneToOneCall(
   )
 
   const play = useNotificationSoundStore(state => state.play)
-  const currentUser = useUserStore(state => state.user)
+  const { data: currentUser } = useMeQuery()
   const ntsTokenQuery = useNtsTokenQuery()
   const ws = useGatewayWs()
 
