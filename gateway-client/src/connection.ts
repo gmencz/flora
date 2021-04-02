@@ -34,7 +34,7 @@ export const connect = (token: Token): Promise<Connection> => {
       WebSocket,
     })
 
-    const send = (opcode: Opcode, data: unknown) => {
+    const send = (opcode: string, data: unknown) => {
       const raw = `{"op":"${opcode}","d":${JSON.stringify(data)}}`
       socket.send(raw)
     }

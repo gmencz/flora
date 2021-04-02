@@ -1,5 +1,5 @@
-import { redisClient } from './client'
+import { redisPublisher } from './publisher'
 
 export function getUser(id: string) {
-  return redisClient.exists(`u:${id}`)
+  return redisPublisher.exists(`u:${id}`)
 }

@@ -1,5 +1,5 @@
 import WebSocket from 'ws'
-import { redisClient } from '../lib/redis'
+import { redisPublisher } from '../lib/redis'
 import { RequestWithUser } from '../types'
 
 export function connectUser(
@@ -9,7 +9,7 @@ export function connectUser(
 ) {
   const { userId } = request
   connectedUsers.set(userId, socket)
-  redisClient.set(`u:${userId}`, '')
+  redisPublisher.set(`u:${userId}`, '')
 }
 
 export function disconnectUser(
@@ -18,5 +18,5 @@ export function disconnectUser(
 ) {
   const { userId } = request
   connectedUsers.delete(userId)
-  redisClient.del(`u:${userId}`)
+  redisPublisher.del(`u:${userId}`)
 }

@@ -57,12 +57,7 @@ export interface SendDirectMessageVariables
   dm: string
 }
 
-export interface SendDirectMessagePayload {
-  rateLimitTimestamp: string
-  message: DirectMessage
-}
-
-export default handler()
+export default handler<DirectMessage>()
   .use(authorize)
   .post(async (req, res) => {
     try {
@@ -72,7 +67,7 @@ export default handler()
       const fauna = createFaunaClient(faunaToken)
 
       try {
-        const data = await fauna.query<SendDirectMessagePayload>(
+        const data = await fauna.query<DirectMessage>(
           Let(
             {
               lastMessageSentAt: Select(
@@ -146,10 +141,7 @@ export default handler()
                     },
                   }),
 
-                  {
-                    rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
-                    message: Var('newMessageData'),
-                  },
+                  Var('newMessageData'),
                 ),
               ),
 
@@ -222,10 +214,7 @@ export default handler()
                       },
                     }),
 
-                    {
-                      rateLimitTimestamp: ToString(Var('rateLimitTimestamp')),
-                      message: Var('newMessageData'),
-                    },
+                    Var('newMessageData'),
                   ),
                 ),
               ),

@@ -12,11 +12,14 @@ interface NtsToken {
 }
 
 export function useNtsTokenQuery() {
+  const oneDay = 86400
+  const oneHour = 3600
+
   return useQuery<NtsToken>(
     'ntsToken',
     () => json<NtsToken>('/api/twilio/ntsToken'),
     {
-      staleTime: 40000 * 1000,
+      staleTime: (oneDay / 2 - oneHour) * 1000,
     },
   )
 }
